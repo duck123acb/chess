@@ -1,10 +1,7 @@
 use macroquad::prelude::*;
 
 struct Paddle {
-  x: f32,
-  y: f32,
-  width: f32,
-  height: f32,
+  rect: Rect,
   speed: f32,
   up_key: KeyCode,
   down_key: KeyCode
@@ -12,10 +9,7 @@ struct Paddle {
 impl Paddle {
   fn new(paddle_x: f32, paddle_y: f32, paddle_up_key: KeyCode, paddle_down_key: KeyCode) -> Self {
     Self {
-      x: paddle_x,
-      y: paddle_y,
-      width: 25.0,
-      height: 200.0,
+      rect: Rect::new(paddle_x, paddle_y, 25.0, 200.0),
       speed: 700.0,
       up_key: paddle_up_key,
       down_key: paddle_down_key
@@ -23,7 +17,7 @@ impl Paddle {
   }
 
   fn draw(&self) {
-    draw_rectangle(self.x - (self.width / 2.0), self.y - (self.height / 2.0), self.width, self.height, WHITE);
+    draw_rectangle(self.rect.x - (self.rect.w / 2.0), self.rect.y - (self.rect.h / 2.0), self.rect.w, self.rect.h, WHITE);
   }
   fn update(&mut self, dt: f32) {
     let dir;
@@ -41,12 +35,19 @@ impl Paddle {
       dir = 0.0
     }
 
-    self.y += self.speed * dir * dt;
+    self.rect.y += self.speed * dir * dt;
+
+    if self.rect.y >= screen_height() - self.rect.h / 2.0{
+      self.rect.y = screen_height() - self.rect.h / 2.0;
+    }
+    if self.rect.y <= self.rect.h / 2.0 {
+      self.rect.y = self.rect.h / 2.0;
+    }
   }
 }
 
 struct Ball {
-  rect: Rect, // why didnt do this for the paddle lol
+  rect: Rect,
   speed_x: f32,
   speed_y: f32
 }
@@ -73,11 +74,12 @@ fn window_conf() -> Conf {
     window_title: "chess".to_string(),
     window_width: 800,
     window_height: 600,
+    window_resizable: false,
     ..Default::default()
   }
 }
 
-fn resolve_collision(rect_a: &mut Rect, rect_b: &Rect) -> bool {
+fn resolve_collision(rect_a: &Rect, rect_b: &Rect) -> bool {
   if let Some(_intersection) = rect_a.intersect(*rect_b) {
     return true;
   }
@@ -96,6 +98,11 @@ async fn main() {
     ball.update(deltatime);
     paddle_left.update(deltatime);
     paddle_right.update(deltatime);
+
+    if resolve_collision(&ball.rect, &paddle_left.rect) || resolve_collision(&ball.rect, &paddle_right.rect) {
+      ball.speed_x *= -1.0;
+      ball.speed_y *= -0.5;
+    }
 
     /* RENDERING */
     clear_background(BLACK);
