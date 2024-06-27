@@ -1,4 +1,4 @@
-use macroquad::{prelude::*, texture};
+use macroquad::prelude::*;
 
 fn window_conf() -> Conf {
   Conf {
@@ -18,24 +18,11 @@ struct Square {
   piece: Piece
 }
 
-fn draw_from_atlas(
-  texture: &Texture2D,
-  x: i32,
-  y: i32,
-  width: i32,
-  height: i32,
-  dest_x: f32,
-  dest_y: f32,
-) {
+fn draw_from_atlas(texture: &Texture2D, texture_x: i32, texture_y: i32, width: i32, height: i32, dest_x: f32, dest_y: f32) {
   let params = DrawTextureParams {
-      dest_size: Some(vec2(width as f32, height as f32)),
-      source: Some(Rect {
-          x: x as f32,
-          y: y as f32,
-          w: width as f32,
-          h: height as f32,
-      }),
-      ..Default::default()
+    dest_size: Some(vec2(width as f32, height as f32)),
+    source: Some(Rect {x: texture_x as f32, y: texture_y as f32, w: width as f32, h: height as f32}),
+    ..Default::default()
   };
 
   draw_texture_ex(texture, dest_x, dest_y, WHITE, params);
@@ -55,7 +42,7 @@ async fn main() {
     /* RENDERING */
     clear_background(BLACK);
     
-    draw_from_atlas(&texture_atlas, 0, 0, 130, 130, 100.0, 100.0); // Draw the first sprite
+    draw_from_atlas(&texture_atlas, 0, 0, 130, 130, 0.0, 0.0); // Draw the first sprite
 
     next_frame().await
   }
