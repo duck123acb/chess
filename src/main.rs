@@ -51,9 +51,9 @@ struct PieceSprite {
   piece_type: char // change to the dedicated piece enum later
 }
 impl PieceSprite {
-  fn new(sprite_x: i32, sprite_y: i32, sprite_texture: &Texture2D, sprite_type: char) -> Self {
+  fn new(sprite_x: f32, sprite_y: f32, sprite_size: f32, sprite_texture: &Texture2D, sprite_type: char) -> Self {
     Self {
-      rect: Rect::new(sprite_x as f32, sprite_y as f32, TEXTURE_SIZE as f32, TEXTURE_SIZE as f32), // 133 comes from my spritesheet
+      rect: Rect::new(sprite_x, sprite_y, sprite_size as f32, sprite_size as f32),
       texture: sprite_texture.clone(),
       piece_type: sprite_type
     }
@@ -96,13 +96,13 @@ impl Square {
 #[macroquad::main(window_conf)]
 async fn main() {
   let texture_atlas = load_texture(TEXTURE_PATH).await.unwrap();
-  texture_atlas.set_filter(FilterMode::Nearest);
+  // texture_atlas.set_filter(FilterMode::Nearest);
 
   let base_square = Square::new(0.0, 0.0, screen_width() / 8.0, DARKBROWN);
   let mut squares: [Square; 64] = [base_square; 64];
   
-  let piece = PieceSprite::new(0, 0, &texture_atlas, 'Q'); // MY CODE WORKS YESSSS!!!!!!!!
-  let piece2 = PieceSprite::new(200, 200, &texture_atlas, 'r'); // MY CODE WORKS YESSSS!!!!!!!!
+  let piece = PieceSprite::new(0f32, 0f32, base_square.rect.w, &texture_atlas, 'Q'); // MY CODE WORKS YESSSS!!!!!!!!
+  let piece2 = PieceSprite::new(200f32, 200f32, base_square.rect.w, &texture_atlas, 'r'); // MY CODE WORKS YESSSS!!!!!!!!
   
   let mut x = 0;
   let mut y = 0;
