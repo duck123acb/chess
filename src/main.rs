@@ -21,6 +21,7 @@ impl Paddle {
       down_key: paddle_down_key
     }
   }
+
   fn draw(&self) {
     draw_rectangle(self.x - (self.width / 2.0), self.y - (self.height / 2.0), self.width, self.height, WHITE);
   }
@@ -42,7 +43,29 @@ impl Paddle {
 
     self.y += self.speed * dir * dt;
   }
+}
 
+struct Ball {
+  rect: Rect, // why didnt do this for the paddle lol
+  speed_x: f32,
+  speed_y: f32
+}
+impl Ball {
+  fn new(ball_x: f32, ball_y: f32, ball_size: f32, ball_speed_x: f32, ball_speed_y: f32) -> Self {
+    Self {
+      rect: Rect::new(ball_x, ball_y, ball_size, ball_size),
+      speed_x: ball_speed_x,
+      speed_y: ball_speed_y
+    }
+  }
+
+  fn draw(&self) {
+    draw_rectangle(self.rect.x - (self.rect.w / 2.0), self.rect.y - (self.rect.w / 2.0), self.rect.w, self.rect.h, WHITE);
+  }
+  fn update(&mut self, dt: f32) {
+    self.rect.x += self.speed_x * dt;
+    self.rect.y += self.speed_y * dt;
+  }
 }
 
 fn window_conf() -> Conf {
@@ -54,19 +77,24 @@ fn window_conf() -> Conf {
   }
 }
 
+
 #[macroquad::main(window_conf)]
 async fn main() {
   let mut paddle_left = Paddle::new(40.0, screen_height() / 2.0, KeyCode::W, KeyCode::S);
   let mut paddle_right = Paddle::new(screen_width() - 40.0, screen_height() / 2.0, KeyCode::I, KeyCode::K);
+  let mut ball = Ball::new(screen_width() / 2.0, screen_height() / 2.0, 15.0, 200.0, 150.0);
   
   loop {
     /* LOGIC */
-    paddle_left.update(get_frame_time());
-    paddle_right.update(get_frame_time());
+    let deltatime = get_frame_time();
+    ball.update(deltatime);
+    paddle_left.update(deltatime);
+    paddle_right.update(deltatime);
 
     /* RENDERING */
     clear_background(BLACK);
 
+    ball.draw();
     paddle_left.draw();
     paddle_right.draw();
 
