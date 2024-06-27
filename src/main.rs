@@ -1,4 +1,9 @@
+use std::collections::HashMap;
+
 use macroquad::prelude::*;
+
+const TEXTURE_PATH: &str = "assets/pieces.png";
+const SPRITE_SIZE: i32 = 133;
 
 fn window_conf() -> Conf {
   Conf {
@@ -18,6 +23,26 @@ fn draw_from_atlas(texture: &Texture2D, texture_x: i32, texture_y: i32, texture_
 
   draw_texture_ex(texture, texture_rect.x, texture_rect.y, WHITE, params);
 }
+fn get_sprite_coords(key: char) -> (i32, i32) {
+  let sprite_map: HashMap<char, (i32, i32)> = HashMap::from([
+    ('K', (0, 0)),
+    ('Q', (1, 0)),
+    ('B', (2, 0)),
+    ('N', (3, 0)),
+    ('R', (4, 0)),
+    ('P', (5, 0)),
+    ('k', (0, 1)),
+    ('q', (1, 1)),
+    ('b', (2, 1)),
+    ('n', (3, 1)),
+    ('r', (4, 1)),
+    ('p', (5, 1)),
+  ]);
+  if let Some(&(x, y)) = sprite_map.get(&key) {
+    return (x, y)
+  }
+  return (-1, -1) // if this is returned, something is wrong
+}
 
 struct PieceSprite {
   rect: Rect,
@@ -25,10 +50,10 @@ struct PieceSprite {
   piece_type: char // change to the dedicated piece enum later
 }
 impl PieceSprite {
-  fn new(sprite_x: i32, sprite_y: i32, sprite_texture: Texture2D, sprite_type: char) -> Self {
+  fn new(sprite_x: i32, sprite_y: i32, sprite_texture: &Texture2D, sprite_type: char) -> Self {
     Self {
-      rect: Rect::new(sprite_x as f32, sprite_y as f32, 133f32, 133f32), // 133 comes from my spritesheet
-      texture: sprite_texture,
+      rect: Rect::new(sprite_x as f32, sprite_y as f32, SPRITE_SIZE as f32, SPRITE_SIZE as f32), // 133 comes from my spritesheet
+      texture: sprite_texture.clone(),
       piece_type: sprite_type
     }
   }
@@ -37,8 +62,8 @@ impl PieceSprite {
 
   }
   fn draw(&self) {
-    // depending on type, update the texture_x and texture_y
-    draw_from_atlas(&self.texture, 0, 0, self.rect);
+    let (x, y) = get_sprite_coords(self.piece_type);
+    draw_from_atlas(&self.texture, x * SPRITE_SIZE, y * SPRITE_SIZE, self.rect);
   }
 }
 struct Square {
@@ -48,14 +73,19 @@ struct Square {
 
 #[macroquad::main(window_conf)]
 async fn main() {
-  let texture_atlas = load_texture("assets/pieces.png").await.unwrap();
+  let texture_atlas = load_texture(TEXTURE_PATH).await.unwrap();
   texture_atlas.set_filter(FilterMode::Nearest);
+  let piece = PieceSprite::new(0, 0, &texture_atlas, 'Q'); // MY CODE WORKS YESSSS!!!!!!!!
+  let piece2 = PieceSprite::new(200, 200, &texture_atlas, 'r'); // MY CODE WORKS YESSSS!!!!!!!!
 
   loop {
     /* LOGIC */
 
     /* RENDERING */
-    clear_background(BLACK);
+    clear_background(GRAY);
+
+    piece.draw();
+    piece2.draw();
     
     next_frame().await
   }
