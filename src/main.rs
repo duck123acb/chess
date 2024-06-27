@@ -4,6 +4,7 @@ use macroquad::prelude::*;
 const TEXTURE_PATH: &str = "assets/pieces.png";
 const SPRITE_SIZE: i32 = 133;
 const LIGHTBROWN: Color = Color::new(0.95, 0.86, 0.71, 1.00);
+const DARKBROWN: Color = Color::new(0.71, 0.55, 0.4, 1.00);
 
 fn window_conf() -> Conf {
   Conf {
@@ -67,22 +68,30 @@ impl PieceSprite {
   }
 }
 
+#[derive(Copy, Clone)]
 struct Square {
   rect: Rect,
   colour: Color,
-  piece: Option<PieceSprite>
+  piece: char
 }
 impl Square {
   fn new(square_x: f32, square_y: f32, square_size: f32, square_colour: Color) -> Self {
     Self {
       rect: Rect::new(square_x, square_y, square_size, square_size),
      colour: square_colour,
-      piece: None,
+      piece: ' ',
     }
   }
 
   fn draw(&self) {
     draw_rectangle(self.rect.x, self.rect.y, self.rect.w, self.rect.h, self.colour);
+  }
+  fn set_location(&mut self, x: f32, y: f32) {
+    self.rect.x = x;
+    self.rect.y = y;
+  }
+  fn set_colour(&mut self, colour: Color) {
+    self.colour = colour;
   }
 }
 
@@ -92,16 +101,23 @@ async fn main() {
   // texture_atlas.set_filter(FilterMode::Nearest);
   // let piece = PieceSprite::new(0, 0, &texture_atlas, 'Q'); // MY CODE WORKS YESSSS!!!!!!!!
   // let piece2 = PieceSprite::new(200, 200, &texture_atlas, 'r'); // MY CODE WORKS YESSSS!!!!!!!!
-  let base_square = Square::new(0.0, 0.0, screen_width() / 8.0, LIGHTBROWN);
-  let squares: [&Square; 64] = [&base_square; 64];
+  let base_square = Square::new(0.0, 0.0, screen_width() / 8.0, DARKBROWN);
+  let mut squares: [Square; 64] = [base_square; 64];
 
-  // need to figure out how to set things. maybe a setter?
-  // let mut x = 0;
-  // let mut y = 0;
-  // let mut i = 0;
-  // while y >= 8 {
-  //   squares[i].rect.x = x as f32 * squares[i].rect.w;
-  // }
+  let mut x = 0;
+  let mut y = 0;
+  for i in 0..64 {
+    squares[i].set_location(x as f32 * squares[i].rect.w, y as f32 * squares[i].rect.w);
+    if (x + y) % 2 == 0 {
+      squares[i].set_colour(LIGHTBROWN);
+    }
+
+    x += 1;
+    if x >= 8 {
+      x = 0;
+      y += 1;
+    }
+  }
 
   loop {
     /* LOGIC */
@@ -109,11 +125,11 @@ async fn main() {
     /* RENDERING */
     clear_background(GRAY);
 
-    // piece.draw();
-    // piece2.draw();
     for square in squares {
       square.draw();
     }
+    // piece.draw();
+    // piece2.draw();
 
     next_frame().await
   }
