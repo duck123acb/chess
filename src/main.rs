@@ -27,7 +27,7 @@ struct PieceSprite {
 impl PieceSprite {
   fn new(sprite_x: i32, sprite_y: i32, sprite_texture: Texture2D, sprite_type: char) -> Self {
     Self {
-      rect: Rect::new(sprite_x as f32, sprite_y as f32, 130f32, 130f32),
+      rect: Rect::new(sprite_x as f32, sprite_y as f32, 133f32, 133f32), // 133 comes from my spritesheet
       texture: sprite_texture,
       piece_type: sprite_type
     }
