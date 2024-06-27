@@ -59,9 +59,6 @@ impl PieceSprite {
     }
   }
 
-  fn update(&mut self) {
-
-  }
   fn draw(&self) {
     let (x, y) = get_sprite_coords(self.piece_type);
     draw_from_atlas(&self.texture, x * SPRITE_SIZE, y * SPRITE_SIZE, self.rect);
