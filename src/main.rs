@@ -106,7 +106,18 @@ async fn main() {
 
   let base_square = Square::new(0.0, 0.0, screen_width() / 8.0, DARKBROWN);
   let mut squares: [Square; 64] = [base_square; 64];
+
   let mut piece_sprites: Vec<PieceSprite> = Vec::new();
+  let piece_sprite = PieceSprite::new(0.0, 0.0, squares[0].rect.w, &texture_atlas, 'B', 9);
+  let piece_sprite1 = PieceSprite::new(0.0, 0.0, squares[0].rect.w, &texture_atlas, 'r', 0);
+  let piece_sprite2 = PieceSprite::new(0.0, 0.0, squares[0].rect.w, &texture_atlas, 'r', 2);
+  let piece_sprite3 = PieceSprite::new(0.0, 0.0, squares[0].rect.w, &texture_atlas, 'r', 16);
+  let piece_sprite4 = PieceSprite::new(0.0, 0.0, squares[0].rect.w, &texture_atlas, 'r', 18);
+  piece_sprites.push(piece_sprite);
+  piece_sprites.push(piece_sprite1);
+  piece_sprites.push(piece_sprite2);
+  piece_sprites.push(piece_sprite3);
+  piece_sprites.push(piece_sprite4);
 
   
   let mut x = 0;
@@ -124,8 +135,6 @@ async fn main() {
     }
   }
 
-  let piece_sprite = PieceSprite::new(0.0, 0.0, squares[0].rect.w, &texture_atlas, 'B', 9);
-  piece_sprites.push(piece_sprite);
   loop {
     /* LOGIC */
     for piece_sprite in piece_sprites.iter_mut() {
