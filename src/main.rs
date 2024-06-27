@@ -84,6 +84,7 @@ impl Square {
   fn draw(&self) {
     draw_rectangle(self.rect.x, self.rect.y, self.rect.w, self.rect.h, self.colour);
   }
+
   fn set_location(&mut self, x: f32, y: f32) {
     self.rect.x = x;
     self.rect.y = y;
@@ -100,9 +101,8 @@ async fn main() {
 
   let base_square = Square::new(0.0, 0.0, screen_width() / 8.0, DARKBROWN);
   let mut squares: [Square; 64] = [base_square; 64];
-  
-  let piece = PieceSprite::new(0f32, 0f32, base_square.rect.w, &texture_atlas, 'Q'); // MY CODE WORKS YESSSS!!!!!!!!
-  let piece2 = PieceSprite::new(200f32, 200f32, base_square.rect.w, &texture_atlas, 'r'); // MY CODE WORKS YESSSS!!!!!!!!
+  let mut piece_sprites: Vec<PieceSprite> = Vec::new();
+
   
   let mut x = 0;
   let mut y = 0;
@@ -119,6 +119,13 @@ async fn main() {
     }
   }
 
+  squares[7].piece = 'r';
+  for square in &squares {
+    if square.piece != ' ' {
+      let piece_sprite = PieceSprite::new(square.rect.x, square.rect.y, square.rect.w, &texture_atlas, square.piece);
+      piece_sprites.push(piece_sprite);
+    }
+  }
   loop {
     /* LOGIC */
 
@@ -128,8 +135,9 @@ async fn main() {
     for square in squares {
       square.draw();
     }
-    piece.draw();
-    piece2.draw();
+    for piece_sprite in &piece_sprites {
+      piece_sprite.draw();
+    }
 
     next_frame().await
   }
