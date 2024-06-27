@@ -107,7 +107,7 @@ async fn main() {
   let base_square = Square::new(0.0, 0.0, screen_width() / 8.0, DARKBROWN);
   let mut squares: [Square; 64] = [base_square; 64];
 
-  let mut piece_sprites: Vec<PieceSprite> = Vec::new();
+  let mut piece_sprites: Vec<PieceSprite> = Vec::new(); // make a way to do this from a list of chars/squares
   let piece_sprite = PieceSprite::new(0.0, 0.0, squares[0].rect.w, &texture_atlas, 'B', 9);
   let piece_sprite1 = PieceSprite::new(0.0, 0.0, squares[0].rect.w, &texture_atlas, 'r', 0);
   let piece_sprite2 = PieceSprite::new(0.0, 0.0, squares[0].rect.w, &texture_atlas, 'r', 2);
