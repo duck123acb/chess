@@ -77,6 +77,12 @@ fn window_conf() -> Conf {
   }
 }
 
+fn resolve_collision(rect_a: &mut Rect, rect_b: &Rect) -> bool {
+  if let Some(_intersection) = rect_a.intersect(*rect_b) {
+    return true;
+  }
+  return false;
+}
 
 #[macroquad::main(window_conf)]
 async fn main() {
