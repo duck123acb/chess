@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use macroquad::prelude::*;
 
 const TEXTURE_PATH: &str = "assets/pieces.png";
-const SPRITE_SIZE: i32 = 133;
+const TEXTURE_SIZE: i32 = 133;
 const LIGHTBROWN: Color = Color::new(0.95, 0.86, 0.71, 1.00);
 const DARKBROWN: Color = Color::new(0.71, 0.55, 0.4, 1.00);
 
@@ -15,14 +15,14 @@ fn window_conf() -> Conf {
     ..Default::default()
   }
 }
-fn draw_from_atlas(texture: &Texture2D, texture_x: i32, texture_y: i32, texture_rect: Rect) { // macroquad doesn't have a built in function for drawing from an atlas
+fn draw_from_atlas(texture: &Texture2D, sprite_rect: Rect, texture_rect: Rect) { // macroquad doesn't have a built in function for drawing from an atlas
   let params = DrawTextureParams {
-    dest_size: Some(vec2(texture_rect.w, texture_rect.h)),
-    source: Some(Rect {x: texture_x as f32, y: texture_y as f32, w: texture_rect.w, h: texture_rect.h}),
+    dest_size: Some(vec2(sprite_rect.w, sprite_rect.h)),
+    source: Some(Rect {x: texture_rect.x as f32, y: texture_rect.y as f32, w: texture_rect.w, h: texture_rect.h}),
     ..Default::default()
   };
 
-  draw_texture_ex(texture, texture_rect.x, texture_rect.y, WHITE, params);
+  draw_texture_ex(texture, sprite_rect.x, sprite_rect.y, WHITE, params);
 }
 fn get_sprite_coords(key: char) -> (i32, i32) {
   let sprite_map: HashMap<char, (i32, i32)> = HashMap::from([
@@ -53,7 +53,7 @@ struct PieceSprite {
 impl PieceSprite {
   fn new(sprite_x: i32, sprite_y: i32, sprite_texture: &Texture2D, sprite_type: char) -> Self {
     Self {
-      rect: Rect::new(sprite_x as f32, sprite_y as f32, SPRITE_SIZE as f32, SPRITE_SIZE as f32), // 133 comes from my spritesheet
+      rect: Rect::new(sprite_x as f32, sprite_y as f32, TEXTURE_SIZE as f32, TEXTURE_SIZE as f32), // 133 comes from my spritesheet
       texture: sprite_texture.clone(),
       piece_type: sprite_type
     }
@@ -61,7 +61,8 @@ impl PieceSprite {
 
   fn draw(&self) {
     let (x, y) = get_sprite_coords(self.piece_type);
-    draw_from_atlas(&self.texture, x * SPRITE_SIZE, y * SPRITE_SIZE, self.rect);
+    let texture_mask = Rect::new((x * TEXTURE_SIZE) as f32, (y * TEXTURE_SIZE) as f32 , TEXTURE_SIZE as f32, TEXTURE_SIZE as f32);
+    draw_from_atlas(&self.texture, self.rect, texture_mask);
   }
 }
 
@@ -94,13 +95,15 @@ impl Square {
 
 #[macroquad::main(window_conf)]
 async fn main() {
-  // let texture_atlas = load_texture(TEXTURE_PATH).await.unwrap();
-  // texture_atlas.set_filter(FilterMode::Nearest);
-  // let piece = PieceSprite::new(0, 0, &texture_atlas, 'Q'); // MY CODE WORKS YESSSS!!!!!!!!
-  // let piece2 = PieceSprite::new(200, 200, &texture_atlas, 'r'); // MY CODE WORKS YESSSS!!!!!!!!
+  let texture_atlas = load_texture(TEXTURE_PATH).await.unwrap();
+  texture_atlas.set_filter(FilterMode::Nearest);
+
   let base_square = Square::new(0.0, 0.0, screen_width() / 8.0, DARKBROWN);
   let mut squares: [Square; 64] = [base_square; 64];
-
+  
+  let piece = PieceSprite::new(0, 0, &texture_atlas, 'Q'); // MY CODE WORKS YESSSS!!!!!!!!
+  let piece2 = PieceSprite::new(200, 200, &texture_atlas, 'r'); // MY CODE WORKS YESSSS!!!!!!!!
+  
   let mut x = 0;
   let mut y = 0;
   for i in 0..64 {
@@ -125,8 +128,8 @@ async fn main() {
     for square in squares {
       square.draw();
     }
-    // piece.draw();
-    // piece2.draw();
+    piece.draw();
+    piece2.draw();
 
     next_frame().await
   }
