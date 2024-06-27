@@ -48,14 +48,16 @@ fn get_sprite_coords(key: char) -> (i32, i32) {
 struct PieceSprite {
   rect: Rect,
   texture: Texture2D,
-  piece_type: char // change to the dedicated piece enum later
+  piece_type: char, // change to the dedicated piece enum later // maybe not
+  square: i32
 }
 impl PieceSprite {
-  fn new(sprite_x: f32, sprite_y: f32, sprite_size: f32, sprite_texture: &Texture2D, sprite_type: char) -> Self {
+  fn new(sprite_x: f32, sprite_y: f32, sprite_size: f32, sprite_texture: &Texture2D, sprite_type: char, sprite_square: i32) -> Self {
     Self {
       rect: Rect::new(sprite_x, sprite_y, sprite_size as f32, sprite_size as f32),
       texture: sprite_texture.clone(),
-      piece_type: sprite_type
+      piece_type: sprite_type,
+      square: sprite_square
     }
   }
 
@@ -64,20 +66,23 @@ impl PieceSprite {
     let texture_mask = Rect::new((x * TEXTURE_SIZE) as f32, (y * TEXTURE_SIZE) as f32 , TEXTURE_SIZE as f32, TEXTURE_SIZE as f32);
     draw_from_atlas(&self.texture, self.rect, texture_mask);
   }
+
+  fn set_location(&mut self, x: f32, y: f32) {
+    self.rect.x = x;
+    self.rect.y = y;
+  }
 }
 
 #[derive(Copy, Clone)]
 struct Square {
   rect: Rect,
   colour: Color,
-  piece: char
 }
 impl Square {
   fn new(square_x: f32, square_y: f32, square_size: f32, square_colour: Color) -> Self {
     Self {
       rect: Rect::new(square_x, square_y, square_size, square_size),
-     colour: square_colour,
-      piece: ' ',
+      colour: square_colour,
     }
   }
 
@@ -119,16 +124,19 @@ async fn main() {
     }
   }
 
-  squares[7].piece = 'r';
-  for square in &squares {
-    if square.piece != ' ' {
-      let piece_sprite = PieceSprite::new(square.rect.x, square.rect.y, square.rect.w, &texture_atlas, square.piece);
-      piece_sprites.push(piece_sprite);
-    }
-  }
+  let piece_sprite = PieceSprite::new(0.0, 0.0, squares[0].rect.w, &texture_atlas, 'B', 9);
+  piece_sprites.push(piece_sprite);
   loop {
     /* LOGIC */
+    for piece_sprite in piece_sprites.iter_mut() {
+      if piece_sprite.square == -1 {
+        continue;
+      }
 
+      let piece_square = squares[piece_sprite.square as usize];
+      piece_sprite.set_location(piece_square.rect.x, piece_square.rect.y);
+    }
+  
     /* RENDERING */
     clear_background(GRAY);
 
