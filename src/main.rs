@@ -1,9 +1,9 @@
 use std::collections::HashMap;
-
 use macroquad::prelude::*;
 
 const TEXTURE_PATH: &str = "assets/pieces.png";
 const SPRITE_SIZE: i32 = 133;
+const LIGHTBROWN: Color = Color::new(0.95, 0.86, 0.71, 1.00);
 
 fn window_conf() -> Conf {
   Conf {
@@ -66,17 +66,42 @@ impl PieceSprite {
     draw_from_atlas(&self.texture, x * SPRITE_SIZE, y * SPRITE_SIZE, self.rect);
   }
 }
+
 struct Square {
   rect: Rect,
-  piece: PieceSprite
+  colour: Color,
+  piece: Option<PieceSprite>
+}
+impl Square {
+  fn new(square_x: f32, square_y: f32, square_size: f32, square_colour: Color) -> Self {
+    Self {
+      rect: Rect::new(square_x, square_y, square_size, square_size),
+     colour: square_colour,
+      piece: None,
+    }
+  }
+
+  fn draw(&self) {
+    draw_rectangle(self.rect.x, self.rect.y, self.rect.w, self.rect.h, self.colour);
+  }
 }
 
 #[macroquad::main(window_conf)]
 async fn main() {
-  let texture_atlas = load_texture(TEXTURE_PATH).await.unwrap();
-  texture_atlas.set_filter(FilterMode::Nearest);
-  let piece = PieceSprite::new(0, 0, &texture_atlas, 'Q'); // MY CODE WORKS YESSSS!!!!!!!!
-  let piece2 = PieceSprite::new(200, 200, &texture_atlas, 'r'); // MY CODE WORKS YESSSS!!!!!!!!
+  // let texture_atlas = load_texture(TEXTURE_PATH).await.unwrap();
+  // texture_atlas.set_filter(FilterMode::Nearest);
+  // let piece = PieceSprite::new(0, 0, &texture_atlas, 'Q'); // MY CODE WORKS YESSSS!!!!!!!!
+  // let piece2 = PieceSprite::new(200, 200, &texture_atlas, 'r'); // MY CODE WORKS YESSSS!!!!!!!!
+  let base_square = Square::new(0.0, 0.0, screen_width() / 8.0, LIGHTBROWN);
+  let squares: [&Square; 64] = [&base_square; 64];
+
+  // need to figure out how to set things. maybe a setter?
+  // let mut x = 0;
+  // let mut y = 0;
+  // let mut i = 0;
+  // while y >= 8 {
+  //   squares[i].rect.x = x as f32 * squares[i].rect.w;
+  // }
 
   loop {
     /* LOGIC */
@@ -84,9 +109,12 @@ async fn main() {
     /* RENDERING */
     clear_background(GRAY);
 
-    piece.draw();
-    piece2.draw();
-    
+    // piece.draw();
+    // piece2.draw();
+    for square in squares {
+      square.draw();
+    }
+
     next_frame().await
   }
 }
