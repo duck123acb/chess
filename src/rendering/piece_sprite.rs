@@ -76,4 +76,8 @@ impl PieceSprite {
     self.rect.x = x;
     self.rect.y = y;
   }
+  pub fn set_location_center(&mut self, x: f32, y: f32) {
+    self.rect.x = x - (self.rect.w / 2.0);
+    self.rect.y = y - (self.rect.w / 2.0);
+  }
 }

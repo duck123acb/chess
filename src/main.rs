@@ -49,7 +49,7 @@ async fn main() {
 
       if piece_sprite.mouse_on_sprite {
         let (mouse_x, mouse_y) = mouse_position();
-        piece_sprite.set_location(mouse_x, mouse_y);
+        piece_sprite.set_location_center(mouse_x, mouse_y);
       }
       else {
         if piece_sprite.square == -1 {
