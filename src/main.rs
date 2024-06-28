@@ -53,7 +53,7 @@ async fn main() {
 
   loop {
     for piece_sprite in piece_sprites.iter_mut() {
-    piece_sprite.update();
+      piece_sprite.update();
 
       if piece_sprite.square == -1 {
         continue;

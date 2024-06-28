@@ -19,7 +19,8 @@ pub struct PieceSprite {
   texture: Texture2D,
   piece_type: char, // change to the dedicated piece enum later // maybe not
   
-  pub square: i32
+  pub square: i32,
+  pub mouse_on_sprite: bool
 }
 impl PieceSprite {
   pub fn new(sprite_x: f32, sprite_y: f32, sprite_size: f32, sprite_texture: &Texture2D, sprite_type: char, sprite_square: i32) -> Self {
@@ -27,7 +28,8 @@ impl PieceSprite {
       rect: Rect::new(sprite_x, sprite_y, sprite_size as f32, sprite_size as f32),
       texture: sprite_texture.clone(),
       piece_type: sprite_type,
-      square: sprite_square
+      square: sprite_square,
+      mouse_on_sprite: false
     }
   }
   fn get_sprite_coords(key: char) -> (i32, i32) { // retufns coordinates of sprite on the atlas
