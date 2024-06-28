@@ -3,7 +3,7 @@ mod rendering;
 mod utils;
 
 /* IMPORTS */
-use rendering::sprite_piece::*;
+use rendering::piece_sprite::*;
 use rendering::square::*;
 use utils::window_conf;
 use macroquad::prelude::*;
