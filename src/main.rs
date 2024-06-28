@@ -1,5 +1,7 @@
+/* MODULES */
 mod rendering;
 
+/* IMPORTS */
 use rendering::sprite_piece::*;
 use rendering::square::*;
 use macroquad::prelude::*;

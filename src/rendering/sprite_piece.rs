@@ -48,7 +48,7 @@ impl PieceSprite {
     if let Some(&(x, y)) = sprite_map.get(&key) {
       return (x, y) // retufned this way because rust-analyzer doesnt like the way shown below
     }
-    (-1, -1) // if this is retufned, something is wrong
+    (-1, -1) // if this is returned, something is wrong
   }
 
   pub fn draw(&self) {
