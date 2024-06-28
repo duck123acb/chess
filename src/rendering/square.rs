@@ -1,9 +1,12 @@
+use std::default;
+
 use macroquad::prelude::*;
+use crate::utils::contains;
 
 pub const LIGHTSQUARE: Color = Color::new(0.95, 0.86, 0.71, 1.00);
 pub const DARKSQUARE: Color = Color::new(0.71, 0.55, 0.4, 1.00);
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq)]
 pub struct Square {
   pub rect: Rect,
   colour: Color,
@@ -15,7 +18,17 @@ impl Square {
       colour: square_colour,
     }
   }
+  pub fn default() -> Self {
+    Square::new(0.0, 0.0, screen_width() / 8.0, DARKSQUARE)
+  }
 
+  pub fn handle_mouseover(&self) -> Self {
+    let mouse_pos = mouse_position().into();
+    if contains(self.rect, mouse_pos) {
+      return *self;
+    }
+    return Self::default();
+  }
   pub fn draw(&self) {
     draw_rectangle(self.rect.x, self.rect.y, self.rect.w, self.rect.h, self.colour);
   }

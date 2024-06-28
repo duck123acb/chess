@@ -11,6 +11,5 @@ pub fn window_conf() -> Conf {
 }
 
 pub fn contains(rect: Rect, point: Vec2) -> bool {
-  point.x >= rect.x && point.x <= rect.x + rect.w &&
-  point.y >= rect.y && point.y <= rect.y + rect.h
+  (point.x >= rect.x && point.x <= rect.x + rect.w) && (point.y >= rect.y && point.y <= rect.y + rect.h)
 }

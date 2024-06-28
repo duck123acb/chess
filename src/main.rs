@@ -12,8 +12,8 @@ use macroquad::prelude::*;
 async fn main() {
   let texture_atlas = load_texture(TEXTURE_PATH).await.unwrap();
 
-  let base_square = Square::new(0.0, 0.0, screen_width() / 8.0, DARKSQUARE);
-  let mut squares: [Square; 64] = [base_square; 64];
+  let mut squares: [Square; 64] = [Square::default(); 64];
+  let mut mouse_square = Square::default();
 
   let mut piece_sprites: Vec<PieceSprite> = Vec::new(); // make a way to do this from a list of chars/squares
   let piece_sprite = PieceSprite::new(0.0, 0.0, squares[0].rect.w, &texture_atlas, 'B', 9);
@@ -50,6 +50,8 @@ async fn main() {
       if piece_sprite.mouse_on_sprite {
         let (mouse_x, mouse_y) = mouse_position();
         piece_sprite.set_location_center(mouse_x, mouse_y);
+
+        // let mouse_square_index = squares.iter().position(|&r| r == mouse_square).unwrap() as i32;
       }
       else {
         if piece_sprite.square == -1 {
@@ -62,12 +64,16 @@ async fn main() {
   
     clear_background(GRAY);
 
-    for square in squares {
+    for square in &squares {
+      // mouse_square = square.handle_mouseover();
+      // println!("{}", mouse_square.rect.x);
+
+      
       square.draw();
     }
 
     piece_sprites.sort_by(|a, b| a.mouse_on_sprite.cmp(&b.mouse_on_sprite)); // sorts the list so that the pieces that are affected by the mouse are last. this ensures that they are drawn on top of the other pieces
-    for piece_sprite in piece_sprites.iter() {
+    for piece_sprite in &piece_sprites {
       piece_sprite.draw();
     }
 
