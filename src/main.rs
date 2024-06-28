@@ -52,8 +52,9 @@ async fn main() {
   }
 
   loop {
-    /* LOGIC */
     for piece_sprite in piece_sprites.iter_mut() {
+    piece_sprite.update();
+
       if piece_sprite.square == -1 {
         continue;
       }
@@ -62,7 +63,6 @@ async fn main() {
       piece_sprite.set_location(piece_square.rect.x, piece_square.rect.y);
     }
   
-    /* RENDERING */
     clear_background(GRAY);
 
     for square in squares {

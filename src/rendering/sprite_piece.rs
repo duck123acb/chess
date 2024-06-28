@@ -51,14 +51,27 @@ impl PieceSprite {
     (-1, -1) // if this is returned, something is wrong
   }
 
+  pub fn update(&mut self) {
+    if is_mouse_button_down(MouseButton::Left) {
+      let mouse_pos = mouse_position().into();
+      if !self.contains(mouse_pos) {
+        return;
+      }
+      println!("mouse down on {}", self.piece_type);
+    }
+  }
+  
   pub fn draw(&self) {
     let (x, y) = Self::get_sprite_coords(self.piece_type);
     let texture_mask = Rect::new((x * TEXTURE_SIZE) as f32, (y * TEXTURE_SIZE) as f32 , TEXTURE_SIZE as f32, TEXTURE_SIZE as f32);
     draw_from_atlas(&self.texture, self.rect, texture_mask);
   }
-
   pub fn set_location(&mut self, x: f32, y: f32) {
     self.rect.x = x;
     self.rect.y = y;
+  }
+  fn contains(&self, point: Vec2) -> bool {
+    point.x >= self.rect.x && point.x <= self.rect.x + self.rect.w &&
+    point.y >= self.rect.y && point.y <= self.rect.y + self.rect.h
   }
 }
