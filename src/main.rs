@@ -15,34 +15,14 @@ fn window_conf() -> Conf {
     ..Default::default()
   }
 }
-fn draw_from_atlas(texture: &Texture2D, sprite_rect: Rect, texture_rect: Rect) { // macroquad doesn't have a built in function for drawing from an atlas
+fn draw_from_atlas(atlas: &Texture2D, sprite_rect: Rect, texture_mask: Rect) {
   let params = DrawTextureParams {
-    dest_size: Some(vec2(sprite_rect.w, sprite_rect.h)),
-    source: Some(Rect {x: texture_rect.x as f32, y: texture_rect.y as f32, w: texture_rect.w, h: texture_rect.h}),
-    ..Default::default()
+    dest_size: Some(vec2(sprite_rect.w, sprite_rect.h)), // sets onscreen size
+    source: Some(Rect {x: texture_mask.x as f32, y: texture_mask.y as f32, w: texture_mask.w, h: texture_mask.h}), // gets the sprite from the atlas
+    ..Default::default() // sets the rest of the parameters to their default
   };
 
-  draw_texture_ex(texture, sprite_rect.x, sprite_rect.y, WHITE, params);
-}
-fn get_sprite_coords(key: char) -> (i32, i32) {
-  let sprite_map: HashMap<char, (i32, i32)> = HashMap::from([
-    ('K', (0, 0)),
-    ('Q', (1, 0)),
-    ('B', (2, 0)),
-    ('N', (3, 0)),
-    ('R', (4, 0)),
-    ('P', (5, 0)),
-    ('k', (0, 1)),
-    ('q', (1, 1)),
-    ('b', (2, 1)),
-    ('n', (3, 1)),
-    ('r', (4, 1)),
-    ('p', (5, 1)),
-  ]);
-  if let Some(&(x, y)) = sprite_map.get(&key) {
-    return (x, y)
-  }
-  return (-1, -1) // if this is returned, something is wrong
+  draw_texture_ex(atlas, sprite_rect.x, sprite_rect.y, WHITE, params);
 }
 
 struct PieceSprite {
@@ -60,9 +40,29 @@ impl PieceSprite {
       square: sprite_square
     }
   }
+  fn get_sprite_coords(key: char) -> (i32, i32) { // returns coordinates of sprite on the atlas
+    let sprite_map: HashMap<char, (i32, i32)> = HashMap::from([
+      ('K', (0, 0)),
+      ('Q', (1, 0)),
+      ('B', (2, 0)),
+      ('N', (3, 0)),
+      ('R', (4, 0)),
+      ('P', (5, 0)),
+      ('k', (0, 1)),
+      ('q', (1, 1)),
+      ('b', (2, 1)),
+      ('n', (3, 1)),
+      ('r', (4, 1)),
+      ('p', (5, 1)),
+    ]);
+    if let Some(&(x, y)) = sprite_map.get(&key) {
+      return (x, y) // returned this way because rust-analyzer doesnt like the way shown below
+    }
+    (-1, -1) // if this is returned, something is wrong
+  }
 
   fn draw(&self) {
-    let (x, y) = get_sprite_coords(self.piece_type);
+    let (x, y) = Self::get_sprite_coords(self.piece_type);
     let texture_mask = Rect::new((x * TEXTURE_SIZE) as f32, (y * TEXTURE_SIZE) as f32 , TEXTURE_SIZE as f32, TEXTURE_SIZE as f32);
     draw_from_atlas(&self.texture, self.rect, texture_mask);
   }
@@ -102,7 +102,6 @@ impl Square {
 #[macroquad::main(window_conf)]
 async fn main() {
   let texture_atlas = load_texture(TEXTURE_PATH).await.unwrap();
-  // texture_atlas.set_filter(FilterMode::Nearest);
 
   let base_square = Square::new(0.0, 0.0, screen_width() / 8.0, DARKBROWN);
   let mut squares: [Square; 64] = [base_square; 64];
@@ -119,7 +118,7 @@ async fn main() {
   piece_sprites.push(piece_sprite3);
   piece_sprites.push(piece_sprite4);
 
-  
+  // square grid setup
   let mut x = 0;
   let mut y = 0;
   for i in 0..64 {
