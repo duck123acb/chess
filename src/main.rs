@@ -1,6 +1,7 @@
 mod rendering;
-use rendering::*;
 
+use rendering::sprite_piece::*;
+use rendering::square::*;
 use macroquad::prelude::*;
 
 fn window_conf() -> Conf {
@@ -12,7 +13,6 @@ fn window_conf() -> Conf {
     ..Default::default()
   }
 }
-
 
 #[macroquad::main(window_conf)]
 async fn main() {
