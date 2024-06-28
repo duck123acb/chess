@@ -1,5 +1,3 @@
-use std::default;
-
 use macroquad::prelude::*;
 use crate::utils::contains;
 
@@ -22,12 +20,9 @@ impl Square {
     Square::new(0.0, 0.0, screen_width() / 8.0, DARKSQUARE)
   }
 
-  pub fn handle_mouseover(&self) -> Self {
+  pub fn handle_mouseover(&self) -> bool {
     let mouse_pos = mouse_position().into();
-    if contains(self.rect, mouse_pos) {
-      return *self;
-    }
-    return Self::default();
+    return contains(self.rect, mouse_pos);
   }
   pub fn draw(&self) {
     draw_rectangle(self.rect.x, self.rect.y, self.rect.w, self.rect.h, self.colour);

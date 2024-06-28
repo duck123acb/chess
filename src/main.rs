@@ -51,7 +51,8 @@ async fn main() {
         let (mouse_x, mouse_y) = mouse_position();
         piece_sprite.set_location_center(mouse_x, mouse_y);
 
-        // let mouse_square_index = squares.iter().position(|&r| r == mouse_square).unwrap() as i32;
+        let mouse_square_index = squares.iter().position(|&r| r == mouse_square).unwrap() as i32;
+        piece_sprite.square = mouse_square_index;
       }
       else {
         if piece_sprite.square == -1 {
@@ -65,9 +66,9 @@ async fn main() {
     clear_background(GRAY);
 
     for square in &squares {
-      // mouse_square = square.handle_mouseover();
-      // println!("{}", mouse_square.rect.x);
-
+      if square.handle_mouseover() {
+        mouse_square = *square;
+      }
       
       square.draw();
     }

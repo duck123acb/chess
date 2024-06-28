@@ -58,9 +58,10 @@ impl PieceSprite {
   pub fn handle_mousedown(&mut self) {
     if is_mouse_button_pressed(MouseButton::Left) && !self.mouse_on_sprite { 
       let mouse_pos = mouse_position().into();
-      if contains(self.rect, mouse_pos) {
-        self.mouse_on_sprite = true;
-      }
+      // if contains(self.rect, mouse_pos) {
+      //   self.mouse_on_sprite = true;
+      // }
+      self.mouse_on_sprite = contains(self.rect, mouse_pos);
     }
     if is_mouse_button_released(MouseButton::Left) && self.mouse_on_sprite {
       self.mouse_on_sprite = false;
