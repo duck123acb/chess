@@ -13,6 +13,10 @@ fn draw_from_atlas(atlas: &Texture2D, sprite_rect: Rect, texture_mask: Rect) {
 
   draw_texture_ex(atlas, sprite_rect.x, sprite_rect.y, WHITE, params);
 }
+fn contains(rect: Rect, point: Vec2) -> bool {
+  point.x >= rect.x && point.x <= rect.x + rect.w &&
+  point.y >= rect.y && point.y <= rect.y + rect.h
+}
 
 pub struct PieceSprite {
   rect: Rect,
@@ -56,7 +60,7 @@ impl PieceSprite {
   pub fn handle_mousedown(&mut self) {
     if is_mouse_button_pressed(MouseButton::Left) && !self.mouse_on_sprite { 
       let mouse_pos = mouse_position().into();
-      if self.contains(mouse_pos) {
+      if contains(self.rect, mouse_pos) {
         self.mouse_on_sprite = true;
       }
     }
@@ -73,9 +77,5 @@ impl PieceSprite {
   pub fn set_location(&mut self, x: f32, y: f32) {
     self.rect.x = x;
     self.rect.y = y;
-  }
-  fn contains(&self, point: Vec2) -> bool {
-    point.x >= self.rect.x && point.x <= self.rect.x + self.rect.w &&
-    point.y >= self.rect.y && point.y <= self.rect.y + self.rect.h
   }
 }
