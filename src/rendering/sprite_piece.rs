@@ -17,7 +17,7 @@ fn draw_from_atlas(atlas: &Texture2D, sprite_rect: Rect, texture_mask: Rect) {
 pub struct PieceSprite {
   rect: Rect,
   texture: Texture2D,
-  piece_type: char, // change to the dedicated piece enum later // maybe not
+  piece_type: char,
   
   pub square: i32,
   pub mouse_on_sprite: bool
@@ -53,13 +53,15 @@ impl PieceSprite {
     (-1, -1) // if this is returned, something is wrong
   }
 
-  pub fn update(&mut self) {
-    if is_mouse_button_down(MouseButton::Left) {
+  pub fn handle_mousedown(&mut self) {
+    if is_mouse_button_pressed(MouseButton::Left) && !self.mouse_on_sprite { 
       let mouse_pos = mouse_position().into();
-      if !self.contains(mouse_pos) {
-        return;
+      if self.contains(mouse_pos) {
+        self.mouse_on_sprite = true;
       }
-      println!("mouse down on {}", self.piece_type);
+    }
+    if is_mouse_button_released(MouseButton::Left) && self.mouse_on_sprite {
+      self.mouse_on_sprite = false;
     }
   }
   

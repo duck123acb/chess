@@ -53,14 +53,19 @@ async fn main() {
 
   loop {
     for piece_sprite in piece_sprites.iter_mut() {
-      piece_sprite.update();
+      piece_sprite.handle_mousedown();
 
-      if piece_sprite.square == -1 {
-        continue;
+      if piece_sprite.mouse_on_sprite {
+        let (mouse_x, mouse_y) = mouse_position();
+        piece_sprite.set_location(mouse_x, mouse_y);
       }
-
-      let piece_square = squares[piece_sprite.square as usize];
-      piece_sprite.set_location(piece_square.rect.x, piece_square.rect.y);
+      else {
+        if piece_sprite.square == -1 {
+          continue;
+        }
+        let piece_square = squares[piece_sprite.square as usize];
+        piece_sprite.set_location(piece_square.rect.x, piece_square.rect.y);
+      }
     }
   
     clear_background(GRAY);
@@ -68,7 +73,8 @@ async fn main() {
     for square in squares {
       square.draw();
     }
-    for piece_sprite in &piece_sprites {
+
+    for piece_sprite in piece_sprites.iter() {
       piece_sprite.draw();
     }
 
