@@ -1,5 +1,6 @@
 use macroquad::prelude::*;
 use std::collections::HashMap;
+use crate::utils::contains;
 
 pub const TEXTURE_PATH: &str = "assets/pieces.png";
 const TEXTURE_SIZE: i32 = 133;
@@ -13,10 +14,7 @@ fn draw_from_atlas(atlas: &Texture2D, sprite_rect: Rect, texture_mask: Rect) {
 
   draw_texture_ex(atlas, sprite_rect.x, sprite_rect.y, WHITE, params);
 }
-fn contains(rect: Rect, point: Vec2) -> bool {
-  point.x >= rect.x && point.x <= rect.x + rect.w &&
-  point.y >= rect.y && point.y <= rect.y + rect.h
-}
+
 
 pub struct PieceSprite {
   rect: Rect,

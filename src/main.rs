@@ -1,20 +1,12 @@
 /* MODULES */
 mod rendering;
+mod utils;
 
 /* IMPORTS */
 use rendering::sprite_piece::*;
 use rendering::square::*;
+use utils::window_conf;
 use macroquad::prelude::*;
-
-fn window_conf() -> Conf {
-  Conf {
-    window_title: "chess".to_string(),
-    window_width: 800,
-    window_height: 800,
-    window_resizable: false,
-    ..Default::default()
-  }
-}
 
 #[macroquad::main(window_conf)]
 async fn main() {
