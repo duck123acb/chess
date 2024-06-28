@@ -74,6 +74,7 @@ async fn main() {
       square.draw();
     }
 
+    piece_sprites.sort_by(|a, b| a.mouse_on_sprite.cmp(&b.mouse_on_sprite)); // sorts the list so that the pieces that are affected by the mouse are last. this ensures that they are drawn on top of the other pieces
     for piece_sprite in piece_sprites.iter() {
       piece_sprite.draw();
     }
