@@ -52,8 +52,8 @@ impl Board {
         },
         'P' | 'N' | 'B' | 'R' | 'K' | 'Q' | 'p' | 'n' | 'b' | 'r' | 'k' | 'q' => {
           let bitboard_type = char_to_piecetype[&c];
-          let square_index = (y * 8) + x;
-          self.bitboards[bitboard_type as usize] |= (1 << square_index); // x goes from left to right but this is a left shift
+          let square_index = y * 8 + (7 - x); // oh my god this line of code took me like 30 minutes to figure out holy what the muffin | this isnt a really useful comment but it's kinda funny in my opinion
+          self.bitboards[bitboard_type as usize] |= (1 << square_index);
           x += 1;
         },
         _ => panic!("Unexpected character in FEN"),
