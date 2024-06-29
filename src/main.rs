@@ -31,7 +31,7 @@ async fn main() {
 
   // square grid setup
   let mut x = 0;
-  let mut y = 0;
+  let mut y = 7;
   for i in 0..64 {
     squares[i].set_location(x as f32 * squares[i].rect.w, y as f32 * squares[i].rect.w);
     if (x + y) % 2 == 0 {
@@ -41,7 +41,7 @@ async fn main() {
     x += 1;
     if x >= 8 {
       x = 0;
-      y += 1;
+      y -= 1;
     }
   }
 
