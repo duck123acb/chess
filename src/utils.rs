@@ -1,4 +1,22 @@
+#![allow(dead_code)]
+
 use macroquad::prelude::*;
+
+#[derive(Copy, Clone)]
+pub enum PieceType {
+  WhiteKing,
+  WhiteQueen,
+  WhiteBishop,
+  WhiteKnight,
+  WhiteRook,
+  WhitePawn,
+  BlackKing,
+  BlackQueen,
+  BlackBishop,
+  BlackKnight,
+  BlackRook,
+  BlackPawn
+}
 
 pub fn window_conf() -> Conf {
   Conf {
