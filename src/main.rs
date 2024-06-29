@@ -1,5 +1,6 @@
 /* MODULES */
 mod rendering;
+mod board;
 mod utils;
 
 /* IMPORTS */
