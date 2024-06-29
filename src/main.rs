@@ -44,6 +44,17 @@ async fn main() {
   }
 
   loop {
+    clear_background(GRAY);
+
+    for square in &squares {
+      if square.handle_mouseover() {
+        mouse_square = *square;
+      }
+      
+      square.draw();
+    }
+
+    // piece_sprite logic
     for piece_sprite in piece_sprites.iter_mut() {
       piece_sprite.handle_mousedown();
 
@@ -62,17 +73,8 @@ async fn main() {
         piece_sprite.set_location(piece_square.rect.x, piece_square.rect.y);
       }
     }
-  
-    clear_background(GRAY);
 
-    for square in &squares {
-      if square.handle_mouseover() {
-        mouse_square = *square;
-      }
-      
-      square.draw();
-    }
-
+    // piece_sprite rendering
     piece_sprites.sort_by(|a, b| a.mouse_on_sprite.cmp(&b.mouse_on_sprite)); // sorts the list so that the pieces that are affected by the mouse are last. this ensures that they are drawn on top of the other pieces
     for piece_sprite in &piece_sprites {
       piece_sprite.draw();
