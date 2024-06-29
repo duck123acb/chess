@@ -25,9 +25,9 @@ pub struct PieceSprite {
   pub mouse_on_sprite: bool
 }
 impl PieceSprite {
-  pub fn new(sprite_x: f32, sprite_y: f32, sprite_size: f32, sprite_texture: &Texture2D, sprite_type: PieceType, sprite_square: i32) -> Self {
+  pub fn new(sprite_size: f32, sprite_texture: &Texture2D, sprite_type: PieceType, sprite_square: i32) -> Self {
     Self {
-      rect: Rect::new(sprite_x, sprite_y, sprite_size as f32, sprite_size as f32),
+      rect: Rect::new(0.0, 0.0, sprite_size as f32, sprite_size as f32),
       texture: sprite_texture.clone(),
       piece_type: sprite_type,
       square: sprite_square,

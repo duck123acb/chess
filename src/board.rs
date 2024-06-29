@@ -52,7 +52,7 @@ impl Board {
         },
         'P' | 'N' | 'B' | 'R' | 'K' | 'Q' | 'p' | 'n' | 'b' | 'r' | 'k' | 'q' => {
           let bitboard_type = char_to_piecetype[&c];
-          let square_index = y * 8 + (7 - x); // oh my god this line of code took me like 30 minutes to figure out holy what the muffin | this isnt a really useful comment but it's kinda funny in my opinion
+          let square_index = y * 8 + x; // oh my god this line of code took me like 30 minutes to figure out holy what the muffin | this isnt a really useful comment but it's kinda funny in my opinion
           self.bitboards[bitboard_type as usize] |= (1 << square_index);
           x += 1;
         },
@@ -61,12 +61,12 @@ impl Board {
     }
   }
 
+  pub fn get_bitboards(&self) -> [u64; 12] {
+    return  self.bitboards;
+  }
+
   // DEBUGING
   pub fn print(&self, index: PieceType) {
     println!("{:b}", self.bitboards[index as usize]);
-  }
-
-  fn export() { // return board as an array for the renderer to draw
-    
   }
 }

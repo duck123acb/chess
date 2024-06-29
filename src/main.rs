@@ -21,17 +21,27 @@ async fn main() {
   let mut squares: [Square; 64] = [Square::default(); 64];
   let mut mouse_square = Square::default();
 
-  let mut piece_sprites: Vec<PieceSprite> = Vec::new(); // make a way to do this from a list of chars/squares
-  let piece_sprite = PieceSprite::new(0.0, 0.0, squares[0].rect.w, &texture_atlas, PieceType::WhiteBishop, 9);
-  let piece_sprite1 = PieceSprite::new(0.0, 0.0, squares[0].rect.w, &texture_atlas, PieceType::BlackRook, 0);
-  let piece_sprite2 = PieceSprite::new(0.0, 0.0, squares[0].rect.w, &texture_atlas, PieceType::BlackRook, 2);
-  let piece_sprite3 = PieceSprite::new(0.0, 0.0, squares[0].rect.w, &texture_atlas, PieceType::BlackRook, 16);
-  let piece_sprite4 = PieceSprite::new(0.0, 0.0, squares[0].rect.w, &texture_atlas, PieceType::BlackRook, 18);
-  piece_sprites.push(piece_sprite);
-  piece_sprites.push(piece_sprite1);
-  piece_sprites.push(piece_sprite2);
-  piece_sprites.push(piece_sprite3);
-  piece_sprites.push(piece_sprite4);
+  let mut piece_sprites: Vec<PieceSprite> = Vec::new();
+  let bitboards = board.get_bitboards();
+  for piece_type in PieceType::iter() {
+    for i in 0..64 {
+      let bitboard = bitboards[piece_type as usize];
+      if bitboard & (1 << i) != 0 {
+        let new_piece = PieceSprite::new(squares[0].rect.w, &texture_atlas, piece_type, i);
+        piece_sprites.push(new_piece);
+      }
+    }
+  }
+  // let piece_sprite = PieceSprite::new(0.0, 0.0, squares[0].rect.w, &texture_atlas, PieceType::WhiteBishop, 9);
+  // let piece_sprite1 = PieceSprite::new(0.0, 0.0, squares[0].rect.w, &texture_atlas, PieceType::BlackRook, 0);
+  // let piece_sprite2 = PieceSprite::new(0.0, 0.0, squares[0].rect.w, &texture_atlas, PieceType::BlackRook, 2);
+  // let piece_sprite3 = PieceSprite::new(0.0, 0.0, squares[0].rect.w, &texture_atlas, PieceType::BlackRook, 16);
+  // let piece_sprite4 = PieceSprite::new(0.0, 0.0, squares[0].rect.w, &texture_atlas, PieceType::BlackRook, 18);
+  // piece_sprites.push(piece_sprite);
+  // piece_sprites.push(piece_sprite1);
+  // piece_sprites.push(piece_sprite2);
+  // piece_sprites.push(piece_sprite3);
+  // piece_sprites.push(piece_sprite4);
 
   // square grid setup
   let mut x = 0;
