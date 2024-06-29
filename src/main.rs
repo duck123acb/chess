@@ -6,12 +6,16 @@ mod utils;
 /* IMPORTS */
 use rendering::piece_sprite::*;
 use rendering::square::*;
+use board::Board;
 use utils::window_conf;
 use utils::PieceType;
 use macroquad::prelude::*;
 
 #[macroquad::main(window_conf)]
 async fn main() {
+  let board = Board::new("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+  board.print(PieceType::WhiteKing);
+
   let texture_atlas = load_texture(TEXTURE_PATH).await.unwrap();
 
   let mut squares: [Square; 64] = [Square::default(); 64];

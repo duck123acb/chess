@@ -3,11 +3,19 @@
 use std::collections::HashMap;
 use crate::utils::PieceType;
 
-struct Board {
+pub struct Board {
   bitboards: [u64; 12],
   // add other flags when needed
 }
 impl Board {
+  pub fn new(fen: &str) -> Self {
+    let mut new_board = Self {
+      bitboards: [0; 12]
+    };
+    new_board.parse_fen(fen);
+    new_board
+  }
+
   fn parse_fen(&mut self, fen: &str) {
     let mut parts = fen.split(' '); // do the rest of the flags later
     let position = parts.next().unwrap();
@@ -42,9 +50,9 @@ impl Board {
             panic!("Invalid FEN: rank {} does not have exactly 8 columns", 8 - x);
           }
         },
-        'P' | 'N' | 'B' | 'R' | 'Q' | 'K' | 'p' | 'n' | 'b' | 'r' | 'q' | 'k' => {
+        'P' | 'N' | 'B' | 'R' | 'K' | 'Q' | 'p' | 'n' | 'b' | 'r' | 'k' | 'q' => {
           let bitboard_type = char_to_piecetype[&c];
-          let square_index = y * 8 + x;
+          let square_index = (y * 8) + x;
           self.bitboards[bitboard_type as usize] |= (1 << square_index);
           x += 1;
         },
@@ -52,6 +60,12 @@ impl Board {
       }
     }
   }
+
+  // DEBUGING
+  pub fn print(&self, index: PieceType) {
+    println!("{:b}", self.bitboards[index as usize]);
+  }
+
   fn export() { // return board as an array for the renderer to draw
     
   }
