@@ -53,7 +53,7 @@ impl Board {
         'P' | 'N' | 'B' | 'R' | 'K' | 'Q' | 'p' | 'n' | 'b' | 'r' | 'k' | 'q' => {
           let bitboard_type = char_to_piecetype[&c];
           let square_index = (y * 8) + x;
-          self.bitboards[bitboard_type as usize] |= (1 << square_index);
+          self.bitboards[bitboard_type as usize] |= (1 << square_index); // x goes from left to right but this is a left shift
           x += 1;
         },
         _ => panic!("Unexpected character in FEN"),
