@@ -14,7 +14,6 @@ use macroquad::prelude::*;
 #[macroquad::main(window_conf)]
 async fn main() {
   let board = Board::new("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-  board.print(PieceType::WhiteKing);
 
   let texture_atlas = load_texture(TEXTURE_PATH).await.unwrap();
 
@@ -32,16 +31,6 @@ async fn main() {
       }
     }
   }
-  // let piece_sprite = PieceSprite::new(0.0, 0.0, squares[0].rect.w, &texture_atlas, PieceType::WhiteBishop, 9);
-  // let piece_sprite1 = PieceSprite::new(0.0, 0.0, squares[0].rect.w, &texture_atlas, PieceType::BlackRook, 0);
-  // let piece_sprite2 = PieceSprite::new(0.0, 0.0, squares[0].rect.w, &texture_atlas, PieceType::BlackRook, 2);
-  // let piece_sprite3 = PieceSprite::new(0.0, 0.0, squares[0].rect.w, &texture_atlas, PieceType::BlackRook, 16);
-  // let piece_sprite4 = PieceSprite::new(0.0, 0.0, squares[0].rect.w, &texture_atlas, PieceType::BlackRook, 18);
-  // piece_sprites.push(piece_sprite);
-  // piece_sprites.push(piece_sprite1);
-  // piece_sprites.push(piece_sprite2);
-  // piece_sprites.push(piece_sprite3);
-  // piece_sprites.push(piece_sprite4);
 
   // square grid setup
   let mut x = 0;

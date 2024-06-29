@@ -66,7 +66,7 @@ impl Board {
   }
 
   // DEBUGING
-  pub fn print(&self, index: PieceType) {
+  pub fn print(&self, index: PieceType) { //TODO: remove this later
     println!("{:b}", self.bitboards[index as usize]);
   }
 }
