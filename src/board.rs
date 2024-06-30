@@ -14,7 +14,7 @@ const RANK_SHIFT: i32 = 8; // value to shift if you want to move ranks
 const FILE_SHIFT: i32 = 1; // value to shift if you want to move files
 
 fn pawn_moves(bitboard: u64, friendly_bitboard: u64, enemy_bitboard: u64, is_white: bool)  -> u64 { // TODO: captures, promotion
-  let other_pieces = friendly_bitboard | enemy_bitboard;
+  let all_pieces = friendly_bitboard | enemy_bitboard;
   let mut moves: u64 = 0;
   let mut attacks: u64 = 0;
 
@@ -30,17 +30,17 @@ fn pawn_moves(bitboard: u64, friendly_bitboard: u64, enemy_bitboard: u64, is_whi
     if bitboard & (TOP_RANK >> RANK_SHIFT) != 0 { // if pawn is on 7th rank
       moves |= bitboard >> (RANK_SHIFT * 2);
     }
+
     attacks |= bitboard >> (RANK_SHIFT - 1) | bitboard >> (RANK_SHIFT + 1);
   }
 
-  let shared_squares = other_pieces & moves;
-  moves ^= shared_squares; // removes squares where another piece is. doesnt affect the pawn attacks
+  moves ^= all_pieces & moves; // removes squares where another piece is. doesnt affect the pawn attacks
+  attacks ^= attacks & friendly_bitboard; // removes attacks on friendly pieces
+  if attacks & all_pieces == 0 { // if the pawn attacks nothing
+    attacks = 0; // attacks mean nothing
+  }
 
-  let false_attacks = attacks & friendly_bitboard;
-  attacks ^= false_attacks; // removes attacks on friendly pieces
-
-  // TODO: remove attacks on pieces that dont exist
-
+  moves |= attacks;
   moves
 }
 
@@ -98,6 +98,25 @@ impl Board {
           x += 1;
         },
         _ => panic!("Unexpected character in FEN"),
+      }
+    }
+  }
+
+  fn all_white_pieces(&self) -> u64 {
+    self.bitboards[PieceType::WhiteKing as usize] | self.bitboards[PieceType::WhiteQueen as usize] | self.bitboards[PieceType::WhiteBishop as usize] | self.bitboards[PieceType::WhiteKnight as usize] | self.bitboards[PieceType::WhiteRook as usize] | self.bitboards[PieceType::WhitePawn as usize]
+  }
+  fn all_black_pieces(&self) -> u64 {
+    self.bitboards[PieceType::BlackKing as usize] | self.bitboards[PieceType::BlackQueen as usize] | self.bitboards[PieceType::BlackBishop as usize] | self.bitboards[PieceType::BlackKnight as usize] | self.bitboards[PieceType::BlackRook as usize] | self.bitboards[PieceType::BlackPawn as usize]
+  }
+
+  pub fn get_legal_moves(&self, bitboard: u64, piece_type: PieceType) -> u64 {
+    match piece_type {
+      PieceType::WhitePawn => {
+        return pawn_moves(bitboard, self.all_white_pieces(), self.all_black_pieces(), true);
+      },
+      _ => {
+        println!("uh oh");
+        return 0;
       }
     }
   }
