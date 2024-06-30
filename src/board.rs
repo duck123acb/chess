@@ -44,6 +44,16 @@ fn pawn_moves(bitboard: u64, friendly_bitboard: u64, enemy_bitboard: u64, is_whi
   moves
 }
 
+fn bits_to_indices(bitboard: &u64) -> Vec<i32> {
+  let mut indices = Vec::new();
+  for i in 0..64 {
+    if *bitboard & (1 << i) != 0 {
+      indices.push(i);
+    }
+  }
+  indices
+}
+
 pub struct Board {
   bitboards: [u64; 12],
   // add other flags when needed
@@ -109,14 +119,15 @@ impl Board {
     self.bitboards[PieceType::BlackKing as usize] | self.bitboards[PieceType::BlackQueen as usize] | self.bitboards[PieceType::BlackBishop as usize] | self.bitboards[PieceType::BlackKnight as usize] | self.bitboards[PieceType::BlackRook as usize] | self.bitboards[PieceType::BlackPawn as usize]
   }
 
-  pub fn get_legal_moves(&self, bitboard: u64, piece_type: PieceType) -> u64 {
+  pub fn get_legal_moves(&self, bitboard: u64, piece_type: PieceType) -> Vec<i32> {
     match piece_type {
       PieceType::WhitePawn => {
-        return pawn_moves(bitboard, self.all_white_pieces(), self.all_black_pieces(), true);
+        let moves = pawn_moves(bitboard, self.all_white_pieces(), self.all_black_pieces(), true);
+        return bits_to_indices(&moves);
       },
       _ => {
         println!("uh oh");
-        return 0;
+        return Vec::from([-1]);
       }
     }
   }
