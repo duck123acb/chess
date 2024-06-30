@@ -1,4 +1,5 @@
 #![allow(unused_parens)]
+#![allow(dead_code)]
 
 use std::collections::HashMap;
 use crate::utils::PieceType;
@@ -15,17 +16,31 @@ const FILE_SHIFT: i32 = 1; // value to shift if you want to move files
 fn pawn_moves(bitboard: u64, friendly_bitboard: u64, enemy_bitboard: u64, is_white: bool)  -> u64 { // TODO: captures, promotion
   let other_pieces = friendly_bitboard | enemy_bitboard;
   let mut moves: u64 = 0;
+  let mut attacks: u64 = 0;
+
   if is_white {
     moves |= bitboard << RANK_SHIFT;
     if bitboard & (BOTTOM_RANK << RANK_SHIFT) != 0 { // if pawn is on 2nd rank
       moves |= bitboard << (RANK_SHIFT * 2);
     }
+
+    attacks |= bitboard << (RANK_SHIFT - 1) | bitboard << (RANK_SHIFT + 1);
   } else {
     moves |= bitboard >> RANK_SHIFT;
     if bitboard & (TOP_RANK >> RANK_SHIFT) != 0 { // if pawn is on 7th rank
       moves |= bitboard >> (RANK_SHIFT * 2);
     }
+    attacks |= bitboard >> (RANK_SHIFT - 1) | bitboard >> (RANK_SHIFT + 1);
   }
+
+  let shared_squares = other_pieces & moves;
+  moves ^= shared_squares; // removes squares where another piece is. doesnt affect the pawn attacks
+
+  let false_attacks = attacks & friendly_bitboard;
+  attacks ^= false_attacks; // removes attacks on friendly pieces
+
+  // TODO: remove attacks on pieces that dont exist
+
   moves
 }
 
