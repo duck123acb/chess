@@ -3,6 +3,32 @@
 use std::collections::HashMap;
 use crate::utils::PieceType;
 
+// from white's perspective
+const TOP_RANK: u64 = 0xFF00000000000000;
+const BOTTOM_RANK: u64 = 0x00000000000000FF;
+const LEFT_FILE: u64 = 0x0101010101010101;
+const RIGHT_FILE: u64 = 0x8080808080808080;
+
+const RANK_SHIFT: i32 = 8; // value to shift if you want to move ranks
+const FILE_SHIFT: i32 = 1; // value to shift if you want to move files
+
+fn pawn_moves(bitboard: u64, friendly_bitboard: u64, enemy_bitboard: u64, is_white: bool)  -> u64 { // TODO: captures, promotion
+  let other_pieces = friendly_bitboard | enemy_bitboard;
+  let mut moves: u64 = 0;
+  if is_white {
+    moves |= bitboard << RANK_SHIFT;
+    if bitboard & (BOTTOM_RANK << RANK_SHIFT) != 0 { // if pawn is on 2nd rank
+      moves |= bitboard << (RANK_SHIFT * 2);
+    }
+  } else {
+    moves |= bitboard >> RANK_SHIFT;
+    if bitboard & (TOP_RANK >> RANK_SHIFT) != 0 { // if pawn is on 7th rank
+      moves |= bitboard >> (RANK_SHIFT * 2);
+    }
+  }
+  moves
+}
+
 pub struct Board {
   bitboards: [u64; 12],
   // add other flags when needed
