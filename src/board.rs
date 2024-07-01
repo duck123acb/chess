@@ -24,7 +24,7 @@ fn pawn_moves(bitboard: u64, friendly_bitboard: u64, enemy_bitboard: u64, is_whi
       moves |= bitboard << (RANK_SHIFT * 2);
     }
 
-    attacks |= bitboard << (RANK_SHIFT - 1) | bitboard << (RANK_SHIFT + 1);
+    attacks |= bitboard << (RANK_SHIFT - 1) | bitboard >> (RANK_SHIFT + 1);
   } else {
     moves |= bitboard >> RANK_SHIFT;
     if bitboard & (TOP_RANK >> RANK_SHIFT) != 0 { // if pawn is on 7th rank
@@ -41,6 +41,8 @@ fn pawn_moves(bitboard: u64, friendly_bitboard: u64, enemy_bitboard: u64, is_whi
   }
 
   moves |= attacks;
+  println!("{:b}", moves);
+
   moves
 }
 

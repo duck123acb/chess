@@ -3,11 +3,10 @@ mod rendering;
 mod board;
 mod utils;
 
-use board::Move;
 /* IMPORTS */
 use rendering::piece_sprite::*;
 use rendering::square::*;
-use board::Board;
+use board::*;
 use utils::window_conf;
 use utils::PieceType;
 use macroquad::prelude::*;
@@ -79,14 +78,14 @@ async fn main() {
           piece_sprite.square = mouse_square_index;
         }
 
-        piece_sprite.moved_piece = false; // Release the piece
+        piece_sprite.moved_piece = false;
       }
   
       else if piece_sprite.square != -1 {
         let piece_square = squares[piece_sprite.square as usize];
         piece_sprite.set_location(piece_square.rect.x, piece_square.rect.y);
       }
-  
+
       piece_sprite.draw();
   }
 
