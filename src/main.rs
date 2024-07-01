@@ -63,29 +63,33 @@ async fn main() {
     piece_sprites.sort_by(|a, b| a.mouse_on_sprite.cmp(&b.mouse_on_sprite)); // sorts the list so that the pieces that are affected by the mouse are last. this ensures that they are drawn on top of the other pieces
     for piece_sprite in piece_sprites.iter_mut() {
       piece_sprite.handle_mousedown();
-
+  
       if piece_sprite.mouse_on_sprite {
+        piece_sprite.moved_piece = true;
         let (mouse_x, mouse_y) = mouse_position();
         piece_sprite.set_location_center(mouse_x, mouse_y);
-
+      }
+  
+      else if piece_sprite.moved_piece && is_mouse_button_released(MouseButton::Left) {
+        println!("hi");
         let piece_moves = board.get_legal_moves(1 << piece_sprite.square, piece_sprite.piece_type);
         let mouse_square_index = squares.iter().position(|&r| r == mouse_square).unwrap() as i32;
 
-        if piece_moves.contains(&mouse_square_index) { // TODO: update mouse square on mouseup
+        if piece_moves.contains(&mouse_square_index) {
           board.make_move(Move::new(piece_sprite.square, mouse_square_index, piece_sprite.piece_type, false));
           piece_sprite.square = mouse_square_index;
         }
+
+        piece_sprite.moved_piece = false; // Release the piece
       }
-      else {
-        if piece_sprite.square == -1 {
-          continue;
-        }
+  
+      else if piece_sprite.square != -1 {
         let piece_square = squares[piece_sprite.square as usize];
         piece_sprite.set_location(piece_square.rect.x, piece_square.rect.y);
       }
-
+  
       piece_sprite.draw();
-    }
+  }
 
     next_frame().await
   }
