@@ -13,7 +13,7 @@ const RIGHT_FILE: u64 = 0x8080808080808080;
 const RANK_SHIFT: i32 = 8; // value to shift if you want to move ranks
 const FILE_SHIFT: i32 = 1; // value to shift if you want to move files
 
-fn pawn_moves(bitboard: u64, friendly_bitboard: u64, enemy_bitboard: u64, is_white: bool)  -> u64 { // TODO: promotion
+fn pawn_moves(bitboard: u64, friendly_bitboard: u64, enemy_bitboard: u64, is_white: bool)  -> u64 { // TODO: promotion, en_passent
   let all_pieces = friendly_bitboard | enemy_bitboard;
   let mut moves: u64 = 0;
   let mut attacks: u64 = 0;
@@ -54,6 +54,23 @@ fn bits_to_indices(bitboard: &u64) -> Vec<i32> {
   indices
 }
 
+pub struct Move {
+  start_square: i32,
+  end_square: i32,
+  moved_piece: PieceType,
+  is_capture: bool,
+  // add other flags later
+}
+impl Move {
+  pub fn new(move_start_square: i32, move_end_square: i32, piece: PieceType, is_move_capture: bool) -> Self {
+    Self {
+      start_square: move_start_square,
+      end_square: move_end_square,
+      moved_piece: piece,
+      is_capture: is_move_capture
+    }
+  }
+}
 pub struct Board {
   bitboards: [u64; 12], // TODO: highlighted squares
   // add other flags when needed
@@ -112,6 +129,13 @@ impl Board {
     }
   }
 
+  pub fn make_move(&mut self, move_to_make: Move) { // move is a keyword in rust for some reason
+    let new_piece_bitboard = 1 << move_to_make.end_square;
+    let curr_piece_bitboard = 1 << move_to_make.start_square;
+
+    self.bitboards[move_to_make.moved_piece as usize] ^= curr_piece_bitboard | new_piece_bitboard;
+  }
+
   fn all_white_pieces(&self) -> u64 {
     self.bitboards[PieceType::WhiteKing as usize] | self.bitboards[PieceType::WhiteQueen as usize] | self.bitboards[PieceType::WhiteBishop as usize] | self.bitboards[PieceType::WhiteKnight as usize] | self.bitboards[PieceType::WhiteRook as usize] | self.bitboards[PieceType::WhitePawn as usize]
   }
@@ -123,6 +147,10 @@ impl Board {
     match piece_type {
       PieceType::WhitePawn => {
         let moves = pawn_moves(bitboard, self.all_white_pieces(), self.all_black_pieces(), true);
+        return bits_to_indices(&moves);
+      },
+      PieceType::BlackPawn => {
+        let moves = pawn_moves(bitboard, self.all_white_pieces(), self.all_black_pieces(), false);
         return bits_to_indices(&moves);
       },
       _ => {

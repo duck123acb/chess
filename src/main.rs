@@ -3,6 +3,7 @@ mod rendering;
 mod board;
 mod utils;
 
+use board::Move;
 /* IMPORTS */
 use rendering::piece_sprite::*;
 use rendering::square::*;
@@ -13,7 +14,7 @@ use macroquad::prelude::*;
 
 #[macroquad::main(window_conf)]
 async fn main() {
-  let board = Board::new("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+  let mut board = Board::new("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
   let texture_atlas = load_texture(TEXTURE_PATH).await.unwrap();
 
@@ -67,11 +68,11 @@ async fn main() {
         let (mouse_x, mouse_y) = mouse_position();
         piece_sprite.set_location_center(mouse_x, mouse_y);
 
-        let piece_bitboard = 1 << piece_sprite.square;
-        let piece_moves = board.get_legal_moves(piece_bitboard, piece_sprite.piece_type);
+        let piece_moves = board.get_legal_moves(1 << piece_sprite.square, piece_sprite.piece_type);
         let mouse_square_index = squares.iter().position(|&r| r == mouse_square).unwrap() as i32;
 
-        if piece_moves.contains(&mouse_square_index) {
+        if piece_moves.contains(&mouse_square_index) { // TODO: update mouse square on mouseup
+          board.make_move(Move::new(piece_sprite.square, mouse_square_index, piece_sprite.piece_type, false));
           piece_sprite.square = mouse_square_index;
         }
       }
