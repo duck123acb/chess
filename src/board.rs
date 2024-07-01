@@ -45,7 +45,7 @@ fn pawn_moves(bitboard: u64, friendly_bitboard: u64, enemy_bitboard: u64, is_whi
   moves
 }
 
-fn bits_to_indices(bitboard: &u64) -> Vec<i32> {
+pub fn bits_to_indices(bitboard: &u64) -> Vec<i32> {
   let mut indices = Vec::new();
   for i in 0..64 {
     if *bitboard & (1 << i) != 0 {

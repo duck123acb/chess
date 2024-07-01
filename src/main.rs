@@ -3,6 +3,8 @@ mod rendering;
 mod board;
 mod utils;
 
+use std::ops::Index;
+
 /* IMPORTS */
 use rendering::piece_sprite::*;
 use rendering::square::*;
@@ -21,10 +23,9 @@ async fn main() {
   let mut mouse_square = Square::default();
 
   let mut piece_sprites: Vec<PieceSprite> = Vec::new();
-  let bitboards = board.get_bitboards();
   for piece_type in PieceType::iter() {
     for i in 0..64 {
-      let bitboard = bitboards[piece_type as usize];
+      let bitboard = board.get_bitboards()[piece_type as usize];
       if bitboard & (1 << i) != 0 {
         let new_piece = PieceSprite::new(squares[0].rect.w, &texture_atlas, piece_type, i);
         piece_sprites.push(new_piece);
@@ -59,8 +60,9 @@ async fn main() {
       square.draw();
     }
 
+    let mut piecesprites_to_remove: Vec<usize> = Vec::new();
     piece_sprites.sort_by(|a, b| a.mouse_on_sprite.cmp(&b.mouse_on_sprite)); // sorts the list so that the pieces that are affected by the mouse are last. this ensures that they are drawn on top of the other pieces
-    for piece_sprite in piece_sprites.iter_mut() {
+    for (i, piece_sprite) in piece_sprites.iter_mut().enumerate() {
       piece_sprite.handle_mousedown();
   
       if piece_sprite.mouse_on_sprite {
@@ -75,19 +77,33 @@ async fn main() {
 
         if piece_moves.contains(&mouse_square_index) {
           board.make_move(Move::new(piece_sprite.square, mouse_square_index, piece_sprite.piece_type, false));
-          piece_sprite.square = mouse_square_index;
         }
 
         piece_sprite.moved_piece = false;
       }
   
       else if piece_sprite.square != -1 {
+        let piecetype_squares = bits_to_indices(&board.get_bitboards()[piece_sprite.piece_type as usize]);
+        if !piecetype_squares.contains(&piece_sprite.square) { // if the piece doesnt exist there, add it to a vector to be removed
+          piecesprites_to_remove.push(i);
+        }
+
         let piece_square = squares[piece_sprite.square as usize];
         piece_sprite.set_location(piece_square.rect.x, piece_square.rect.y);
       }
 
+      if piecesprites_to_remove.contains(&i) { // if it's gonna be removed, dont draw it
+        continue;
+      }
       piece_sprite.draw();
-  }
+    }
+
+    for &index in piecesprites_to_remove.iter().rev() { // remove the piece_sprites that are needed to remove
+      piece_sprites.remove(index);
+    }
+    // for all bitboards
+    // if the bit is not contained in the piecetype vector
+    // add the piece
 
     next_frame().await
   }
