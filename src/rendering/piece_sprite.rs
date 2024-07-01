@@ -19,8 +19,8 @@ fn draw_from_atlas(atlas: &Texture2D, sprite_rect: Rect, texture_mask: Rect) {
 pub struct PieceSprite {
   rect: Rect,
   texture: Texture2D,
-  piece_type: PieceType,
   
+  pub piece_type: PieceType,
   pub square: i32,
   pub mouse_on_sprite: bool
 }

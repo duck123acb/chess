@@ -13,7 +13,7 @@ const RIGHT_FILE: u64 = 0x8080808080808080;
 const RANK_SHIFT: i32 = 8; // value to shift if you want to move ranks
 const FILE_SHIFT: i32 = 1; // value to shift if you want to move files
 
-fn pawn_moves(bitboard: u64, friendly_bitboard: u64, enemy_bitboard: u64, is_white: bool)  -> u64 { // TODO: captures, promotion
+fn pawn_moves(bitboard: u64, friendly_bitboard: u64, enemy_bitboard: u64, is_white: bool)  -> u64 { // TODO: promotion
   let all_pieces = friendly_bitboard | enemy_bitboard;
   let mut moves: u64 = 0;
   let mut attacks: u64 = 0;
@@ -55,7 +55,7 @@ fn bits_to_indices(bitboard: &u64) -> Vec<i32> {
 }
 
 pub struct Board {
-  bitboards: [u64; 12],
+  bitboards: [u64; 12], // TODO: highlighted squares
   // add other flags when needed
 }
 impl Board {
@@ -126,8 +126,7 @@ impl Board {
         return bits_to_indices(&moves);
       },
       _ => {
-        println!("uh oh");
-        return Vec::from([-1]);
+        panic!("Piece type not found");
       }
     }
   }

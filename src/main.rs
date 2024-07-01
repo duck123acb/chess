@@ -67,8 +67,13 @@ async fn main() {
         let (mouse_x, mouse_y) = mouse_position();
         piece_sprite.set_location_center(mouse_x, mouse_y);
 
+        let piece_bitboard = 1 << piece_sprite.square;
+        let piece_moves = board.get_legal_moves(piece_bitboard, piece_sprite.piece_type);
         let mouse_square_index = squares.iter().position(|&r| r == mouse_square).unwrap() as i32;
-        piece_sprite.square = mouse_square_index; // if square is in pieces' legal moves, then do this
+
+        if piece_moves.contains(&mouse_square_index) {
+          piece_sprite.square = mouse_square_index;
+        }
       }
       else {
         if piece_sprite.square == -1 {
