@@ -71,7 +71,6 @@ async fn main() {
       }
   
       else if piece_sprite.moved_piece && is_mouse_button_released(MouseButton::Left) {
-        println!("hi");
         let piece_moves = board.get_legal_moves(1 << piece_sprite.square, piece_sprite.piece_type);
         let mouse_square_index = squares.iter().position(|&r| r == mouse_square).unwrap() as i32;
 
