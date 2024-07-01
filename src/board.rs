@@ -34,8 +34,6 @@ fn pawn_moves(bitboard: u64, friendly_bitboard: u64, enemy_bitboard: u64, is_whi
     attacks |= bitboard >> (RANK_SHIFT - 1) | bitboard >> (RANK_SHIFT + 1);
   }
 
-  println!("{:b}", attacks);
-
   moves ^= all_pieces & moves; // removes squares where another piece is. doesnt affect the pawn attacks
   attacks ^= attacks & friendly_bitboard; // removes attacks on friendly pieces
   if attacks & all_pieces == 0 { // if the pawn attacks nothing
