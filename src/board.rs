@@ -24,8 +24,8 @@ fn pawn_moves(bitboard: u64, friendly_bitboard: u64, enemy_bitboard: u64, is_whi
       moves |= bitboard << (RANK_SHIFT * 2);
     }
 
-    attacks |= bitboard << (RANK_SHIFT - 1) | bitboard >> (RANK_SHIFT + 1);
-  } else {
+    attacks |= bitboard << (RANK_SHIFT - 1) | bitboard << (RANK_SHIFT + 1);
+  } else { // black pawns cant capture things?
     moves |= bitboard >> RANK_SHIFT;
     if bitboard & (TOP_RANK >> RANK_SHIFT) != 0 { // if pawn is on 7th rank
       moves |= bitboard >> (RANK_SHIFT * 2);
@@ -34,6 +34,8 @@ fn pawn_moves(bitboard: u64, friendly_bitboard: u64, enemy_bitboard: u64, is_whi
     attacks |= bitboard >> (RANK_SHIFT - 1) | bitboard >> (RANK_SHIFT + 1);
   }
 
+  println!("{:b}", attacks);
+
   moves ^= all_pieces & moves; // removes squares where another piece is. doesnt affect the pawn attacks
   attacks ^= attacks & friendly_bitboard; // removes attacks on friendly pieces
   if attacks & all_pieces == 0 { // if the pawn attacks nothing
@@ -41,7 +43,6 @@ fn pawn_moves(bitboard: u64, friendly_bitboard: u64, enemy_bitboard: u64, is_whi
   }
 
   moves |= attacks;
-  println!("{:b}", moves);
 
   moves
 }
@@ -152,7 +153,7 @@ impl Board {
         return bits_to_indices(&moves);
       },
       PieceType::BlackPawn => {
-        let moves = pawn_moves(bitboard, self.all_white_pieces(), self.all_black_pieces(), false);
+        let moves = pawn_moves(bitboard, self.all_black_pieces(), self.all_white_pieces(), false);
         return bits_to_indices(&moves);
       },
       _ => {

@@ -11,7 +11,7 @@ use utils::window_conf;
 use utils::PieceType;
 use macroquad::prelude::*;
 
-#[macroquad::main(window_conf)]
+#[macroquad::main(window_conf)] // TODO: draw pieces from the bitboards
 async fn main() {
   let mut board = Board::new("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
