@@ -17,13 +17,14 @@ fn draw_from_atlas(atlas: &Texture2D, sprite_rect: Rect, texture_mask: Rect) {
 
 
 pub struct PieceSprite {
-  rect: Rect,
   texture: Texture2D,
   
+  pub rect: Rect,
   pub piece_type: PieceType,
   pub square: i32,
   pub mouse_on_sprite: bool,
-  pub moved_piece: bool
+  pub moved_piece: bool,
+  pub attacked_piece: bool
 }
 impl PieceSprite {
   pub fn new(sprite_size: f32, sprite_texture: &Texture2D, sprite_type: PieceType, sprite_square: i32) -> Self {
@@ -33,7 +34,8 @@ impl PieceSprite {
       piece_type: sprite_type,
       square: sprite_square,
       mouse_on_sprite: false,
-      moved_piece: false
+      moved_piece: false,
+      attacked_piece: false,
     }
   }
   fn get_sprite_coords(key: &PieceType) -> (i32, i32) { // retufns coordinates of sprite on the atlas
@@ -56,8 +58,7 @@ impl PieceSprite {
 
   pub fn handle_mousedown(&mut self) {
     if is_mouse_button_pressed(MouseButton::Left) && !self.mouse_on_sprite { 
-      let mouse_pos = mouse_position().into();
-      self.mouse_on_sprite = contains(self.rect, mouse_pos);
+      self.mouse_on_sprite = contains(self.rect, mouse_position().into());
     }
     if is_mouse_button_released(MouseButton::Left) && self.mouse_on_sprite {
       self.mouse_on_sprite = false;

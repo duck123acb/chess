@@ -58,20 +58,30 @@ pub fn bits_to_indices(bitboard: &u64) -> Vec<i32> {
 pub struct Move {
   start_square: i32,
   end_square: i32,
-  moved_piece: PieceType,
-  is_capture: bool,
+  moved_piece_type: PieceType,
+  captured_piece_type: Option<PieceType>,
   // add other flags later
 }
 impl Move {
-  pub fn new(move_start_square: i32, move_end_square: i32, piece: PieceType, is_move_capture: bool) -> Self {
+  pub fn new(move_start_square: i32, move_end_square: i32, piece: PieceType, piece_captured: Option<PieceType>) -> Self {
     Self {
       start_square: move_start_square,
       end_square: move_end_square,
-      moved_piece: piece,
-      is_capture: is_move_capture
+      moved_piece_type: piece,
+      captured_piece_type: piece_captured
     }
   }
+
+  pub fn print(&self) {
+    println!("({}, {})", self.start_square, self.end_square)
+  }
 }
+impl PartialEq for Move {
+  fn eq(&self, other: &Self) -> bool {
+    self.start_square == other.start_square && self.end_square == other.end_square
+  }
+}
+
 pub struct Board {
   bitboards: [u64; 12], // TODO: highlighted squares
   // add other flags when needed
@@ -130,11 +140,41 @@ impl Board {
     }
   }
 
+  pub fn generate_moves(&self, piece_bitboard: &u64, moves_bitboard: &u64, piece_type: PieceType) -> Vec<Move>{
+    let mut moves: Vec<Move> = Vec::new();
+    let mut piece_square = 0;
+    for i in 0..64 {
+      if piece_bitboard & 1 << i != 0 {
+        piece_square = i as i32;
+        break;
+      }
+    }
+
+    for square in bits_to_indices(moves_bitboard) {
+      let mut new_move = Move::new(piece_square, square, piece_type, None);
+
+      for piece_type in PieceType::iter() {
+        if self.bitboards[piece_type as usize] & 1 << square != 0 { // if the square already has something on it
+          new_move.captured_piece_type = Some(piece_type);
+        }
+      }
+
+      moves.push(new_move);
+    }
+
+    moves
+  }
+
   pub fn make_move(&mut self, move_to_make: Move) { // move is a keyword in rust for some reason
     let new_piece_bitboard = 1 << move_to_make.end_square;
     let curr_piece_bitboard = 1 << move_to_make.start_square;
 
-    self.bitboards[move_to_make.moved_piece as usize] ^= curr_piece_bitboard | new_piece_bitboard;
+    self.bitboards[move_to_make.moved_piece_type as usize] ^= curr_piece_bitboard | new_piece_bitboard;
+
+
+    if let Some(piece_type) = move_to_make.captured_piece_type {
+      self.bitboards[piece_type as usize] ^= new_piece_bitboard;
+    }
   }
 
   fn all_white_pieces(&self) -> u64 {
@@ -144,24 +184,25 @@ impl Board {
     self.bitboards[PieceType::BlackKing as usize] | self.bitboards[PieceType::BlackQueen as usize] | self.bitboards[PieceType::BlackBishop as usize] | self.bitboards[PieceType::BlackKnight as usize] | self.bitboards[PieceType::BlackRook as usize] | self.bitboards[PieceType::BlackPawn as usize]
   }
 
-  pub fn get_legal_moves(&self, bitboard: u64, piece_type: PieceType) -> Vec<i32> {
+  pub fn get_legal_moves(&self, bitboard: u64, piece_type: PieceType) -> Vec<Move> {
+    let mut moves = 0;
     match piece_type {
       PieceType::WhitePawn => {
-        let moves = pawn_moves(bitboard, self.all_white_pieces(), self.all_black_pieces(), true);
-        return bits_to_indices(&moves);
+        moves = pawn_moves(bitboard, self.all_white_pieces(), self.all_black_pieces(), true);
       },
       PieceType::BlackPawn => {
-        let moves = pawn_moves(bitboard, self.all_black_pieces(), self.all_white_pieces(), false);
-        return bits_to_indices(&moves);
+        moves = pawn_moves(bitboard, self.all_black_pieces(), self.all_white_pieces(), false);
       },
       _ => {
         panic!("Piece type not found");
       }
     }
+
+    self.generate_moves(&bitboard, &moves, piece_type)
   }
 
   pub fn get_bitboards(&self) -> [u64; 12] {
-    return  self.bitboards;
+    self.bitboards
   }
 
   // DEBUGING
