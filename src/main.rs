@@ -68,13 +68,13 @@ async fn main() {
         captured_piece = Some(piece_sprite.piece_type);
       }
       
-      if piece_sprite.mouse_on_sprite {
+      if piece_sprite.mouse_on_sprite { // move the sprite based on where the mouse is
         piece_sprite.moved_piece = true;
         let (mouse_x, mouse_y) = mouse_position();
         piece_sprite.set_location_center(mouse_x, mouse_y);
       }
 
-      else if piece_sprite.moved_piece && is_mouse_button_released(MouseButton::Left) {
+      else if piece_sprite.moved_piece && is_mouse_button_released(MouseButton::Left) { // make a mov
         if let Some(piece_type) = captured_piece {
           if piece_type as usize == piece_sprite.piece_type as usize { // if the captured piece is the same as the piece making the move
             captured_piece = None; // it's not actually the captured pieces
@@ -92,7 +92,7 @@ async fn main() {
         piece_sprite.moved_piece = false;
       }
   
-      else if piece_sprite.square != -1 {
+      else if piece_sprite.square != -1 { // set the sprites locations to the square
         let piecetype_squares = bits_to_indices(&board.get_bitboards()[piece_sprite.piece_type as usize]);
         if !piecetype_squares.contains(&piece_sprite.square) { // if the piece doesnt exist there, add it to a vector to be removed
           piecesprites_to_remove.push(i);
@@ -102,6 +102,7 @@ async fn main() {
         piece_sprite.set_location(piece_square.rect.x, piece_square.rect.y);
       }
 
+      
       if piecesprites_to_remove.contains(&i) { // if it's gonna be removed, dont draw it
         continue;
       }
