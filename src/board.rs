@@ -24,14 +24,25 @@ fn pawn_moves(bitboard: u64, friendly_bitboard: u64, enemy_bitboard: u64, is_whi
       moves |= bitboard << (RANK_SHIFT * 2);
     }
 
-    attacks |= bitboard << (RANK_SHIFT - 1) | bitboard << (RANK_SHIFT + 1);
+    if bitboard & LEFT_FILE == 0 { // if piece is not on the left file
+      attacks |= bitboard << (RANK_SHIFT - 1)
+    }
+    if bitboard & RIGHT_FILE == 0 { // if piece is not on the right file
+      attacks |= bitboard << (RANK_SHIFT + 1);
+    }
   } else { // black pawns cant capture things?
     moves |= bitboard >> RANK_SHIFT;
     if bitboard & (TOP_RANK >> RANK_SHIFT) != 0 { // if pawn is on 7th rank
       moves |= bitboard >> (RANK_SHIFT * 2);
     }
 
-    attacks |= bitboard >> (RANK_SHIFT - 1) | bitboard >> (RANK_SHIFT + 1);
+    if bitboard & LEFT_FILE == 0 { // if piece is not on the left file
+      attacks |= bitboard >> (RANK_SHIFT + 1)
+    }
+    if bitboard & RIGHT_FILE == 0 { // if piece is not on the right file
+      attacks |= bitboard >> (RANK_SHIFT - 1);
+    }
+
   }
 
   moves ^= all_pieces & moves; // removes squares where another piece is. doesnt affect the pawn attacks
