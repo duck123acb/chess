@@ -50,8 +50,8 @@ fn pawn_moves(bitboard: u64, friendly_bitboard: u64, enemy_bitboard: u64, is_whi
     attacks = 0; // attacks mean nothing
   }
 
-  moves |= attacks;
 
+  moves |= attacks;
   moves
 }
 
