@@ -77,7 +77,7 @@ async fn main() {
       else if piece_sprite.moved_piece && is_mouse_button_released(MouseButton::Left) { // make a mov
         if let Some(piece_type) = captured_piece {
           if piece_type as usize == piece_sprite.piece_type as usize { // if the captured piece is the same as the piece making the move
-            captured_piece = None; // it's not actually the captured pieces
+            captured_piece = None; // it's not actually the captured piece
           }
         }
 

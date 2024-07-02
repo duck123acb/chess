@@ -55,6 +55,37 @@ fn pawn_moves(bitboard: u64, friendly_bitboard: u64, enemy_bitboard: u64, is_whi
   moves
 }
 
+fn knight_moves(bitboard: &u64) -> u64 {
+  let mut moves = 0;
+
+  if (bitboard & TOP_RANK == 0) && (bitboard & (LEFT_FILE | (LEFT_FILE >> FILE_SHIFT)) == 0) { // if not on top rank AND if not on the two left-most files
+    moves |= bitboard << 6; // up left left
+  }
+  if (bitboard & (TOP_RANK & (TOP_RANK >> RANK_SHIFT)) == 0) && (bitboard & LEFT_FILE == 0) { // if not on the two top-most ranks AND if not on the left file
+    moves |= bitboard << 15; // up up left
+  }
+  if (bitboard & (TOP_RANK & (TOP_RANK >> RANK_SHIFT)) == 0) && (bitboard & RIGHT_FILE == 0) { // if not on the two top-most ranks AND if not on the right file
+    moves |= bitboard << 17; // up up right
+  }
+  if (bitboard & TOP_RANK == 0) && (bitboard & (RIGHT_FILE | (RIGHT_FILE << FILE_SHIFT)) == 0) { // if not on top rank AND if not on the two right-most files
+    moves |= bitboard << 10; // up right right
+  }
+  if (bitboard & BOTTOM_RANK == 0) && (bitboard & (RIGHT_FILE | (RIGHT_FILE << FILE_SHIFT)) == 0) { // if not on bottom rank AND if not on the two right-most files
+    moves |= bitboard >> 6; // down right right
+  }
+  if (bitboard & (BOTTOM_RANK & (BOTTOM_RANK << RANK_SHIFT)) == 0) && (bitboard & RIGHT_FILE == 0) { // if not on the two bottom-most ranks AND if not on the right file
+    moves |= bitboard >> 15; // down down right
+  }
+  if (bitboard & (BOTTOM_RANK & (BOTTOM_RANK << RANK_SHIFT)) == 0) && (bitboard & LEFT_FILE == 0) { // if not on the two bottom-most ranks AND if not on the left file
+    moves |= bitboard >> 17; // down down left
+  }
+  if (bitboard & BOTTOM_RANK == 0) && (bitboard & (LEFT_FILE | (LEFT_FILE >> FILE_SHIFT)) == 0) { // if not on bottom rank AND if not on the two left-most files
+    moves |= bitboard >> 10; // down left left
+  }
+
+  moves
+}
+
 pub fn bits_to_indices(bitboard: &u64) -> Vec<i32> {
   let mut indices = Vec::new();
   for i in 0..64 {
@@ -203,6 +234,9 @@ impl Board {
       },
       PieceType::BlackPawn => {
         moves = pawn_moves(bitboard, self.all_black_pieces(), self.all_white_pieces(), false);
+      },
+      PieceType::WhiteKnight | PieceType::BlackKnight => {
+        moves = knight_moves(&bitboard);
       },
       _ => {
         panic!("Piece type not found");
