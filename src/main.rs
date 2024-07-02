@@ -3,8 +3,6 @@ mod rendering;
 mod board;
 mod utils;
 
-use std::ops::Index;
-
 /* IMPORTS */
 use rendering::piece_sprite::*;
 use rendering::square::*;
@@ -25,8 +23,7 @@ async fn main() {
   let mut piece_sprites: Vec<PieceSprite> = Vec::new();
   for piece_type in PieceType::iter() {
     for i in 0..64 {
-      let bitboard = board.get_bitboards()[piece_type as usize];
-      if bitboard & (1 << i) != 0 {
+      if board.get_bitboards()[piece_type as usize] & (1 << i) != 0 {
         let new_piece = PieceSprite::new(squares[0].rect.w, &texture_atlas, piece_type, i);
         piece_sprites.push(new_piece);
       }
@@ -101,9 +98,17 @@ async fn main() {
     for &index in piecesprites_to_remove.iter().rev() { // remove the piece_sprites that are needed to remove
       piece_sprites.remove(index);
     }
-    // for all bitboards
-    // if the bit is not contained in the piecetype vector
-    // add the piece
+
+    for piece_type in PieceType::iter() { // add the piece if it doesnt exist
+      let piecetype_squares = bits_to_indices(&board.get_bitboards()[piece_type as usize]);
+  
+      for square_index in piecetype_squares {
+        if !piece_sprites.iter().any(|sprite| sprite.square == square_index && sprite.piece_type as usize == piece_type as usize) { // if the piece doesnt exist
+          let new_piece_sprite: PieceSprite = PieceSprite::new(squares[0].rect.w, &texture_atlas, piece_type, square_index);
+          piece_sprites.push(new_piece_sprite);
+        }
+      }
+    }
 
     next_frame().await
   }
