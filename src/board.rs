@@ -185,7 +185,8 @@ impl Board {
   }
 
   pub fn get_legal_moves(&self, bitboard: u64, piece_type: PieceType) -> Vec<Move> {
-    let mut moves = 0;
+    let moves;
+
     match piece_type {
       PieceType::WhitePawn => {
         moves = pawn_moves(bitboard, self.all_white_pieces(), self.all_black_pieces(), true);
