@@ -13,7 +13,7 @@ const RIGHT_FILE: u64 = 0x0101010101010101;
 const RANK_SHIFT: i32 = 8; // value to shift if you want to move ranks
 const FILE_SHIFT: i32 = 1; // value to shift if you want to move files
 
-fn pawn_moves(bitboard: u64, friendly_bitboard: u64, enemy_bitboard: u64, is_white: bool)  -> u64 { // TODO: promotion, en_passent
+fn pawn_moves(bitboard: &u64, friendly_bitboard: &u64, enemy_bitboard: &u64, is_white: bool)  -> u64 { // TODO: promotion, en_passent
   let all_pieces = friendly_bitboard | enemy_bitboard;
   let mut moves: u64 = 0;
   let mut attacks: u64 = 0;
@@ -55,7 +55,7 @@ fn pawn_moves(bitboard: u64, friendly_bitboard: u64, enemy_bitboard: u64, is_whi
   moves
 }
 
-fn knight_moves(bitboard: &u64) -> u64 {
+fn knight_moves(bitboard: &u64, friendly_bitboard: &u64) -> u64 {
   let mut moves = 0;
 
   if (bitboard & TOP_RANK == 0) && (bitboard & (LEFT_FILE | (LEFT_FILE >> FILE_SHIFT)) == 0) { // if not on top rank AND if not on the two left-most files\
@@ -83,6 +83,11 @@ fn knight_moves(bitboard: &u64) -> u64 {
     moves |= bitboard >> 6; // down left left
   }
   
+  let false_attacks = moves & friendly_bitboard;
+  if false_attacks != 0 {
+    moves ^= false_attacks;
+  }
+
   moves
 }
 
@@ -235,13 +240,16 @@ impl Board {
 
     match piece_type {
       PieceType::WhitePawn => {
-        moves = pawn_moves(bitboard, self.all_white_pieces(), self.all_black_pieces(), true);
+        moves = pawn_moves(&bitboard, &self.all_white_pieces(), &self.all_black_pieces(), true);
       },
       PieceType::BlackPawn => {
-        moves = pawn_moves(bitboard, self.all_black_pieces(), self.all_white_pieces(), false);
+        moves = pawn_moves(&bitboard, &self.all_black_pieces(), &self.all_white_pieces(), false);
       },
-      PieceType::WhiteKnight | PieceType::BlackKnight => {
-        moves = knight_moves(&bitboard);
+      PieceType::WhiteKnight => {
+        moves = knight_moves(&bitboard, &self.all_white_pieces());
+      },
+      PieceType::BlackKnight => {
+        moves = knight_moves(&bitboard, &self.all_black_pieces());
       },
       _ => {
         panic!("Piece type not found");
