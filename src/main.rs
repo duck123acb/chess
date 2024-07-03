@@ -37,7 +37,7 @@ async fn main() {
   for i in 0..64 {
     squares[i].set_location(x as f32 * squares[i].rect.w, y as f32 * squares[i].rect.w);
     if (x + y) % 2 == 0 {
-      squares[i].set_colour(DARKSQUARE);
+      squares[i].set_colour(LIGHTSQUARE);
     }
 
     x -= 1;

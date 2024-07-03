@@ -17,7 +17,7 @@ impl Square {
     }
   }
   pub fn default() -> Self {
-    Square::new(0.0, 0.0, screen_width() / 8.0, LIGHTSQUARE)
+    Square::new(0.0, 0.0, screen_width() / 8.0, DARKSQUARE)
   }
 
   pub fn handle_mouseover(&self) -> bool {
