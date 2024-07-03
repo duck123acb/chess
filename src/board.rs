@@ -8,7 +8,7 @@ use crate::utils::PieceType;
 const TOP_RANK: u64 = 0xFF00000000000000;
 const BOTTOM_RANK: u64 = 0x00000000000000FF;
 const LEFT_FILE: u64 = 0x8080808080808080;
-const RIGHT_FILE: u64 = 0x0101010101010101; 
+const RIGHT_FILE: u64 = 0x0101010101010101;
 
 const RANK_SHIFT: i32 = 8; // value to shift if you want to move ranks
 const FILE_SHIFT: i32 = 1; // value to shift if you want to move files
@@ -24,10 +24,10 @@ fn pawn_moves(bitboard: u64, friendly_bitboard: u64, enemy_bitboard: u64, is_whi
       moves |= bitboard << (RANK_SHIFT * 2);
     }
 
-    if bitboard & RIGHT_FILE == 0 { // if piece is not on the left file
+    if bitboard & LEFT_FILE == 0 { // if piece is not on the left file
       attacks |= bitboard << (RANK_SHIFT - 1)
     }
-    if bitboard & LEFT_FILE == 0 { // if piece is not on the right file
+    if bitboard & RIGHT_FILE == 0 { // if piece is not on the right file
       attacks |= bitboard << (RANK_SHIFT + 1);
     }
   } else {
@@ -36,10 +36,10 @@ fn pawn_moves(bitboard: u64, friendly_bitboard: u64, enemy_bitboard: u64, is_whi
       moves |= bitboard >> (RANK_SHIFT * 2);
     }
 
-    if bitboard & RIGHT_FILE == 0 { // if piece is not on the left file
+    if bitboard & LEFT_FILE == 0 { // if piece is not on the left file
       attacks |= bitboard >> (RANK_SHIFT + 1)
     }
-    if bitboard & LEFT_FILE == 0 { // if piece is not on the right file
+    if bitboard & RIGHT_FILE == 0 { // if piece is not on the right file
       attacks |= bitboard >> (RANK_SHIFT - 1);
     }
   }
@@ -59,6 +59,7 @@ fn knight_moves(bitboard: &u64) -> u64 {
   let mut moves = 0;
 
   if (bitboard & TOP_RANK == 0) && (bitboard & (LEFT_FILE | (LEFT_FILE >> FILE_SHIFT)) == 0) { // if not on top rank AND if not on the two left-most files
+    
     moves |= bitboard << 6; // up left left
   }
   if (bitboard & (TOP_RANK & (TOP_RANK >> RANK_SHIFT)) == 0) && (bitboard & LEFT_FILE == 0) { // if not on the two top-most ranks AND if not on the left file
@@ -177,7 +178,7 @@ impl Board {
         },
         'P' | 'N' | 'B' | 'R' | 'K' | 'Q' | 'p' | 'n' | 'b' | 'r' | 'k' | 'q' => {
           let bitboard_type = char_to_piecetype[&c];
-          let square_index = y * 8 + x; // oh my god this line of code took me like 30 minutes to figure out holy what the muffin | this isnt a really useful comment but it's kinda funny in my opinion
+          let square_index = y * 8 + (7 - x); // oh my god this line of code took me like 30 minutes to figure out holy what the muffin | this isnt a really useful comment but it's kinda funny in my opinion
           self.bitboards[bitboard_type as usize] |= (1 << square_index);
           x += 1;
         },
