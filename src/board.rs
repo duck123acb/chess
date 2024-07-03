@@ -96,6 +96,7 @@ fn king_moves(bitboard: &u64, friendly_bitboard: &u64) -> u64 {
 
   if bitboard & TOP_RANK == 0 { // if not on the top of the board
     moves |= bitboard << RANK_SHIFT; // up
+    
     if bitboard & RIGHT_FILE == 0 { // if not on the right of the board
       moves |= bitboard << RANK_SHIFT - 1; // up right
     }
@@ -105,6 +106,7 @@ fn king_moves(bitboard: &u64, friendly_bitboard: &u64) -> u64 {
   }
   if bitboard & BOTTOM_RANK == 0 { // if not on the bottom of the board
     moves |= bitboard >> RANK_SHIFT; // down
+
     if bitboard & LEFT_FILE == 0 { // if not on the left of the board
       moves |= bitboard >> RANK_SHIFT - 1; // down left
     }
