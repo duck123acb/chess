@@ -24,10 +24,10 @@ fn pawn_moves(bitboard: u64, friendly_bitboard: u64, enemy_bitboard: u64, is_whi
       moves |= bitboard << (RANK_SHIFT * 2);
     }
 
-    if bitboard & LEFT_FILE == 0 { // if piece is not on the left file
+    if bitboard & RIGHT_FILE == 0 { // if piece is not on the left file
       attacks |= bitboard << (RANK_SHIFT - 1)
     }
-    if bitboard & RIGHT_FILE == 0 { // if piece is not on the right file
+    if bitboard & LEFT_FILE == 0 { // if piece is not on the right file
       attacks |= bitboard << (RANK_SHIFT + 1);
     }
   } else {
@@ -36,10 +36,10 @@ fn pawn_moves(bitboard: u64, friendly_bitboard: u64, enemy_bitboard: u64, is_whi
       moves |= bitboard >> (RANK_SHIFT * 2);
     }
 
-    if bitboard & LEFT_FILE == 0 { // if piece is not on the left file
+    if bitboard & RIGHT_FILE == 0 { // if piece is not on the left file
       attacks |= bitboard >> (RANK_SHIFT + 1)
     }
-    if bitboard & RIGHT_FILE == 0 { // if piece is not on the right file
+    if bitboard & LEFT_FILE == 0 { // if piece is not on the right file
       attacks |= bitboard >> (RANK_SHIFT - 1);
     }
   }
@@ -59,7 +59,6 @@ fn knight_moves(bitboard: &u64) -> u64 {
   let mut moves = 0;
 
   if (bitboard & TOP_RANK == 0) && (bitboard & (LEFT_FILE | (LEFT_FILE >> FILE_SHIFT)) == 0) { // if not on top rank AND if not on the two left-most files
-    
     moves |= bitboard << 6; // up left left
   }
   if (bitboard & (TOP_RANK & (TOP_RANK >> RANK_SHIFT)) == 0) && (bitboard & LEFT_FILE == 0) { // if not on the two top-most ranks AND if not on the left file
