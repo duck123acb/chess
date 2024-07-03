@@ -7,8 +7,8 @@ use crate::utils::PieceType;
 // from white's perspective
 const TOP_RANK: u64 = 0xFF00000000000000;
 const BOTTOM_RANK: u64 = 0x00000000000000FF;
-const LEFT_FILE: u64 = 0x0101010101010101;
-const RIGHT_FILE: u64 = 0x8080808080808080;
+const LEFT_FILE: u64 = 0x8080808080808080;
+const RIGHT_FILE: u64 = 0x0101010101010101; 
 
 const RANK_SHIFT: i32 = 8; // value to shift if you want to move ranks
 const FILE_SHIFT: i32 = 1; // value to shift if you want to move files
@@ -24,10 +24,10 @@ fn pawn_moves(bitboard: u64, friendly_bitboard: u64, enemy_bitboard: u64, is_whi
       moves |= bitboard << (RANK_SHIFT * 2);
     }
 
-    if bitboard & LEFT_FILE == 0 { // if piece is not on the left file
+    if bitboard & RIGHT_FILE == 0 { // if piece is not on the left file
       attacks |= bitboard << (RANK_SHIFT - 1)
     }
-    if bitboard & RIGHT_FILE == 0 { // if piece is not on the right file
+    if bitboard & LEFT_FILE == 0 { // if piece is not on the right file
       attacks |= bitboard << (RANK_SHIFT + 1);
     }
   } else {
@@ -36,10 +36,10 @@ fn pawn_moves(bitboard: u64, friendly_bitboard: u64, enemy_bitboard: u64, is_whi
       moves |= bitboard >> (RANK_SHIFT * 2);
     }
 
-    if bitboard & LEFT_FILE == 0 { // if piece is not on the left file
+    if bitboard & RIGHT_FILE == 0 { // if piece is not on the left file
       attacks |= bitboard >> (RANK_SHIFT + 1)
     }
-    if bitboard & RIGHT_FILE == 0 { // if piece is not on the right file
+    if bitboard & LEFT_FILE == 0 { // if piece is not on the right file
       attacks |= bitboard >> (RANK_SHIFT - 1);
     }
   }
@@ -100,7 +100,8 @@ pub struct Move {
   start_square: i32,
   end_square: i32,
   moved_piece_type: PieceType,
-  captured_piece_type: Option<PieceType>,
+
+  pub captured_piece_type: Option<PieceType>,
   // add other flags later
 }
 impl Move {
@@ -113,8 +114,12 @@ impl Move {
     }
   }
 
+  pub fn get_end_square(&self) -> i32 {
+    self.end_square
+  }
+
   pub fn print(&self) {
-    println!("({}, {})", self.start_square, self.end_square)
+    println!("({}, {})  {}", self.start_square, self.end_square, self.moved_piece_type as usize);
   }
 }
 impl PartialEq for Move {
@@ -248,10 +253,5 @@ impl Board {
 
   pub fn get_bitboards(&self) -> [u64; 12] {
     self.bitboards
-  }
-
-  // DEBUGING
-  pub fn print(&self, index: PieceType) { //TODO: remove this later
-    println!("{:b}", self.bitboards[index as usize]);
   }
 }
