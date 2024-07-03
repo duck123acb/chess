@@ -95,23 +95,27 @@ fn king_moves(bitboard: &u64, friendly_bitboard: &u64) -> u64 {
   let mut moves = 0;
 
   if bitboard & TOP_RANK == 0 { // if not on the top of the board
-    moves |= bitboard << RANK_SHIFT - 1; // up right
     moves |= bitboard << RANK_SHIFT; // up
-    moves |= bitboard << RANK_SHIFT + 1; // up left
+    if bitboard & RIGHT_FILE == 0 { // if not on the right of the board
+      moves |= bitboard << RANK_SHIFT - 1; // up right
+    }
+    if bitboard & LEFT_FILE == 0 { // if not on the left of the board
+      moves |= bitboard << RANK_SHIFT + 1; // up left
+    }
   }
   if bitboard & BOTTOM_RANK == 0 { // if not on the bottom of the board
-    moves |= bitboard >> RANK_SHIFT - 1; // down left
-    moves |= bitboard >> RANK_SHIFT;  // down
-    moves |= bitboard >> RANK_SHIFT + 1; // down right
+    moves |= bitboard >> RANK_SHIFT; // down
+    if bitboard & LEFT_FILE == 0 { // if not on the left of the board
+      moves |= bitboard >> RANK_SHIFT - 1; // down left
+    }
+    if bitboard & RIGHT_FILE == 0 { // if not on the right of the board
+      moves |= bitboard >> RANK_SHIFT + 1; // down right
+    }
   }
   if bitboard & LEFT_FILE == 0 { // if not on the left of the board
-    moves |= bitboard << RANK_SHIFT + 1; // up left
-    moves |= bitboard >> RANK_SHIFT - 1; // down left
     moves |= bitboard << FILE_SHIFT; // left
   }
   if bitboard & RIGHT_FILE == 0 { // if not on the right of the board
-    moves |= bitboard << RANK_SHIFT - 1; // up right
-    moves |= bitboard >> RANK_SHIFT + 1; // down right
     moves |= bitboard >> FILE_SHIFT; // right
   }
   
