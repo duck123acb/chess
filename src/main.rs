@@ -41,7 +41,7 @@ async fn main() {
     }
 
     x -= 1;
-    if x == -1 {
+    if x < 0 {
       x = 7;
       y -= 1;
     }
