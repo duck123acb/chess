@@ -7,13 +7,13 @@ use crate::utils::PieceType;
 // from white's perspective
 const TOP_RANK: u64 = 0xFF00000000000000;
 const BOTTOM_RANK: u64 = 0x00000000000000FF;
-const LEFT_FILE: u64 = 0x0101010101010101;
-const RIGHT_FILE: u64 = 0x8080808080808080;
+const LEFT_FILE: u64 = 0x8080808080808080;
+const RIGHT_FILE: u64 = 0x0101010101010101;
 
 const RANK_SHIFT: i32 = 8; // value to shift if you want to move ranks
 const FILE_SHIFT: i32 = 1; // value to shift if you want to move files
 
-fn pawn_moves(bitboard: u64, friendly_bitboard: u64, enemy_bitboard: u64, is_white: bool)  -> u64 { // TODO: promotion, en_passent
+fn pawn_moves(bitboard: &u64, friendly_bitboard: &u64, enemy_bitboard: &u64, is_white: bool)  -> u64 { // TODO: promotion, en_passent
   let all_pieces = friendly_bitboard | enemy_bitboard;
   let mut moves: u64 = 0;
   let mut attacks: u64 = 0;
@@ -24,10 +24,10 @@ fn pawn_moves(bitboard: u64, friendly_bitboard: u64, enemy_bitboard: u64, is_whi
       moves |= bitboard << (RANK_SHIFT * 2);
     }
 
-    if bitboard & LEFT_FILE == 0 { // if piece is not on the left file
+    if bitboard & RIGHT_FILE == 0 { // if piece is not on the left file
       attacks |= bitboard << (RANK_SHIFT - 1)
     }
-    if bitboard & RIGHT_FILE == 0 { // if piece is not on the right file
+    if bitboard & LEFT_FILE == 0 { // if piece is not on the right file
       attacks |= bitboard << (RANK_SHIFT + 1);
     }
   } else {
@@ -36,10 +36,10 @@ fn pawn_moves(bitboard: u64, friendly_bitboard: u64, enemy_bitboard: u64, is_whi
       moves |= bitboard >> (RANK_SHIFT * 2);
     }
 
-    if bitboard & LEFT_FILE == 0 { // if piece is not on the left file
+    if bitboard & RIGHT_FILE == 0 { // if piece is not on the left file
       attacks |= bitboard >> (RANK_SHIFT + 1)
     }
-    if bitboard & RIGHT_FILE == 0 { // if piece is not on the right file
+    if bitboard & LEFT_FILE == 0 { // if piece is not on the right file
       attacks |= bitboard >> (RANK_SHIFT - 1);
     }
   }
@@ -50,7 +50,81 @@ fn pawn_moves(bitboard: u64, friendly_bitboard: u64, enemy_bitboard: u64, is_whi
     attacks = 0; // attacks mean nothing
   }
 
+
   moves |= attacks;
+  moves
+}
+
+fn knight_moves(bitboard: &u64, friendly_bitboard: &u64) -> u64 {
+  let mut moves = 0;
+
+  if (bitboard & TOP_RANK == 0) && (bitboard & (LEFT_FILE | (LEFT_FILE >> FILE_SHIFT)) == 0) { // if not on top rank AND if not on the two left-most files\
+    moves |= bitboard << 10; // up left left
+  }
+  if (bitboard & (TOP_RANK & (TOP_RANK >> RANK_SHIFT)) == 0) && (bitboard & LEFT_FILE == 0) { // if not on the two top-most ranks AND if not on the left file
+    moves |= bitboard << 17; // up up left
+  }
+  if (bitboard & (TOP_RANK & (TOP_RANK >> RANK_SHIFT)) == 0) && (bitboard & RIGHT_FILE == 0) { // if not on the two top-most ranks AND if not on the right file
+    moves |= bitboard << 15; // up up right
+  }
+  if (bitboard & TOP_RANK == 0) && (bitboard & (RIGHT_FILE | (RIGHT_FILE << FILE_SHIFT)) == 0) { // if not on top rank AND if not on the two right-most files
+    moves |= bitboard << 6; // up right right
+  }
+  if (bitboard & BOTTOM_RANK == 0) && (bitboard & (RIGHT_FILE | (RIGHT_FILE << FILE_SHIFT)) == 0) { // if not on bottom rank AND if not on the two right-most files
+    moves |= bitboard >> 10; // down right right
+  }
+  if (bitboard & (BOTTOM_RANK & (BOTTOM_RANK << RANK_SHIFT)) == 0) && (bitboard & RIGHT_FILE == 0) { // if not on the two bottom-most ranks AND if not on the right file
+    moves |= bitboard >> 17; // down down right
+  }
+  if (bitboard & (BOTTOM_RANK & (BOTTOM_RANK << RANK_SHIFT)) == 0) && (bitboard & LEFT_FILE == 0) { // if not on the two bottom-most ranks AND if not on the left file
+    moves |= bitboard >> 15; // down down left
+  }
+  if (bitboard & BOTTOM_RANK == 0) && (bitboard & (LEFT_FILE | (LEFT_FILE >> FILE_SHIFT)) == 0) { // if not on bottom rank AND if not on the two left-most files
+    moves |= bitboard >> 6; // down left left
+  }
+  
+  let false_attacks = moves & friendly_bitboard;
+  if false_attacks != 0 {
+    moves ^= false_attacks;
+  }
+
+  moves
+}
+
+fn king_moves(bitboard: &u64, friendly_bitboard: &u64) -> u64 {
+  let mut moves = 0;
+
+  if bitboard & TOP_RANK == 0 { // if not on the top of the board
+    moves |= bitboard << RANK_SHIFT; // up
+    
+    if bitboard & RIGHT_FILE == 0 { // if not on the right of the board
+      moves |= bitboard << RANK_SHIFT - 1; // up right
+    }
+    if bitboard & LEFT_FILE == 0 { // if not on the left of the board
+      moves |= bitboard << RANK_SHIFT + 1; // up left
+    }
+  }
+  if bitboard & BOTTOM_RANK == 0 { // if not on the bottom of the board
+    moves |= bitboard >> RANK_SHIFT; // down
+
+    if bitboard & LEFT_FILE == 0 { // if not on the left of the board
+      moves |= bitboard >> RANK_SHIFT - 1; // down left
+    }
+    if bitboard & RIGHT_FILE == 0 { // if not on the right of the board
+      moves |= bitboard >> RANK_SHIFT + 1; // down right
+    }
+  }
+  if bitboard & LEFT_FILE == 0 { // if not on the left of the board
+    moves |= bitboard << FILE_SHIFT; // left
+  }
+  if bitboard & RIGHT_FILE == 0 { // if not on the right of the board
+    moves |= bitboard >> FILE_SHIFT; // right
+  }
+  
+  let false_attacks = moves & friendly_bitboard;
+  if false_attacks != 0 {
+    moves ^= false_attacks;
+  }
 
   moves
 }
@@ -69,7 +143,8 @@ pub struct Move {
   start_square: i32,
   end_square: i32,
   moved_piece_type: PieceType,
-  captured_piece_type: Option<PieceType>,
+
+  pub captured_piece_type: Option<PieceType>,
   // add other flags later
 }
 impl Move {
@@ -82,8 +157,12 @@ impl Move {
     }
   }
 
+  pub fn get_end_square(&self) -> i32 {
+    self.end_square
+  }
+
   pub fn print(&self) {
-    println!("({}, {})", self.start_square, self.end_square)
+    println!("({}, {})  {}", self.start_square, self.end_square, self.moved_piece_type as usize);
   }
 }
 impl PartialEq for Move {
@@ -141,7 +220,7 @@ impl Board {
         },
         'P' | 'N' | 'B' | 'R' | 'K' | 'Q' | 'p' | 'n' | 'b' | 'r' | 'k' | 'q' => {
           let bitboard_type = char_to_piecetype[&c];
-          let square_index = y * 8 + x; // oh my god this line of code took me like 30 minutes to figure out holy what the muffin | this isnt a really useful comment but it's kinda funny in my opinion
+          let square_index = y * 8 + (7 - x); // oh my god this line of code took me like 30 minutes to figure out holy what the muffin | this isnt a really useful comment but it's kinda funny in my opinion
           self.bitboards[bitboard_type as usize] |= (1 << square_index);
           x += 1;
         },
@@ -198,11 +277,23 @@ impl Board {
     let moves;
 
     match piece_type {
+      PieceType::WhiteKing => {
+        moves = king_moves(&bitboard, &self.all_white_pieces());
+      },
+      PieceType::BlackKing => {
+        moves = king_moves(&bitboard, &self.all_black_pieces());
+      },
+      PieceType::WhiteKnight => {
+        moves = knight_moves(&bitboard, &self.all_white_pieces());
+      },
+      PieceType::BlackKnight => {
+        moves = knight_moves(&bitboard, &self.all_black_pieces());
+      },
       PieceType::WhitePawn => {
-        moves = pawn_moves(bitboard, self.all_white_pieces(), self.all_black_pieces(), true);
+        moves = pawn_moves(&bitboard, &self.all_white_pieces(), &self.all_black_pieces(), true);
       },
       PieceType::BlackPawn => {
-        moves = pawn_moves(bitboard, self.all_black_pieces(), self.all_white_pieces(), false);
+        moves = pawn_moves(&bitboard, &self.all_black_pieces(), &self.all_white_pieces(), false);
       },
       _ => {
         panic!("Piece type not found");
@@ -214,10 +305,5 @@ impl Board {
 
   pub fn get_bitboards(&self) -> [u64; 12] {
     self.bitboards
-  }
-
-  // DEBUGING
-  pub fn print(&self, index: PieceType) { //TODO: remove this later
-    println!("{:b}", self.bitboards[index as usize]);
   }
 }

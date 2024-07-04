@@ -16,26 +16,26 @@ fn draw_from_atlas(atlas: &Texture2D, sprite_rect: Rect, texture_mask: Rect) {
 }
 
 
+#[derive(Clone)]
 pub struct PieceSprite {
   texture: Texture2D,
+  piece_type: PieceType,
+  square: i32,
+  mouse_on_sprite: bool,
   
   pub rect: Rect,
-  pub piece_type: PieceType,
-  pub square: i32,
-  pub mouse_on_sprite: bool,
   pub moved_piece: bool,
-  pub attacked_piece: bool
 }
 impl PieceSprite {
   pub fn new(sprite_size: f32, sprite_texture: &Texture2D, sprite_type: PieceType, sprite_square: i32) -> Self {
     Self {
-      rect: Rect::new(0.0, 0.0, sprite_size as f32, sprite_size as f32),
       texture: sprite_texture.clone(),
       piece_type: sprite_type,
       square: sprite_square,
       mouse_on_sprite: false,
+      
+      rect: Rect::new(0.0, 0.0, sprite_size as f32, sprite_size as f32),
       moved_piece: false,
-      attacked_piece: false,
     }
   }
   fn get_sprite_coords(key: &PieceType) -> (i32, i32) { // retufns coordinates of sprite on the atlas
@@ -70,12 +70,14 @@ impl PieceSprite {
     let texture_mask = Rect::new((x * TEXTURE_SIZE) as f32, (y * TEXTURE_SIZE) as f32 , TEXTURE_SIZE as f32, TEXTURE_SIZE as f32);
     draw_from_atlas(&self.texture, self.rect, texture_mask);
   }
-  pub fn set_location(&mut self, x: f32, y: f32) {
-    self.rect.x = x;
-    self.rect.y = y;
+
+  pub fn get_piecetype(&self) -> PieceType {
+    self.piece_type
   }
-  pub fn set_location_center(&mut self, x: f32, y: f32) {
-    self.rect.x = x - (self.rect.w / 2.0);
-    self.rect.y = y - (self.rect.w / 2.0);
+  pub fn get_square(&self) -> i32 {
+    self.square
+  }
+  pub fn get_if_mouseonsprite(&self) -> bool {
+    self.mouse_on_sprite
   }
 }

@@ -10,7 +10,7 @@ use board::*;
 use utils::*;
 use macroquad::prelude::*;
 
-#[macroquad::main(window_conf)] // TODO: draw pieces from the bitboards
+#[macroquad::main(window_conf)]
 async fn main() {
   let mut board = Board::new("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
@@ -18,7 +18,7 @@ async fn main() {
 
   let mut squares: [Square; 64] = [Square::default(); 64];
   let mut mouse_square = Square::default();
-  let mut captured_piece: Option<PieceType> = None;
+  let mut captured_piece: Option<PieceSprite> = None;
 
 
   let mut piece_sprites: Vec<PieceSprite> = Vec::new();
@@ -32,7 +32,7 @@ async fn main() {
   }
 
   // square grid setup
-  let mut x = 0;
+  let mut x = 7;
   let mut y = 7;
   for i in 0..64 {
     squares[i].set_location(x as f32 * squares[i].rect.w, y as f32 * squares[i].rect.w);
@@ -40,9 +40,9 @@ async fn main() {
       squares[i].set_colour(LIGHTSQUARE);
     }
 
-    x += 1;
-    if x >= 8 {
-      x = 0;
+    x -= 1;
+    if x < 0 {
+      x = 7;
       y -= 1;
     }
   }
@@ -60,31 +60,39 @@ async fn main() {
 
     let mut piecesprites_to_remove: Vec<usize> = Vec::new();
 
-    piece_sprites.sort_by(|a, b| a.mouse_on_sprite.cmp(&b.mouse_on_sprite)); // sorts the list so that the pieces that are affected by the mouse are last. this ensures that they are drawn on top of the other pieces
+    piece_sprites.sort_by(|a, b| a.get_if_mouseonsprite().cmp(&b.get_if_mouseonsprite())); // sorts the list so that the pieces that are affected by the mouse are last. this ensures that they are drawn on top of the other pieces
     for (i, piece_sprite) in piece_sprites.iter_mut(  ).enumerate() {
       piece_sprite.handle_mousedown();
 
-      if contains(piece_sprite.rect, mouse_position().into()) && !piece_sprite.mouse_on_sprite  && !is_mouse_button_released(MouseButton::Left) { // i dont know why but it has to NOT be when the mouse button is released that frame
-        captured_piece = Some(piece_sprite.piece_type);
+      if contains(piece_sprite.rect, mouse_position().into()) && !piece_sprite.get_if_mouseonsprite()  && !is_mouse_button_released(MouseButton::Left) { // i dont know why but it has to NOT be when the mouse button is released that frame
+        captured_piece = Some(piece_sprite.clone());
       }
-      
-      if piece_sprite.mouse_on_sprite { // move the sprite based on where the mouse is
+
+      if piece_sprite.get_if_mouseonsprite() { // move the sprite based on where the mouse is
         piece_sprite.moved_piece = true;
         let (mouse_x, mouse_y) = mouse_position();
-        piece_sprite.set_location_center(mouse_x, mouse_y);
+        // piece_sprite.set_location_center(mouse_x - (self.rect.w / 2.0), mouse_y - (self.rect.w / 2.0));
+        piece_sprite.rect.x = mouse_x - (piece_sprite.rect.w / 2.0);
+        piece_sprite.rect.y = mouse_y - (piece_sprite.rect.w / 2.0);
       }
 
       else if piece_sprite.moved_piece && is_mouse_button_released(MouseButton::Left) { // make a mov
-        if let Some(piece_type) = captured_piece {
-          if piece_type as usize == piece_sprite.piece_type as usize { // if the captured piece is the same as the piece making the move
-            captured_piece = None; // it's not actually the captured pieces
+        let piece_moves = board.get_legal_moves(1 << piece_sprite.get_square(), piece_sprite.get_piecetype());
+        let mouse_square_index = squares.iter().position(|&r| r == mouse_square).unwrap() as i32;
+        let mut piece_move = Move::new(piece_sprite.get_square(), mouse_square_index, piece_sprite.get_piecetype(), None);
+
+        if let Some(piece) = &captured_piece {
+          piece_move.captured_piece_type = Some(piece.get_piecetype());
+
+          if piece.get_piecetype() as usize == piece_sprite.get_piecetype() as usize { // if the captured piece is the same as the piece making the move
+            piece_move.captured_piece_type = None; // it's not actually the captured piece
+          }
+
+          if piece.get_square() != piece_move.get_end_square() {
+            piece_move.captured_piece_type = None;
           }
         }
 
-        let piece_moves = board.get_legal_moves(1 << piece_sprite.square, piece_sprite.piece_type);
-        let mouse_square_index = squares.iter().position(|&r| r == mouse_square).unwrap() as i32;
-        let piece_move = Move::new(piece_sprite.square, mouse_square_index, piece_sprite.piece_type, captured_piece);
-        
         if piece_moves.contains(&piece_move) {
           board.make_move(piece_move);
         }
@@ -92,14 +100,15 @@ async fn main() {
         piece_sprite.moved_piece = false;
       }
   
-      else if piece_sprite.square != -1 { // set the sprites locations to the square
-        let piecetype_squares = bits_to_indices(&board.get_bitboards()[piece_sprite.piece_type as usize]);
-        if !piecetype_squares.contains(&piece_sprite.square) { // if the piece doesnt exist there, add it to a vector to be removed
+      else if piece_sprite.get_square() != -1 { // set the sprites locations to the square
+        let piecetype_squares = bits_to_indices(&board.get_bitboards()[piece_sprite.get_piecetype() as usize]);
+        if !piecetype_squares.contains(&piece_sprite.get_square()) { // if the piece doesnt exist there, add it to a vector to be removed
           piecesprites_to_remove.push(i);
         }
 
-        let piece_square = squares[piece_sprite.square as usize];
-        piece_sprite.set_location(piece_square.rect.x, piece_square.rect.y);
+        let piece_square = squares[piece_sprite.get_square() as usize];
+        piece_sprite.rect.x = piece_square.rect.x;
+        piece_sprite.rect.y = piece_square.rect.y;
       }
 
       
@@ -117,7 +126,7 @@ async fn main() {
       let piecetype_squares = bits_to_indices(&board.get_bitboards()[piece_type as usize]);
   
       for square_index in piecetype_squares {
-        if !piece_sprites.iter().any(|sprite| sprite.square == square_index && sprite.piece_type as usize == piece_type as usize) { // if the piece doesnt exist
+        if !piece_sprites.iter().any(|sprite| sprite.get_square() == square_index && sprite.get_piecetype() as usize == piece_type as usize) { // if the piece doesnt exist
           let new_piece_sprite: PieceSprite = PieceSprite::new(squares[0].rect.w, &texture_atlas, piece_type, square_index);
           piece_sprites.push(new_piece_sprite);
         }
