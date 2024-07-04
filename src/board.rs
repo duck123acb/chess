@@ -128,6 +128,45 @@ fn king_moves(bitboard: &u64, friendly_bitboard: &u64) -> u64 {
 
   moves
 }
+fn sliding_pieces_moves(piece_bitboard: &u64, population_bitboard: &u64, orthagonal: bool, diagonal: bool) -> u64 { // returns a bitboard with all the squares it attacks
+  let mut moves = 0;
+  let mut directions = Vec::new();
+
+  if orthagonal {
+    directions.push(RANK_SHIFT); // up
+    directions.push(-RANK_SHIFT); // down
+    directions.push(FILE_SHIFT); // left
+    directions.push(-FILE_SHIFT); // right
+  }
+  if diagonal {
+    directions.push(RANK_SHIFT + 1); // up left
+    directions.push(RANK_SHIFT - 1); // up right
+    directions.push(-RANK_SHIFT + 1); // down right
+    directions.push(-RANK_SHIFT - 1); // down left
+  }
+
+  for direction in directions {
+    for shift in 1..8 {
+      let new_square = if direction > 0 { 
+        piece_bitboard << shift * direction
+      } else {
+        piece_bitboard >> shift * (direction * -1)
+      };
+  
+      moves |= new_square;
+      
+      if new_square & population_bitboard != 0 {
+        break;
+      }
+      
+      if new_square & (TOP_RANK | BOTTOM_RANK | LEFT_FILE | RIGHT_FILE) != 0 { // stop the search if the new square is on the edge of the board
+        break;
+      }
+    }
+  }
+
+  moves
+}
 
 pub fn bits_to_indices(bitboard: &u64) -> Vec<i32> {
   let mut indices = Vec::new();
