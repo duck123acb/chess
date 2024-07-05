@@ -13,6 +13,11 @@ const RIGHT_FILE: u64 = 0x0101010101010101;
 const RANK_SHIFT: i32 = 8; // value to shift if you want to move ranks
 const FILE_SHIFT: i32 = 1; // value to shift if you want to move files
 
+const ROOK_MAGICS: [MagicEntry; 64] = todo!();
+const BISHOP_MAGICS: [MagicEntry; 64] = todo!();
+const ROOK_MOVES: [u64; 64] = todo!();
+const BISHOP_MOVES: [u64; 64] = todo!();
+
 fn pawn_moves(bitboard: &u64, friendly_bitboard: &u64, enemy_bitboard: &u64, is_white: bool)  -> u64 { // TODO: promotion, en_passent
   let all_pieces = friendly_bitboard | enemy_bitboard;
   let mut moves: u64 = 0;
@@ -128,44 +133,17 @@ fn king_moves(bitboard: &u64, friendly_bitboard: &u64) -> u64 {
 
   moves
 }
-fn sliding_pieces_moves(piece_bitboard: &u64, population_bitboard: &u64, orthagonal: bool, diagonal: bool) -> u64 { // returns a bitboard with all the squares it attacks
-  let mut moves = 0;
-  let mut directions = Vec::new();
 
-  if orthagonal {
-    directions.push(RANK_SHIFT); // up
-    directions.push(-RANK_SHIFT); // down
-    directions.push(FILE_SHIFT); // left
-    directions.push(-FILE_SHIFT); // right
-  }
-  if diagonal {
-    directions.push(RANK_SHIFT + 1); // up left
-    directions.push(RANK_SHIFT - 1); // up right
-    directions.push(-RANK_SHIFT + 1); // down right
-    directions.push(-RANK_SHIFT - 1); // down left
-  }
-
-  for direction in directions {
-    for shift in 1..8 {
-      let new_square = if direction > 0 { 
-        piece_bitboard << shift * direction
-      } else {
-        piece_bitboard >> shift * (direction * -1)
-      };
+fn get_magic_index(entry: &MagicEntry, population: &u64) -> usize {
+  let blockers = population & entry.mask;
+  let hash = blockers.wrapping_mul(entry.magic);
   
-      moves |= new_square;
-      
-      if new_square & population_bitboard != 0 {
-        break;
-      }
-      
-      if new_square & (TOP_RANK | BOTTOM_RANK | LEFT_FILE | RIGHT_FILE) != 0 { // stop the search if the new square is on the edge of the board
-        break;
-      }
-    }
-  }
+  (hash >> (64 - entry.index_bits)) as usize
+}
+fn get_rook_moves(square_index: i32, population: &u64) -> u64{
+  let magic = &ROOK_MAGICS[square_index as usize];
 
-  moves
+  ROOK_MOVES[get_magic_index(magic, population)]
 }
 
 pub fn bits_to_indices(bitboard: &u64) -> Vec<i32> {
@@ -176,6 +154,12 @@ pub fn bits_to_indices(bitboard: &u64) -> Vec<i32> {
     }
   }
   indices
+}
+
+struct MagicEntry {
+  mask: u64,
+  magic: u64,
+  index_bits: u8,
 }
 
 pub struct Move {
