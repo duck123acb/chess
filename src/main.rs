@@ -1,12 +1,12 @@
 /* MODULES */
 mod rendering;
-mod board_representation;
+mod board;
 mod utils;
 
 /* IMPORTS */
 use rendering::piece_sprite::*;
 use rendering::square::*;
-use board_representation::board::*;
+use board::*;
 use utils::*;
 use macroquad::prelude::*;
 
