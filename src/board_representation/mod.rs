@@ -1,8 +1,10 @@
 #![allow(unused_parens)]
-#![allow(dead_code)]
+
+mod precompiled_bitboards;
 
 use std::collections::HashMap;
 use crate::utils::PieceType;
+use precompiled_bitboards::*;
 
 // from white's perspective
 const TOP_RANK: u64 = 0xFF00000000000000;
@@ -13,10 +15,6 @@ const RIGHT_FILE: u64 = 0x0101010101010101;
 const RANK_SHIFT: i32 = 8; // value to shift if you want to move ranks
 const FILE_SHIFT: i32 = 1; // value to shift if you want to move files
 
-const ROOK_MAGICS: [MagicEntry; 64] = todo!();
-const BISHOP_MAGICS: [MagicEntry; 64] = todo!();
-const ROOK_MOVES: [u64; 64] = todo!();
-const BISHOP_MOVES: [u64; 64] = todo!();
 
 fn pawn_moves(bitboard: &u64, friendly_bitboard: &u64, enemy_bitboard: &u64, is_white: bool)  -> u64 { // TODO: promotion, en_passent
   let all_pieces = friendly_bitboard | enemy_bitboard;
@@ -54,7 +52,6 @@ fn pawn_moves(bitboard: &u64, friendly_bitboard: &u64, enemy_bitboard: &u64, is_
   if attacks & all_pieces == 0 { // if the pawn attacks nothing
     attacks = 0; // attacks mean nothing
   }
-
 
   moves |= attacks;
   moves
@@ -134,16 +131,23 @@ fn king_moves(bitboard: &u64, friendly_bitboard: &u64) -> u64 {
   moves
 }
 
-fn get_magic_index(entry: &MagicEntry, population: &u64) -> usize {
-  let blockers = population & entry.mask;
-  let hash = blockers.wrapping_mul(entry.magic);
+fn get_magic_index(magic: u64, index_bits: u32, mask: u64, population: &u64) -> usize {
+  let blockers = population & mask;
+  let hash = blockers.wrapping_mul(magic);
   
-  (hash >> (64 - entry.index_bits)) as usize
+  (hash >> index_bits) as usize
 }
-fn get_rook_moves(square_index: i32, population: &u64) -> u64{
+fn get_rook_moves(square_index: i32, friendly_bitboard: &u64, enemy_bitboard: &u64) -> u64 {
+  let population = friendly_bitboard & enemy_bitboard;
+  
   let magic = &ROOK_MAGICS[square_index as usize];
+  let mask = &ROOK_MASKS[square_index as usize];
+  let relevant_bits = &ROOK_BITS[square_index as usize];
 
-  ROOK_MOVES[get_magic_index(magic, population)]
+  let mut moves = ROOK_MOVES[square_index as usize][get_magic_index(*magic, *relevant_bits, *mask, &population)];
+  moves ^= friendly_bitboard;
+  
+  moves
 }
 
 pub fn bits_to_indices(bitboard: &u64) -> Vec<i32> {
@@ -154,12 +158,6 @@ pub fn bits_to_indices(bitboard: &u64) -> Vec<i32> {
     }
   }
   indices
-}
-
-struct MagicEntry {
-  mask: u64,
-  magic: u64,
-  index_bits: u8,
 }
 
 pub struct Move {
@@ -317,6 +315,16 @@ impl Board {
       },
       PieceType::BlackPawn => {
         moves = pawn_moves(&bitboard, &self.all_black_pieces(), &self.all_white_pieces(), false);
+      },
+      PieceType::WhiteRook => {
+        let mut square_index = 0;
+        for i in 0..64 {
+          if 1 << i & bitboard != 0 {
+            square_index = i;
+            break;
+          }
+        }
+        moves = get_rook_moves(square_index, &self.all_white_pieces(), &self.all_black_pieces());
       },
       _ => {
         panic!("Piece type not found");
