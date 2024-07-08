@@ -181,10 +181,6 @@ impl Move {
   pub fn get_end_square(&self) -> i32 {
     self.end_square
   }
-
-  pub fn print(&self) {
-    println!("({}, {})  {}", self.start_square, self.end_square, self.moved_piece_type as usize);
-  }
 }
 impl PartialEq for Move {
   fn eq(&self, other: &Self) -> bool {
@@ -294,8 +290,9 @@ impl Board {
     self.bitboards[PieceType::BlackKing as usize] | self.bitboards[PieceType::BlackQueen as usize] | self.bitboards[PieceType::BlackBishop as usize] | self.bitboards[PieceType::BlackKnight as usize] | self.bitboards[PieceType::BlackRook as usize] | self.bitboards[PieceType::BlackPawn as usize]
   }
 
-  pub fn get_legal_moves(&self, bitboard: u64, piece_type: PieceType) -> Vec<Move> {
+  pub fn get_legal_moves(&self, square_index: i32, piece_type: PieceType) -> Vec<Move> {
     let moves;
+    let bitboard = 1 << square_index;
 
     match piece_type {
       PieceType::WhiteKing => {
@@ -317,13 +314,6 @@ impl Board {
         moves = pawn_moves(&bitboard, &self.all_black_pieces(), &self.all_white_pieces(), false);
       },
       PieceType::WhiteRook => {
-        let mut square_index = 0;
-        for i in 0..64 {
-          if 1 << i & bitboard != 0 {
-            square_index = i;
-            break;
-          }
-        }
         moves = get_rook_moves(square_index, &self.all_white_pieces(), &self.all_black_pieces());
       },
       _ => {
