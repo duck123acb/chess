@@ -307,14 +307,17 @@ impl Board {
       PieceType::BlackKnight => {
         moves = knight_moves(&bitboard, &self.all_black_pieces());
       },
+      PieceType::WhiteRook => {
+        moves = get_rook_moves(square_index, &self.all_white_pieces(), &self.all_black_pieces());
+      },
+      PieceType::BlackRook => {
+        moves = get_rook_moves(square_index, &self.all_black_pieces(), &self.all_white_pieces());
+      },
       PieceType::WhitePawn => {
         moves = pawn_moves(&bitboard, &self.all_white_pieces(), &self.all_black_pieces(), true);
       },
       PieceType::BlackPawn => {
         moves = pawn_moves(&bitboard, &self.all_black_pieces(), &self.all_white_pieces(), false);
-      },
-      PieceType::WhiteRook => {
-        moves = get_rook_moves(square_index, &self.all_white_pieces(), &self.all_black_pieces());
       },
       _ => {
         panic!("Piece type not found");
