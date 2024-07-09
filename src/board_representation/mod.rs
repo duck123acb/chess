@@ -137,6 +137,19 @@ fn get_magic_index(magic: u64, index_bits: u32, mask: u64, population: &u64) -> 
   
   (hash >> index_bits) as usize
 }
+
+fn get_bishop_moves(square_index: i32, friendly_bitboard: &u64, enemy_bitboard: &u64) -> u64 {
+  let population = friendly_bitboard & enemy_bitboard;
+  
+  let magic = &BISHOP_MAGICS[square_index as usize];
+  let mask = &BISHOP_MASKS[square_index as usize];
+  let relevant_bits = &BISHOP_BITS[square_index as usize];
+
+  let mut moves = BISHOP_MOVES[square_index as usize][get_magic_index(*magic, *relevant_bits, *mask, &population)];
+  moves ^= friendly_bitboard;
+  
+  moves
+}
 fn get_rook_moves(square_index: i32, friendly_bitboard: &u64, enemy_bitboard: &u64) -> u64 {
   let population = friendly_bitboard & enemy_bitboard;
   
@@ -300,6 +313,12 @@ impl Board {
       },
       PieceType::BlackKing => {
         moves = king_moves(&bitboard, &self.all_black_pieces());
+      },
+      PieceType::WhiteBishop => {
+        moves = get_bishop_moves(square_index, &self.all_white_pieces(), &self.all_black_pieces());
+      },
+      PieceType::BlackBishop => {
+        moves = get_bishop_moves(square_index, &self.all_black_pieces(), &self.all_white_pieces());
       },
       PieceType::WhiteKnight => {
         moves = knight_moves(&bitboard, &self.all_white_pieces());
