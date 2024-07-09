@@ -158,7 +158,7 @@ fn get_rook_moves(square_index: i32, friendly_bitboard: &u64, enemy_bitboard: &u
   let relevant_bits = &ROOK_BITS[square_index as usize];
 
   let mut moves = ROOK_MOVES[square_index as usize][get_magic_index(*magic, *relevant_bits, *mask, &population)];
-  moves ^= friendly_bitboard;
+  moves ^= friendly_bitboard & mask;
   
   moves
 }
@@ -277,6 +277,9 @@ impl Board {
           new_move.captured_piece_type = Some(piece_type);
         }
       }
+      if piece_square == square {
+        continue;
+      }
 
       moves.push(new_move);
     }
@@ -343,9 +346,6 @@ impl Board {
       },
       PieceType::BlackPawn => {
         moves = pawn_moves(&bitboard, &self.all_black_pieces(), &self.all_white_pieces(), false);
-      },
-      _ => {
-        panic!("Piece type not found");
       }
     }
 
