@@ -314,6 +314,12 @@ impl Board {
       PieceType::BlackKing => {
         moves = king_moves(&bitboard, &self.all_black_pieces());
       },
+      PieceType::WhiteQueen => {
+        moves = get_bishop_moves(square_index, &self.all_white_pieces(), &self.all_black_pieces()) | get_rook_moves(square_index, &self.all_white_pieces(), &self.all_black_pieces());
+      },
+      PieceType::BlackQueen => {
+        moves = get_bishop_moves(square_index, &self.all_black_pieces(), &self.all_white_pieces()) | get_rook_moves(square_index, &self.all_black_pieces(), &self.all_white_pieces());
+      },
       PieceType::WhiteBishop => {
         moves = get_bishop_moves(square_index, &self.all_white_pieces(), &self.all_black_pieces());
       },
