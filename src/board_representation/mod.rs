@@ -1,163 +1,42 @@
+mod move_gen;
 mod precompiled_bitboards;
 
 use std::collections::HashMap;
-use crate::utils::PieceType;
-use precompiled_bitboards::*;
+use move_gen::*;
 
-// from white's perspective
-const TOP_RANK: u64 = 0xFF00000000000000;
-const BOTTOM_RANK: u64 = 0x00000000000000FF;
-const LEFT_FILE: u64 = 0x8080808080808080;
-const RIGHT_FILE: u64 = 0x0101010101010101;
-
-const RANK_SHIFT: i32 = 8; // value to shift if you want to move ranks
-const FILE_SHIFT: i32 = 1; // value to shift if you want to move files
-
-
-fn pawn_moves(bitboard: &u64, friendly_bitboard: &u64, enemy_bitboard: &u64, is_white: bool)  -> u64 { // TODO: promotion, en_passent
-  let all_pieces = friendly_bitboard | enemy_bitboard;
-  let mut moves: u64 = 0;
-  let mut attacks: u64 = 0;
-
-  if is_white {
-    moves |= bitboard << RANK_SHIFT;
-    if bitboard & (BOTTOM_RANK << RANK_SHIFT) != 0 { // if pawn is on 2nd rank
-      moves |= bitboard << (RANK_SHIFT * 2);
-    }
-
-    if bitboard & RIGHT_FILE == 0 { // if piece is not on the left file
-      attacks |= bitboard << (RANK_SHIFT - 1)
-    }
-    if bitboard & LEFT_FILE == 0 { // if piece is not on the right file
-      attacks |= bitboard << (RANK_SHIFT + 1);
-    }
-  } else {
-    moves |= bitboard >> RANK_SHIFT;
-    if bitboard & (TOP_RANK >> RANK_SHIFT) != 0 { // if pawn is on 7th rank
-      moves |= bitboard >> (RANK_SHIFT * 2);
-    }
-
-    if bitboard & RIGHT_FILE == 0 { // if piece is not on the left file
-      attacks |= bitboard >> (RANK_SHIFT + 1)
-    }
-    if bitboard & LEFT_FILE == 0 { // if piece is not on the right file
-      attacks |= bitboard >> (RANK_SHIFT - 1);
-    }
-  }
-
-  moves ^= all_pieces & moves; // removes squares where another piece is. doesnt affect the pawn attacks
-  attacks ^= attacks & friendly_bitboard; // removes attacks on friendly pieces
-  if attacks & all_pieces == 0 { // if the pawn attacks nothing
-    attacks = 0; // attacks mean nothing
-  }
-
-  moves |= attacks;
-  moves
+#[derive(Copy, Clone)]
+pub enum PieceType {
+  WhiteKing,
+  WhiteQueen,
+  WhiteBishop,
+  WhiteKnight,
+  WhiteRook,
+  WhitePawn,
+  BlackKing,
+  BlackQueen,
+  BlackBishop,
+  BlackKnight,
+  BlackRook,
+  BlackPawn
 }
-
-fn knight_moves(bitboard: &u64, friendly_bitboard: &u64) -> u64 {
-  let mut moves = 0;
-
-  if (bitboard & TOP_RANK == 0) && (bitboard & (LEFT_FILE | (LEFT_FILE >> FILE_SHIFT)) == 0) { // if not on top rank AND if not on the two left-most files\
-    moves |= bitboard << 10; // up left left
+impl PieceType {
+  pub fn iter() -> impl Iterator<Item = Self> {
+    const VARIANTS: &[PieceType; 12] = &[
+      PieceType::WhiteKing,
+      PieceType::WhiteQueen,
+      PieceType::WhiteBishop,
+      PieceType::WhiteKnight,
+      PieceType::WhiteRook,
+      PieceType::WhitePawn,
+      PieceType::BlackKing,
+      PieceType::BlackQueen,
+      PieceType::BlackBishop,
+      PieceType::BlackKnight,
+      PieceType::BlackRook,
+      PieceType::BlackPawn
+    ];
+    VARIANTS.iter().copied()
   }
-  if (bitboard & (TOP_RANK & (TOP_RANK >> RANK_SHIFT)) == 0) && (bitboard & LEFT_FILE == 0) { // if not on the two top-most ranks AND if not on the left file
-    moves |= bitboard << 17; // up up left
-  }
-  if (bitboard & (TOP_RANK & (TOP_RANK >> RANK_SHIFT)) == 0) && (bitboard & RIGHT_FILE == 0) { // if not on the two top-most ranks AND if not on the right file
-    moves |= bitboard << 15; // up up right
-  }
-  if (bitboard & TOP_RANK == 0) && (bitboard & (RIGHT_FILE | (RIGHT_FILE << FILE_SHIFT)) == 0) { // if not on top rank AND if not on the two right-most files
-    moves |= bitboard << 6; // up right right
-  }
-  if (bitboard & BOTTOM_RANK == 0) && (bitboard & (RIGHT_FILE | (RIGHT_FILE << FILE_SHIFT)) == 0) { // if not on bottom rank AND if not on the two right-most files
-    moves |= bitboard >> 10; // down right right
-  }
-  if (bitboard & (BOTTOM_RANK & (BOTTOM_RANK << RANK_SHIFT)) == 0) && (bitboard & RIGHT_FILE == 0) { // if not on the two bottom-most ranks AND if not on the right file
-    moves |= bitboard >> 17; // down down right
-  }
-  if (bitboard & (BOTTOM_RANK & (BOTTOM_RANK << RANK_SHIFT)) == 0) && (bitboard & LEFT_FILE == 0) { // if not on the two bottom-most ranks AND if not on the left file
-    moves |= bitboard >> 15; // down down left
-  }
-  if (bitboard & BOTTOM_RANK == 0) && (bitboard & (LEFT_FILE | (LEFT_FILE >> FILE_SHIFT)) == 0) { // if not on bottom rank AND if not on the two left-most files
-    moves |= bitboard >> 6; // down left left
-  }
-  
-  let false_attacks = moves & friendly_bitboard;
-  if false_attacks != 0 {
-    moves ^= false_attacks;
-  }
-
-  moves
-}
-
-fn king_moves(bitboard: &u64, friendly_bitboard: &u64) -> u64 {
-  let mut moves = 0;
-
-  if bitboard & TOP_RANK == 0 { // if not on the top of the board
-    moves |= bitboard << RANK_SHIFT; // up
-    
-    if bitboard & RIGHT_FILE == 0 { // if not on the right of the board
-      moves |= bitboard << RANK_SHIFT - 1; // up right
-    }
-    if bitboard & LEFT_FILE == 0 { // if not on the left of the board
-      moves |= bitboard << RANK_SHIFT + 1; // up left
-    }
-  }
-  if bitboard & BOTTOM_RANK == 0 { // if not on the bottom of the board
-    moves |= bitboard >> RANK_SHIFT; // down
-
-    if bitboard & LEFT_FILE == 0 { // if not on the left of the board
-      moves |= bitboard >> RANK_SHIFT - 1; // down left
-    }
-    if bitboard & RIGHT_FILE == 0 { // if not on the right of the board
-      moves |= bitboard >> RANK_SHIFT + 1; // down right
-    }
-  }
-  if bitboard & LEFT_FILE == 0 { // if not on the left of the board
-    moves |= bitboard << FILE_SHIFT; // left
-  }
-  if bitboard & RIGHT_FILE == 0 { // if not on the right of the board
-    moves |= bitboard >> FILE_SHIFT; // right
-  }
-  
-  let false_attacks = moves & friendly_bitboard;
-  if false_attacks != 0 {
-    moves ^= false_attacks;
-  }
-
-  moves
-}
-
-fn get_magic_index(magic: u64, index_bits: u32, mask: u64, population: &u64) -> usize {
-  let blockers = population & mask;
-
-  (blockers.wrapping_mul(magic) >> index_bits) as usize
-}
-
-fn get_bishop_moves(square_index: i32, friendly_bitboard: &u64, enemy_bitboard: &u64) -> u64 {
-  let population = friendly_bitboard | enemy_bitboard;
-  
-  let magic = &BISHOP_MAGICS[square_index as usize];
-  let mask = &BISHOP_MASKS[square_index as usize];
-  let relevant_bits = &BISHOP_BITS[square_index as usize];
-
-  let mut moves = BISHOP_MOVES[square_index as usize][get_magic_index(*magic, *relevant_bits, *mask, &population)];
-  moves ^= friendly_bitboard & mask;
-  
-  moves
-}
-fn get_rook_moves(square_index: i32, friendly_bitboard: &u64, enemy_bitboard: &u64) -> u64 {
-  let population = friendly_bitboard | enemy_bitboard;
-  
-  let magic = &ROOK_MAGICS[square_index as usize];
-  let mask = &ROOK_MASKS[square_index as usize];
-  let relevant_bits = &ROOK_BITS[square_index as usize];
-
-  let mut moves = ROOK_MOVES[square_index as usize][get_magic_index(*magic, *relevant_bits, *mask, &population)];
-  moves ^= friendly_bitboard & mask;
-  
-  moves
 }
 
 pub fn bits_to_indices(bitboard: &u64) -> Vec<i32> {
@@ -169,7 +48,6 @@ pub fn bits_to_indices(bitboard: &u64) -> Vec<i32> {
   }
   indices
 }
-
 pub struct Move {
   start_square: i32,
   end_square: i32,
@@ -256,7 +134,7 @@ impl Board {
     }
   }
 
-  pub fn generate_moves(&self, piece_bitboard: &u64, moves_bitboard: &u64, piece_type: PieceType) -> Vec<Move>{
+  pub fn generate_moves_from_bitboard(&self, piece_bitboard: &u64, moves_bitboard: &u64, piece_type: PieceType) -> Vec<Move>{
     let mut moves: Vec<Move> = Vec::new();
     let mut piece_square = 0;
     for i in 0..64 {
@@ -346,7 +224,11 @@ impl Board {
       }
     }
 
-    self.generate_moves(&bitboard, &moves, piece_type)
+    self.generate_moves_from_bitboard(&bitboard, &moves, piece_type)
+  }
+
+  pub fn get_all_legal_moves(&self) {
+
   }
 
   pub fn get_bitboards(&self) -> [u64; 12] {

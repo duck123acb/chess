@@ -1,41 +1,4 @@
-#![allow(dead_code)]
-
 use macroquad::prelude::*;
-
-#[derive(Copy, Clone)]
-pub enum PieceType {
-  WhiteKing,
-  WhiteQueen,
-  WhiteBishop,
-  WhiteKnight,
-  WhiteRook,
-  WhitePawn,
-  BlackKing,
-  BlackQueen,
-  BlackBishop,
-  BlackKnight,
-  BlackRook,
-  BlackPawn
-}
-impl PieceType {
-  pub fn iter() -> impl Iterator<Item = Self> {
-    const VARIANTS: &[PieceType; 12] = &[
-      PieceType::WhiteKing,
-      PieceType::WhiteQueen,
-      PieceType::WhiteBishop,
-      PieceType::WhiteKnight,
-      PieceType::WhiteRook,
-      PieceType::WhitePawn,
-      PieceType::BlackKing,
-      PieceType::BlackQueen,
-      PieceType::BlackBishop,
-      PieceType::BlackKnight,
-      PieceType::BlackRook,
-      PieceType::BlackPawn
-    ];
-    VARIANTS.iter().copied()
-  }
-}
 
 pub fn window_conf() -> Conf {
   Conf {
