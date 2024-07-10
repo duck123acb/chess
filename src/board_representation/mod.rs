@@ -133,13 +133,12 @@ fn king_moves(bitboard: &u64, friendly_bitboard: &u64) -> u64 {
 
 fn get_magic_index(magic: u64, index_bits: u32, mask: u64, population: &u64) -> usize {
   let blockers = population & mask;
-  let hash = blockers.wrapping_mul(magic);
-  
-  (hash >> index_bits) as usize
+
+  (blockers.wrapping_mul(magic) >> index_bits) as usize
 }
 
 fn get_bishop_moves(square_index: i32, friendly_bitboard: &u64, enemy_bitboard: &u64) -> u64 {
-  let population = friendly_bitboard & enemy_bitboard;
+  let population = friendly_bitboard | enemy_bitboard;
   
   let magic = &BISHOP_MAGICS[square_index as usize];
   let mask = &BISHOP_MASKS[square_index as usize];
@@ -151,7 +150,7 @@ fn get_bishop_moves(square_index: i32, friendly_bitboard: &u64, enemy_bitboard: 
   moves
 }
 fn get_rook_moves(square_index: i32, friendly_bitboard: &u64, enemy_bitboard: &u64) -> u64 {
-  let population = friendly_bitboard & enemy_bitboard;
+  let population = friendly_bitboard | enemy_bitboard;
   
   let magic = &ROOK_MAGICS[square_index as usize];
   let mask = &ROOK_MASKS[square_index as usize];
