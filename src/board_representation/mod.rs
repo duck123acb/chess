@@ -45,12 +45,13 @@ impl PartialEq for Move {
 
 pub struct Board {
   bitboards: [u64; 12], // TODO: highlighted squares
-  // add other flags when needed
+  white_to_move: bool,
 }
 impl Board {
   pub fn new(fen: &str) -> Self {
     let mut new_board = Self {
-      bitboards: [0; 12]
+      bitboards: [0; 12],
+      white_to_move: true
     };
     new_board.parse_fen(fen);
     new_board
@@ -59,7 +60,9 @@ impl Board {
   fn parse_fen(&mut self, fen: &str) {
     let mut parts = fen.split(' '); // do the rest of the flags later
     let position = parts.next().unwrap();
+    let side_to_move = parts.next().unwrap();
 
+    // position
     let char_to_piecetype: HashMap<char, PieceType> = HashMap::from([
       ('K', PieceType::WhiteKing),
       ('Q', PieceType::WhiteQueen),
@@ -74,7 +77,6 @@ impl Board {
       ('r', PieceType::BlackRook),
       ('p', PieceType::BlackPawn),
     ]);
-
     let mut x = 0;
     let mut y = 7;
     for c in position.chars() {
@@ -99,6 +101,13 @@ impl Board {
         _ => panic!("Unexpected character in FEN"),
       }
     }
+
+    // side to move
+    let side_to_move_chars: Vec<char> = side_to_move.chars().collect();
+    if side_to_move_chars.len() != 1 {
+      panic!("More than one character in side_to_move field of FEN string");
+    }
+    self.white_to_move = side_to_move_chars[0] == 'w';
   }
 
   pub fn generate_moves_from_bitboard(&self, piece_bitboard: &u64, moves_bitboard: &u64, piece_type: PieceType) -> Vec<Move>{
@@ -106,7 +115,7 @@ impl Board {
     let mut piece_square = 0;
     for i in 0..64 {
       if piece_bitboard & 1 << i != 0 {
-        piece_square = i as i32;
+        piece_square = i;
         break;
       }
     }
