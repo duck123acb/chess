@@ -203,8 +203,26 @@ impl Board {
     self.generate_moves_from_bitboard(&bitboard, &moves, piece_type)
   }
 
-  pub fn get_all_legal_moves(&self) {
+  pub fn get_all_legal_moves(&self) -> [Vec<Move>; 6] {
+    const VEC: Vec<Move> = Vec::new(); // using Vec::new() directly or in a let doesnt satisfy copy trait, and you cant return references
+    let mut moves: [Vec<Move>; 6] = [VEC; 6];
 
+    let mut piece_types = PieceType::all_white();
+    if !self.white_to_move {
+      piece_types = PieceType::all_black();
+    }
+
+    for piece_type in piece_types {
+      for i in 0..64 {
+        let bitboard = self.bitboards[piece_type as usize];
+
+        if bitboard & (1 << i) != 0 {
+          moves[piece_type as usize] = self.get_legal_moves(i, piece_type);
+        }
+      }
+    }
+
+    moves
   }
 
   pub fn get_bitboards(&self) -> [u64; 12] {

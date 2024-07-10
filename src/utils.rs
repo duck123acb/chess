@@ -33,6 +33,28 @@ impl PieceType {
     ];
     VARIANTS.iter().copied()
   }
+
+  pub fn all_white() -> [PieceType; 6] {
+    [
+      PieceType::WhiteKing,
+      PieceType::WhiteQueen,
+      PieceType::WhiteBishop,
+      PieceType::WhiteKnight,
+      PieceType::WhiteRook,
+      PieceType::WhitePawn
+    ]
+  }
+
+  pub fn all_black() -> [PieceType; 6] {
+    [
+      PieceType::WhiteKing,
+      PieceType::WhiteQueen,
+      PieceType::WhiteBishop,
+      PieceType::WhiteKnight,
+      PieceType::WhiteRook,
+      PieceType::WhitePawn
+    ]
+  }
 }
 
 pub fn window_conf() -> Conf {
