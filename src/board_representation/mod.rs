@@ -3,41 +3,7 @@ mod precompiled_bitboards;
 
 use std::collections::HashMap;
 use move_gen::*;
-
-#[derive(Copy, Clone)]
-pub enum PieceType {
-  WhiteKing,
-  WhiteQueen,
-  WhiteBishop,
-  WhiteKnight,
-  WhiteRook,
-  WhitePawn,
-  BlackKing,
-  BlackQueen,
-  BlackBishop,
-  BlackKnight,
-  BlackRook,
-  BlackPawn
-}
-impl PieceType {
-  pub fn iter() -> impl Iterator<Item = Self> {
-    const VARIANTS: &[PieceType; 12] = &[
-      PieceType::WhiteKing,
-      PieceType::WhiteQueen,
-      PieceType::WhiteBishop,
-      PieceType::WhiteKnight,
-      PieceType::WhiteRook,
-      PieceType::WhitePawn,
-      PieceType::BlackKing,
-      PieceType::BlackQueen,
-      PieceType::BlackBishop,
-      PieceType::BlackKnight,
-      PieceType::BlackRook,
-      PieceType::BlackPawn
-    ];
-    VARIANTS.iter().copied()
-  }
-}
+use crate::utils::PieceType;
 
 pub fn bits_to_indices(bitboard: &u64) -> Vec<i32> {
   let mut indices = Vec::new();
@@ -48,6 +14,7 @@ pub fn bits_to_indices(bitboard: &u64) -> Vec<i32> {
   }
   indices
 }
+
 pub struct Move {
   start_square: i32,
   end_square: i32,
