@@ -1,12 +1,12 @@
 /* MODULES */
 mod rendering;
-mod board;
+mod board_representation;
 mod utils;
 
 /* IMPORTS */
 use rendering::piece_sprite::*;
 use rendering::square::*;
-use board::*;
+use board_representation::*;
 use utils::*;
 use macroquad::prelude::*;
 
@@ -77,7 +77,7 @@ async fn main() {
       }
 
       else if piece_sprite.moved_piece && is_mouse_button_released(MouseButton::Left) { // make a mov
-        let piece_moves = board.get_legal_moves(1 << piece_sprite.get_square(), piece_sprite.get_piecetype());
+        let piece_moves = board.get_legal_moves(piece_sprite.get_square(), piece_sprite.get_piecetype());
         let mouse_square_index = squares.iter().position(|&r| r == mouse_square).unwrap() as i32;
         let mut piece_move = Move::new(piece_sprite.get_square(), mouse_square_index, piece_sprite.get_piecetype(), None);
 

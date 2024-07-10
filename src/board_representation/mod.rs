@@ -1,8 +1,10 @@
 #![allow(unused_parens)]
-#![allow(dead_code)]
+
+mod precompiled_bitboards;
 
 use std::collections::HashMap;
 use crate::utils::PieceType;
+use precompiled_bitboards::*;
 
 // from white's perspective
 const TOP_RANK: u64 = 0xFF00000000000000;
@@ -12,6 +14,7 @@ const RIGHT_FILE: u64 = 0x0101010101010101;
 
 const RANK_SHIFT: i32 = 8; // value to shift if you want to move ranks
 const FILE_SHIFT: i32 = 1; // value to shift if you want to move files
+
 
 fn pawn_moves(bitboard: &u64, friendly_bitboard: &u64, enemy_bitboard: &u64, is_white: bool)  -> u64 { // TODO: promotion, en_passent
   let all_pieces = friendly_bitboard | enemy_bitboard;
@@ -49,7 +52,6 @@ fn pawn_moves(bitboard: &u64, friendly_bitboard: &u64, enemy_bitboard: &u64, is_
   if attacks & all_pieces == 0 { // if the pawn attacks nothing
     attacks = 0; // attacks mean nothing
   }
-
 
   moves |= attacks;
   moves
@@ -129,6 +131,37 @@ fn king_moves(bitboard: &u64, friendly_bitboard: &u64) -> u64 {
   moves
 }
 
+fn get_magic_index(magic: u64, index_bits: u32, mask: u64, population: &u64) -> usize {
+  let blockers = population & mask;
+
+  (blockers.wrapping_mul(magic) >> index_bits) as usize
+}
+
+fn get_bishop_moves(square_index: i32, friendly_bitboard: &u64, enemy_bitboard: &u64) -> u64 {
+  let population = friendly_bitboard | enemy_bitboard;
+  
+  let magic = &BISHOP_MAGICS[square_index as usize];
+  let mask = &BISHOP_MASKS[square_index as usize];
+  let relevant_bits = &BISHOP_BITS[square_index as usize];
+
+  let mut moves = BISHOP_MOVES[square_index as usize][get_magic_index(*magic, *relevant_bits, *mask, &population)];
+  moves ^= friendly_bitboard & mask;
+  
+  moves
+}
+fn get_rook_moves(square_index: i32, friendly_bitboard: &u64, enemy_bitboard: &u64) -> u64 {
+  let population = friendly_bitboard | enemy_bitboard;
+  
+  let magic = &ROOK_MAGICS[square_index as usize];
+  let mask = &ROOK_MASKS[square_index as usize];
+  let relevant_bits = &ROOK_BITS[square_index as usize];
+
+  let mut moves = ROOK_MOVES[square_index as usize][get_magic_index(*magic, *relevant_bits, *mask, &population)];
+  moves ^= friendly_bitboard & mask;
+  
+  moves
+}
+
 pub fn bits_to_indices(bitboard: &u64) -> Vec<i32> {
   let mut indices = Vec::new();
   for i in 0..64 {
@@ -159,10 +192,6 @@ impl Move {
 
   pub fn get_end_square(&self) -> i32 {
     self.end_square
-  }
-
-  pub fn print(&self) {
-    println!("({}, {})  {}", self.start_square, self.end_square, self.moved_piece_type as usize);
   }
 }
 impl PartialEq for Move {
@@ -247,6 +276,9 @@ impl Board {
           new_move.captured_piece_type = Some(piece_type);
         }
       }
+      if piece_square == square {
+        continue;
+      }
 
       moves.push(new_move);
     }
@@ -273,8 +305,9 @@ impl Board {
     self.bitboards[PieceType::BlackKing as usize] | self.bitboards[PieceType::BlackQueen as usize] | self.bitboards[PieceType::BlackBishop as usize] | self.bitboards[PieceType::BlackKnight as usize] | self.bitboards[PieceType::BlackRook as usize] | self.bitboards[PieceType::BlackPawn as usize]
   }
 
-  pub fn get_legal_moves(&self, bitboard: u64, piece_type: PieceType) -> Vec<Move> {
+  pub fn get_legal_moves(&self, square_index: i32, piece_type: PieceType) -> Vec<Move> {
     let moves;
+    let bitboard = 1 << square_index;
 
     match piece_type {
       PieceType::WhiteKing => {
@@ -283,20 +316,35 @@ impl Board {
       PieceType::BlackKing => {
         moves = king_moves(&bitboard, &self.all_black_pieces());
       },
+      PieceType::WhiteQueen => {
+        moves = get_bishop_moves(square_index, &self.all_white_pieces(), &self.all_black_pieces()) | get_rook_moves(square_index, &self.all_white_pieces(), &self.all_black_pieces());
+      },
+      PieceType::BlackQueen => {
+        moves = get_bishop_moves(square_index, &self.all_black_pieces(), &self.all_white_pieces()) | get_rook_moves(square_index, &self.all_black_pieces(), &self.all_white_pieces());
+      },
+      PieceType::WhiteBishop => {
+        moves = get_bishop_moves(square_index, &self.all_white_pieces(), &self.all_black_pieces());
+      },
+      PieceType::BlackBishop => {
+        moves = get_bishop_moves(square_index, &self.all_black_pieces(), &self.all_white_pieces());
+      },
       PieceType::WhiteKnight => {
         moves = knight_moves(&bitboard, &self.all_white_pieces());
       },
       PieceType::BlackKnight => {
         moves = knight_moves(&bitboard, &self.all_black_pieces());
       },
+      PieceType::WhiteRook => {
+        moves = get_rook_moves(square_index, &self.all_white_pieces(), &self.all_black_pieces());
+      },
+      PieceType::BlackRook => {
+        moves = get_rook_moves(square_index, &self.all_black_pieces(), &self.all_white_pieces());
+      },
       PieceType::WhitePawn => {
         moves = pawn_moves(&bitboard, &self.all_white_pieces(), &self.all_black_pieces(), true);
       },
       PieceType::BlackPawn => {
         moves = pawn_moves(&bitboard, &self.all_black_pieces(), &self.all_white_pieces(), false);
-      },
-      _ => {
-        panic!("Piece type not found");
       }
     }
 
