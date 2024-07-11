@@ -15,6 +15,22 @@ pub fn bits_to_indices(bitboard: &u64) -> Vec<i32> {
   indices
 }
 
+struct CastlingRights {
+  white_kingside: bool,
+  white_queenside: bool,
+  black_kingside: bool,
+  black_queenside: bool
+}
+impl CastlingRights {
+  fn new() -> Self {
+    Self {
+      white_kingside: false,
+      white_queenside: false,
+      black_kingside: false,
+      black_queenside: false
+    }
+  }
+}
 pub struct Move {
   start_square: i32,
   end_square: i32,
@@ -46,12 +62,14 @@ impl PartialEq for Move {
 pub struct Board {
   bitboards: [u64; 12], // TODO: highlighted squares
   white_to_move: bool,
+  castling_rights: CastlingRights
 }
 impl Board {
   pub fn new(fen: &str) -> Self {
     let mut new_board = Self {
       bitboards: [0; 12],
-      white_to_move: true
+      white_to_move: true,
+      castling_rights: CastlingRights::new()
     };
     new_board.parse_fen(fen);
     new_board
@@ -61,6 +79,7 @@ impl Board {
     let mut parts = fen.split(' '); // do the rest of the flags later
     let position = parts.next().unwrap();
     let side_to_move = parts.next().unwrap();
+    let castle_rights  = parts.next().unwrap();
 
     // position
     let char_to_piecetype: HashMap<char, PieceType> = HashMap::from([
@@ -98,7 +117,7 @@ impl Board {
           self.bitboards[bitboard_type as usize] |= 1 << square_index;
           x += 1;
         },
-        _ => panic!("Unexpected character in FEN"),
+        _ => panic!("Unexpected character in position field of FEN string"),
       }
     }
 
@@ -108,6 +127,30 @@ impl Board {
       panic!("More than one character in side_to_move field of FEN string");
     }
     self.white_to_move = side_to_move_chars[0] == 'w';
+
+    // castling rights
+    for c in castle_rights.chars() {
+      match c {
+        '-' => { // no castling rights
+          break;
+        },
+        'K' => {
+          self.castling_rights.white_kingside = true;
+        },
+        'Q' => {
+          self.castling_rights.white_queenside = true;
+        },
+        'k' => {
+          self.castling_rights.black_kingside = true;
+        },
+        'q' => {
+          self.castling_rights.black_queenside = true;
+        },
+        _ =>  {
+          panic!("Unexpected character in castling_rights field of FEN string");
+        }
+      }
+    }
   }
 
   pub fn generate_moves_from_bitboard(&self, piece_bitboard: &u64, moves_bitboard: &u64, piece_type: PieceType) -> Vec<Move>{
