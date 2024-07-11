@@ -13,6 +13,8 @@ use macroquad::prelude::*;
 #[macroquad::main(window_conf)]
 async fn main() {
   let mut board = Board::new("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+  let moves = board.get_all_legal_moves();
+  let piece_moves = Vec::new();
 
   let texture_atlas = load_texture(TEXTURE_PATH).await.unwrap();
 
@@ -133,6 +135,6 @@ async fn main() {
       }
     }
 
-    next_frame().await
+    next_frame().await;
   }
 }
