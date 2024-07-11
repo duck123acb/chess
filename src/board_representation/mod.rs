@@ -63,7 +63,9 @@ pub struct Board {
   bitboards: [u64; 12], // TODO: highlighted squares
   white_to_move: bool,
   castling_rights: CastlingRights,
-  en_passent_square: Option<i32>
+  en_passent_square: Option<i32>,
+  halfmove_clock: i32,
+  fullmove_num: i32
 }
 impl Board {
   pub fn new(fen: &str) -> Self {
@@ -71,7 +73,9 @@ impl Board {
       bitboards: [0; 12],
       white_to_move: true,
       castling_rights: CastlingRights::new(),
-      en_passent_square: None
+      en_passent_square: None,
+      halfmove_clock: 0,
+      fullmove_num: 0
     };
     new_board.parse_fen(fen);
     new_board
@@ -81,8 +85,10 @@ impl Board {
     let mut parts = fen.split(' '); // do the rest of the flags later
     let position = parts.next().unwrap();
     let side_to_move = parts.next().unwrap();
-    let castle_rights  = parts.next().unwrap();
-    let en_passent  = parts.next().unwrap();
+    let castling_rights  = parts.next().unwrap();
+    let en_passent_square  = parts.next().unwrap();
+    let halfmove_clock  = parts.next().unwrap();
+    let fullmove_num  = parts.next().unwrap();
 
     // position
     let char_to_piecetype: HashMap<char, PieceType> = HashMap::from([
@@ -132,7 +138,7 @@ impl Board {
     self.white_to_move = side_to_move_chars[0] == 'w';
 
     // castling rights
-    for c in castle_rights.chars() {
+    for c in castling_rights.chars() {
       match c {
         '-' => { // no castling rights
           break;
@@ -156,8 +162,8 @@ impl Board {
     }
 
     // en passent
-    if en_passent != "-" {
-      let en_passent_chars: Vec<char> = en_passent.chars().collect();
+    if en_passent_square != "-" {
+      let en_passent_chars: Vec<char> = en_passent_square.chars().collect();
       let char_to_int: HashMap<char, i32> = HashMap::from([
         ('h', 0),
         ('g', 1),
@@ -176,6 +182,12 @@ impl Board {
 
       self.en_passent_square = Some(square);
     }
+
+    // halfmove_clock
+    self.halfmove_clock = halfmove_clock.parse().unwrap();
+
+    // fullmove_num
+    self.fullmove_num = fullmove_num.parse().unwrap();
   }
 
   pub fn generate_moves_from_bitboard(&self, piece_bitboard: &u64, moves_bitboard: &u64, piece_type: PieceType) -> Vec<Move>{
