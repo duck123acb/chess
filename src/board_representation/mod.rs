@@ -62,14 +62,16 @@ impl PartialEq for Move {
 pub struct Board {
   bitboards: [u64; 12], // TODO: highlighted squares
   white_to_move: bool,
-  castling_rights: CastlingRights
+  castling_rights: CastlingRights,
+  en_passent_square: Option<i32>
 }
 impl Board {
   pub fn new(fen: &str) -> Self {
     let mut new_board = Self {
       bitboards: [0; 12],
       white_to_move: true,
-      castling_rights: CastlingRights::new()
+      castling_rights: CastlingRights::new(),
+      en_passent_square: None
     };
     new_board.parse_fen(fen);
     new_board
@@ -80,6 +82,7 @@ impl Board {
     let position = parts.next().unwrap();
     let side_to_move = parts.next().unwrap();
     let castle_rights  = parts.next().unwrap();
+    let en_passent  = parts.next().unwrap();
 
     // position
     let char_to_piecetype: HashMap<char, PieceType> = HashMap::from([
@@ -150,6 +153,28 @@ impl Board {
           panic!("Unexpected character in castling_rights field of FEN string");
         }
       }
+    }
+
+    // en passent
+    if en_passent != "-" {
+      let en_passent_chars: Vec<char> = en_passent.chars().collect();
+      let char_to_int: HashMap<char, i32> = HashMap::from([
+        ('h', 0),
+        ('g', 1),
+        ('f', 2),
+        ('e', 3),
+        ('d', 4),
+        ('c', 5),
+        ('b', 6),
+        ('a', 7)
+      ]);
+      
+      let mut square = char_to_int[&en_passent_chars[0]];
+      if let Some(square_num) = en_passent_chars[1].to_digit(10) {
+        square += (square_num as i32) * 8;
+      }
+
+      self.en_passent_square = Some(square);
     }
   }
 
