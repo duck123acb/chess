@@ -5,6 +5,8 @@ use std::collections::HashMap;
 use move_gen::*;
 use crate::utils::PieceType;
 
+const VEC: Vec<Move> = Vec::new(); // using Vec::new() directly or in a let doesnt satisfy copy trait, and you cant return references
+
 pub fn bits_to_indices(bitboard: &u64) -> Vec<i32> {
   let mut indices = Vec::new();
   for i in 0..64 {
@@ -31,6 +33,8 @@ impl CastlingRights {
     }
   }
 }
+
+#[derive(Copy, Clone)]
 pub struct Move {
   start_square: i32,
   end_square: i32,
@@ -65,7 +69,9 @@ pub struct Board {
   castling_rights: CastlingRights,
   en_passent_square: Option<i32>,
   halfmove_clock: i32,
-  fullmove_num: i32
+  fullmove_num: i32,
+
+  moves: [Vec<Move>; 64]
 }
 impl Board {
   pub fn new(fen: &str) -> Self {
@@ -75,9 +81,12 @@ impl Board {
       castling_rights: CastlingRights::new(),
       en_passent_square: None,
       halfmove_clock: 0,
-      fullmove_num: 0
+      fullmove_num: 0,
+
+      moves: [VEC; 64]
     };
     new_board.parse_fen(fen);
+    new_board.get_all_legal_moves();
     new_board
   }
 
@@ -223,11 +232,12 @@ impl Board {
     let curr_piece_bitboard = 1 << move_to_make.start_square;
 
     self.bitboards[move_to_make.moved_piece_type as usize] ^= curr_piece_bitboard | new_piece_bitboard;
-
-
     if let Some(piece_type) = move_to_make.captured_piece_type {
       self.bitboards[piece_type as usize] ^= new_piece_bitboard;
     }
+
+    self.white_to_move = !self.white_to_move;
+    self.get_all_legal_moves();
   }
 
   fn all_white_pieces(&self) -> u64 {
@@ -283,29 +293,33 @@ impl Board {
     self.generate_moves_from_bitboard(&bitboard, &moves, piece_type)
   }
 
-  pub fn get_all_legal_moves(&self) -> [Vec<Move>; 6] {
-    const VEC: Vec<Move> = Vec::new(); // using Vec::new() directly or in a let doesnt satisfy copy trait, and you cant return references
-    let mut moves: [Vec<Move>; 6] = [VEC; 6];
+  fn get_all_legal_moves(&mut self) {
+    let mut moves: [Vec<Move>; 64] = [VEC; 64];
 
-    let mut piece_types = PieceType::all_white();
-    if !self.white_to_move {
-      piece_types = PieceType::all_black();
+    let piece_types = if self.white_to_move {
+      PieceType::all_white()
     }
+    else {
+      PieceType::all_black()
+    };
 
     for piece_type in piece_types {
       for i in 0..64 {
         let bitboard = self.bitboards[piece_type as usize];
 
         if bitboard & (1 << i) != 0 {
-          moves[piece_type as usize] = self.get_legal_moves(i, piece_type);
+          moves[i as usize] = self.get_legal_moves(i, piece_type);
         }
       }
     }
 
-    moves
+    self.moves = moves;
   }
 
   pub fn get_bitboards(&self) -> [u64; 12] {
     self.bitboards
+  }
+  pub fn get_moves(&self, index: i32) -> &Vec<Move> {
+    &self.moves[index as usize]
   }
 }

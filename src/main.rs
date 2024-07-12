@@ -13,8 +13,7 @@ use macroquad::prelude::*;
 #[macroquad::main(window_conf)]
 async fn main() {
   let mut board = Board::new("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-  let moves = board.get_all_legal_moves();
-  // let piece_moves = Vec::new();
+  let mut piece_moves: Vec<Move> = Vec::new();
 
   let texture_atlas = load_texture(TEXTURE_PATH).await.unwrap();
 
@@ -76,10 +75,13 @@ async fn main() {
         // piece_sprite.set_location_center(mouse_x - (self.rect.w / 2.0), mouse_y - (self.rect.w / 2.0));
         piece_sprite.rect.x = mouse_x - (piece_sprite.rect.w / 2.0);
         piece_sprite.rect.y = mouse_y - (piece_sprite.rect.w / 2.0);
+
+        let moves = board.get_moves(piece_sprite.get_square());
+        piece_moves = moves.clone();
       }
 
-      else if piece_sprite.moved_piece && is_mouse_button_released(MouseButton::Left) { // make a mov
-        let piece_moves = board.get_legal_moves(piece_sprite.get_square(), piece_sprite.get_piecetype());
+      else if piece_sprite.moved_piece && is_mouse_button_released(MouseButton::Left) { // make a move
+        // let piece_moves = board.get_legal_moves(piece_sprite.get_square(), piece_sprite.get_piecetype());
         let mouse_square_index = squares.iter().position(|&r| r == mouse_square).unwrap() as i32;
         let mut piece_move = Move::new(piece_sprite.get_square(), mouse_square_index, piece_sprite.get_piecetype(), None);
 

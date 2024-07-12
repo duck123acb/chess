@@ -47,12 +47,12 @@ impl PieceType {
 
   pub fn all_black() -> [PieceType; 6] {
     [
-      PieceType::WhiteKing,
-      PieceType::WhiteQueen,
-      PieceType::WhiteBishop,
-      PieceType::WhiteKnight,
-      PieceType::WhiteRook,
-      PieceType::WhitePawn
+      PieceType::BlackKing,
+      PieceType::BlackQueen,
+      PieceType::BlackBishop,
+      PieceType::BlackKnight,
+      PieceType::BlackRook,
+      PieceType::BlackPawn
     ]
   }
 }
