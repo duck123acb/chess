@@ -249,6 +249,7 @@ impl Board {
 
   pub fn get_legal_moves(&self, square_index: i32, piece_type: PieceType) -> Vec<Move> {
     let moves;
+    let en_passent_flag; // replace with flags struct
     let bitboard = 1 << square_index;
 
     match piece_type {
@@ -283,14 +284,14 @@ impl Board {
         moves = get_rook_moves(square_index, &self.all_black_pieces(), &self.all_white_pieces());
       },
       PieceType::WhitePawn => {
-        moves = pawn_moves(&bitboard, &self.all_white_pieces(), &self.all_black_pieces(), true, self.en_passent_square);
+        (moves, en_passent_flag) = pawn_moves(&bitboard, &self.all_white_pieces(), &self.all_black_pieces(), true, self.en_passent_square);
       },
       PieceType::BlackPawn => {
-        moves = pawn_moves(&bitboard, &self.all_black_pieces(), &self.all_white_pieces(), false, self.en_passent_square);
+        (moves, en_passent_flag) = pawn_moves(&bitboard, &self.all_black_pieces(), &self.all_white_pieces(), false, self.en_passent_square);
       }
     }
 
-    self.generate_moves_from_bitboard(&bitboard, &moves, piece_type)
+    self.generate_moves_from_bitboard(&bitboard, &moves, piece_type) // take in an optional flags type then based onthe flag do stuff
   }
 
   fn get_all_legal_moves(&mut self) {

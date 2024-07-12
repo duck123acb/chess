@@ -9,15 +9,22 @@ const RIGHT_FILE: u64 = 0x0101010101010101;
 const RANK_SHIFT: i32 = 8; // value to shift if you want to move ranks
 const FILE_SHIFT: i32 = 1; // value to shift if you want to move files
 
-pub fn pawn_moves(bitboard: &u64, friendly_bitboard: &u64, enemy_bitboard: &u64, is_white: bool, en_passent_square: Option<i32>)  -> u64 { // TODO: promotion, en_passent
+pub fn pawn_moves(bitboard: &u64, friendly_bitboard: &u64, enemy_bitboard: &u64, is_white: bool, en_passent_square: Option<i32>)  -> (u64, Option<i32>) { // TODO: promotion, en_passent
   let all_pieces = friendly_bitboard | enemy_bitboard;
   let mut moves: u64 = 0;
   let mut attacks: u64 = 0;
+  let mut can_be_passented_square = None; // square that pawns can be passented  on (https://www.youtube.com/shorts/wOdObmJ-q9A)
 
   if is_white {
     moves |= bitboard << RANK_SHIFT;
     if bitboard & (BOTTOM_RANK << RANK_SHIFT) != 0 { // if pawn is on 2nd rank
       moves |= bitboard << (RANK_SHIFT * 2);
+
+      for i in 0..64 {
+        if (1 << i) & (bitboard << RANK_SHIFT) != 0 {
+          can_be_passented_square = Some(i);
+        }
+      }
     }
 
     if bitboard & RIGHT_FILE == 0 { // if piece is not on the left file
@@ -30,6 +37,12 @@ pub fn pawn_moves(bitboard: &u64, friendly_bitboard: &u64, enemy_bitboard: &u64,
     moves |= bitboard >> RANK_SHIFT;
     if bitboard & (TOP_RANK >> RANK_SHIFT) != 0 { // if pawn is on 7th rank
       moves |= bitboard >> (RANK_SHIFT * 2);
+
+      for i in 0..64 {
+        if (1 << i) & (bitboard >> RANK_SHIFT) != 0 {
+          can_be_passented_square = Some(i);
+        }
+      }
     }
 
     if bitboard & RIGHT_FILE == 0 { // if piece is not on the left file
@@ -53,7 +66,7 @@ pub fn pawn_moves(bitboard: &u64, friendly_bitboard: &u64, enemy_bitboard: &u64,
   }
 
   moves |= attacks;
-  moves
+  (moves, can_be_passented_square)
 }
 
 pub fn knight_moves(bitboard: &u64, friendly_bitboard: &u64) -> u64 {
