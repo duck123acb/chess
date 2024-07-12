@@ -19,7 +19,6 @@ async fn main() {
 
   let mut squares: [Square; 64] = [Square::default(); 64];
   let mut mouse_square = Square::default();
-  let mut captured_piece: Option<PieceSprite> = None;
 
 
   let mut piece_sprites: Vec<PieceSprite> = Vec::new();
@@ -65,10 +64,6 @@ async fn main() {
     for (i, piece_sprite) in piece_sprites.iter_mut(  ).enumerate() {
       piece_sprite.handle_mousedown();
 
-      if contains(piece_sprite.rect, mouse_position().into()) && !piece_sprite.get_if_mouseonsprite()  && !is_mouse_button_released(MouseButton::Left) { // i dont know why but it has to NOT be when the mouse button is released that frame
-        captured_piece = Some(piece_sprite.clone());
-      }
-
       if piece_sprite.get_if_mouseonsprite() { // move the sprite based on where the mouse is
         piece_sprite.moved_piece = true;
         let (mouse_x, mouse_y) = mouse_position();
@@ -83,22 +78,10 @@ async fn main() {
       else if piece_sprite.moved_piece && is_mouse_button_released(MouseButton::Left) { // make a move
         // let piece_moves = board.get_legal_moves(piece_sprite.get_square(), piece_sprite.get_piecetype());
         let mouse_square_index = squares.iter().position(|&r| r == mouse_square).unwrap() as i32;
-        let mut piece_move = Move::new(piece_sprite.get_square(), mouse_square_index, piece_sprite.get_piecetype(), None);
+        let piece_move = Move::new(piece_sprite.get_square(), mouse_square_index, piece_sprite.get_piecetype(), None, false);
 
-        if let Some(piece) = &captured_piece {
-          piece_move.captured_piece_type = Some(piece.get_piecetype());
-
-          if piece.get_piecetype() == piece_sprite.get_piecetype() { // if the captured piece is the same as the piece making the move
-            piece_move.captured_piece_type = None; // it's not actually the captured piece
-          }
-
-          if piece.get_square() != piece_move.get_end_square() {
-            piece_move.captured_piece_type = None;
-          }
-        }
-
-        if piece_moves.contains(&piece_move) {
-          board.make_move(piece_move);
+        if let Some(matching_move) = piece_moves.iter().find(|m| **m == piece_move) {
+          board.make_move(matching_move.clone());
         }
 
         piece_sprite.moved_piece = false;
