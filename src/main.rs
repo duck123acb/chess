@@ -88,7 +88,7 @@ async fn main() {
         if let Some(piece) = &captured_piece {
           piece_move.captured_piece_type = Some(piece.get_piecetype());
 
-          if piece.get_piecetype() as usize == piece_sprite.get_piecetype() as usize { // if the captured piece is the same as the piece making the move
+          if piece.get_piecetype() == piece_sprite.get_piecetype() { // if the captured piece is the same as the piece making the move
             piece_move.captured_piece_type = None; // it's not actually the captured piece
           }
 
@@ -130,7 +130,7 @@ async fn main() {
       let piecetype_squares = bits_to_indices(&board.get_bitboards()[piece_type as usize]);
   
       for square_index in piecetype_squares {
-        if !piece_sprites.iter().any(|sprite| sprite.get_square() == square_index && sprite.get_piecetype() as usize == piece_type as usize) { // if the piece doesnt exist
+        if !piece_sprites.iter().any(|sprite| sprite.get_square() == square_index && sprite.get_piecetype() == piece_type) { // if the piece doesnt exist
           let new_piece_sprite: PieceSprite = PieceSprite::new(squares[0].rect.w, &texture_atlas, piece_type, square_index);
           piece_sprites.push(new_piece_sprite);
         }

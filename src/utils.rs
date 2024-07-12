@@ -56,6 +56,11 @@ impl PieceType {
     ]
   }
 }
+impl PartialEq for PieceType {
+  fn eq(&self, other: &Self) -> bool {
+  *self as usize == *other as usize
+}
+}
 
 pub fn window_conf() -> Conf {
   Conf {

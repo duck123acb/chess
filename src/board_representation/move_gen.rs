@@ -18,10 +18,11 @@ pub fn pawn_moves(bitboard: &u64, friendly_bitboard: &u64, enemy_bitboard: &u64,
   if is_white {
     moves |= bitboard << RANK_SHIFT;
     if bitboard & (BOTTOM_RANK << RANK_SHIFT) != 0 { // if pawn is on 2nd rank
-      moves |= bitboard << (RANK_SHIFT * 2);
+      let move_square  = bitboard << (RANK_SHIFT * 2);
+      moves |= move_square;
 
       for i in 0..64 {
-        if (1 << i) & (bitboard << RANK_SHIFT) != 0 {
+        if (1 << i) & move_square != 0 {
           can_be_passented_square = Some(i);
         }
       }
@@ -36,10 +37,11 @@ pub fn pawn_moves(bitboard: &u64, friendly_bitboard: &u64, enemy_bitboard: &u64,
   } else {
     moves |= bitboard >> RANK_SHIFT;
     if bitboard & (TOP_RANK >> RANK_SHIFT) != 0 { // if pawn is on 7th rank
-      moves |= bitboard >> (RANK_SHIFT * 2);
+      let move_square  = bitboard >> (RANK_SHIFT * 2);
+      moves |= move_square;
 
       for i in 0..64 {
-        if (1 << i) & (bitboard >> RANK_SHIFT) != 0 {
+        if (1 << i) & move_square != 0 {
           can_be_passented_square = Some(i);
         }
       }
