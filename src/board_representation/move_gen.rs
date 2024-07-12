@@ -1,6 +1,5 @@
 use crate::board_representation::precompiled_bitboards::*;
 
-
 // from white's perspective
 const TOP_RANK: u64 = 0xFF00000000000000;
 const BOTTOM_RANK: u64 = 0x00000000000000FF;
@@ -10,7 +9,7 @@ const RIGHT_FILE: u64 = 0x0101010101010101;
 const RANK_SHIFT: i32 = 8; // value to shift if you want to move ranks
 const FILE_SHIFT: i32 = 1; // value to shift if you want to move files
 
-pub fn pawn_moves(bitboard: &u64, friendly_bitboard: &u64, enemy_bitboard: &u64, is_white: bool)  -> u64 { // TODO: promotion, en_passent
+pub fn pawn_moves(bitboard: &u64, friendly_bitboard: &u64, enemy_bitboard: &u64, is_white: bool, en_passent_square: Option<i32>)  -> u64 { // TODO: promotion, en_passent
   let all_pieces = friendly_bitboard | enemy_bitboard;
   let mut moves: u64 = 0;
   let mut attacks: u64 = 0;
@@ -43,6 +42,12 @@ pub fn pawn_moves(bitboard: &u64, friendly_bitboard: &u64, enemy_bitboard: &u64,
 
   moves ^= all_pieces & moves; // removes squares where another piece is. doesnt affect the pawn attacks
   attacks ^= attacks & friendly_bitboard; // removes attacks on friendly pieces
+  if let Some(square) = en_passent_square {
+    let en_passent_attack = attacks & 1 << square;
+    if  en_passent_attack != 0 {
+      moves |= en_passent_attack;
+    }
+  }
   if attacks & all_pieces == 0 { // if the pawn attacks nothing
     attacks = 0; // attacks mean nothing
   }

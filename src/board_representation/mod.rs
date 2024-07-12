@@ -34,7 +34,7 @@ impl CastlingRights {
   }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Clone)]
 pub struct Move {
   start_square: i32,
   end_square: i32,
@@ -283,10 +283,10 @@ impl Board {
         moves = get_rook_moves(square_index, &self.all_black_pieces(), &self.all_white_pieces());
       },
       PieceType::WhitePawn => {
-        moves = pawn_moves(&bitboard, &self.all_white_pieces(), &self.all_black_pieces(), true);
+        moves = pawn_moves(&bitboard, &self.all_white_pieces(), &self.all_black_pieces(), true, self.en_passent_square);
       },
       PieceType::BlackPawn => {
-        moves = pawn_moves(&bitboard, &self.all_black_pieces(), &self.all_white_pieces(), false);
+        moves = pawn_moves(&bitboard, &self.all_black_pieces(), &self.all_white_pieces(), false, self.en_passent_square);
       }
     }
 
