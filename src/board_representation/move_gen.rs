@@ -9,12 +9,12 @@ const RIGHT_FILE: u64 = 0x0101010101010101;
 const RANK_SHIFT: i32 = 8; // value to shift if you want to move ranks
 const FILE_SHIFT: i32 = 1; // value to shift if you want to move files
 
-pub fn pawn_moves(bitboard: &u64, friendly_bitboard: &u64, enemy_bitboard: &u64, is_white: bool, en_passent_square: Option<i32>)  -> (u64, Option<i32>, bool) { // TODO: promotion, en_passent
+pub fn pawn_moves(bitboard: &u64, friendly_bitboard: &u64, enemy_bitboard: &u64, is_white: bool, en_passent_square: Option<u64>)  -> (u64, Option<u64>, Option<u64>) { // TODO: promotion, en_passent
   let all_pieces = friendly_bitboard | enemy_bitboard;
   let mut moves: u64 = 0;
   let mut attacks: u64 = 0;
   let mut can_be_passented_square = None; // square that pawns can be passented  on (https://www.youtube.com/shorts/wOdObmJ-q9A)
-  let mut is_en_passent = false;
+  let mut is_passenting_square = None; // square that the passenting piece ends up on
 
   if is_white {
     moves |= bitboard << RANK_SHIFT;
@@ -22,11 +22,7 @@ pub fn pawn_moves(bitboard: &u64, friendly_bitboard: &u64, enemy_bitboard: &u64,
       let move_square  = bitboard << (RANK_SHIFT * 2);
       moves |= move_square;
 
-      for i in 0..64 {
-        if (1 << i) & move_square != 0 {
-          can_be_passented_square = Some(i);
-        }
-      }
+      can_be_passented_square = Some(move_square);
     }
 
     if bitboard & RIGHT_FILE == 0 { // if piece is not on the left file
@@ -41,11 +37,7 @@ pub fn pawn_moves(bitboard: &u64, friendly_bitboard: &u64, enemy_bitboard: &u64,
       let move_square  = bitboard >> (RANK_SHIFT * 2);
       moves |= move_square;
 
-      for i in 0..64 {
-        if (1 << i) & move_square != 0 {
-          can_be_passented_square = Some(i);
-        }
-      }
+      can_be_passented_square = Some(move_square)
     }
 
     if bitboard & RIGHT_FILE == 0 { // if piece is not on the left file
@@ -59,10 +51,10 @@ pub fn pawn_moves(bitboard: &u64, friendly_bitboard: &u64, enemy_bitboard: &u64,
   moves ^= all_pieces & moves; // removes squares where another piece is. doesnt affect the pawn attacks
   attacks ^= attacks & friendly_bitboard; // removes attacks on friendly pieces
   if let Some(square) = en_passent_square {
-    let en_passent_attack = attacks & 1 << square;
+    let en_passent_attack = attacks & square;
     if  en_passent_attack != 0 {
       moves |= en_passent_attack;
-      is_en_passent = true;
+      is_passenting_square = Some(en_passent_attack);
     }
   }
   if attacks & all_pieces == 0 { // if the pawn attacks nothing
@@ -70,7 +62,7 @@ pub fn pawn_moves(bitboard: &u64, friendly_bitboard: &u64, enemy_bitboard: &u64,
   }
 
   moves |= attacks;
-  (moves, can_be_passented_square, is_en_passent)
+  (moves, can_be_passented_square, is_passenting_square)
 }
 
 pub fn knight_moves(bitboard: &u64, friendly_bitboard: &u64) -> u64 {

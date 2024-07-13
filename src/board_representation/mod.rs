@@ -42,18 +42,18 @@ pub struct Move {
 
   // flags
   pub captured_piece_type: Option<PieceType>,
-  passentable_square: Option<i32>, // the passented piece
-  is_en_passent: bool // the move which passenting occurs
+  passentable_square: Option<u64>, // the passented piece
+  passenting_square: Option<u64> // the move which passenting occurs
 }
 impl Move {
-  pub fn new(move_start_square: i32, move_end_square: i32, piece: PieceType, move_passentable_square: Option<i32>, en_passent: bool) -> Self {
+  pub fn new(move_start_square: i32, move_end_square: i32, piece: PieceType, move_passentable_square: Option<u64>, en_passent_square: Option<u64>) -> Self {
     Self {
       start_square: move_start_square,
       end_square: move_end_square,
       moved_piece_type: piece,
       captured_piece_type: None,
       passentable_square: move_passentable_square,
-      is_en_passent: en_passent
+      passenting_square: en_passent_square
     }
   }
 }
@@ -67,7 +67,7 @@ pub struct Board {
   bitboards: [u64; 12], // TODO: highlighted squares
   white_to_move: bool,
   castling_rights: CastlingRights,
-  en_passent_square: Option<i32>,
+  en_passent_square: Option<u64>,
   halfmove_clock: i32,
   fullmove_num: i32,
 
@@ -189,7 +189,7 @@ impl Board {
         square += (square_num as i32) * 8;
       }
 
-      self.en_passent_square = Some(square);
+      self.en_passent_square = Some(1 << square);
     }
 
     // halfmove_clock
@@ -199,7 +199,7 @@ impl Board {
     self.fullmove_num = fullmove_num.parse().unwrap();
   }
 
-  pub fn generate_moves_from_bitboard(&self, piece_bitboard: &u64, moves_bitboard: &u64, piece_type: PieceType, passanted_square: Option<i32>, is_en_passent: bool) -> Vec<Move>{
+  pub fn generate_moves_from_bitboard(&self, piece_bitboard: &u64, moves_bitboard: &u64, piece_type: PieceType, passanted_square: Option<u64>, passenting_square: Option<u64>) -> Vec<Move>{
     let mut moves: Vec<Move> = Vec::new();
     let mut piece_square = 0;
     for i in 0..64 {
@@ -210,21 +210,21 @@ impl Board {
     }
 
     for square in bits_to_indices(moves_bitboard) {
-      let mut new_move = Move::new(piece_square, square, piece_type, passanted_square, is_en_passent);
+      let mut new_move = Move::new(piece_square, square, piece_type, passanted_square, passenting_square);
 
       for piece_type in PieceType::iter() {
         if self.bitboards[piece_type as usize] & 1 << square != 0 { // if the square already has something on it
           new_move.captured_piece_type = Some(piece_type);
         }
-        if is_en_passent {
-          println!("hi");
-          if let Some(passanted_square) = self.en_passent_square {
-            if self.bitboards[piece_type as usize] & 1 << passanted_square != 0 {
-              new_move.captured_piece_type = Some(piece_type);
-            }
-          }
+        // if is_en_passent {
+        //   println!("hi");
+        //   if let Some(passanted_square) = self.en_passent_square {
+        //     if self.bitboards[piece_type as usize] & 1 << passanted_square != 0 {
+        //       new_move.captured_piece_type = Some(piece_type);
+        //     }
+        //   }
 
-        }
+        // }
       }
       if piece_square == square {
         continue;
@@ -246,11 +246,12 @@ impl Board {
     }
     if let Some(square) = move_to_make.passentable_square {
       self.en_passent_square = if move_to_make.moved_piece_type == PieceType::WhitePawn {
-        Some(square - 8)
+        Some(square >> 8)
       }
       else {
-        Some(square + 8)
+        Some(square << 8)
       };
+      println!("{:b}", self.en_passent_square.unwrap());
     }
 
     self.white_to_move = !self.white_to_move;
@@ -268,7 +269,7 @@ impl Board {
   pub fn get_legal_moves(&self, square_index: i32, piece_type: PieceType) -> Vec<Move> {
     let moves;
     let mut passented_square = None;
-    let mut is_en_passent = false;
+    let mut passent_square = None;
 
     let bitboard = 1 << square_index;
 
@@ -304,14 +305,14 @@ impl Board {
         moves = get_rook_moves(square_index, &self.all_black_pieces(), &self.all_white_pieces());
       },
       PieceType::WhitePawn => {
-        (moves, passented_square, is_en_passent) = pawn_moves(&bitboard, &self.all_white_pieces(), &self.all_black_pieces(), true, self.en_passent_square);
+        (moves, passented_square, passent_square) = pawn_moves(&bitboard, &self.all_white_pieces(), &self.all_black_pieces(), true, self.en_passent_square);
       },
       PieceType::BlackPawn => {
-        (moves, passented_square, is_en_passent) = pawn_moves(&bitboard, &self.all_black_pieces(), &self.all_white_pieces(), false, self.en_passent_square);
+        (moves, passented_square, passent_square) = pawn_moves(&bitboard, &self.all_black_pieces(), &self.all_white_pieces(), false, self.en_passent_square);
       }
     }
 
-    self.generate_moves_from_bitboard(&bitboard, &moves, piece_type, passented_square, is_en_passent) // take in an optional flags type then based onthe flag do stuff
+    self.generate_moves_from_bitboard(&bitboard, &moves, piece_type, passented_square, passent_square) // take in an optional flags type then based onthe flag do stuff
   }
 
   fn get_all_legal_moves(&mut self) {
