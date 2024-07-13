@@ -3,7 +3,7 @@ mod precompiled_bitboards;
 
 use std::collections::HashMap;
 use move_gen::*;
-use crate::{utils::PieceType, Square};
+use crate::utils::PieceType;
 
 const VEC: Vec<Move> = Vec::new(); // using Vec::new() directly or in a let doesnt satisfy copy trait, and you cant return references
 
@@ -220,15 +220,6 @@ impl Board {
       if piece_square == square {
         continue;
       }
-      // if is_en_passent {
-      //   println!("hi");
-      //   if let Some(passanted_square) = self.en_passent_square {
-      //     if self.bitboards[piece_type as usize] & 1 << passanted_square != 0 {
-      //       new_move.captured_piece_type = Some(piece_type);
-      //     }
-      //   }
-      // }
-      
 
       moves.push(new_move);
     }
@@ -255,9 +246,12 @@ impl Board {
     if let Some(passent_square) = move_to_make.passenting_square {
       if passent_square & new_piece_bitboard != 0 {
         if self.white_to_move {
-          self.bitboards[PieceType::BlackPawn as usize] ^= self.en_passent_square.unwrap();
-          self.en_passent_square = None;
+          self.bitboards[PieceType::BlackPawn as usize] ^= self.en_passent_square.unwrap() >> 8;
         }
+        else {
+          self.bitboards[PieceType::WhitePawn as usize] ^= self.en_passent_square.unwrap() << 8;
+        }
+        self.en_passent_square = None;
       }
     }
 
