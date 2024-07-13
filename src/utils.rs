@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use macroquad::prelude::*;
 
 #[derive(Copy, Clone)]
@@ -35,6 +33,33 @@ impl PieceType {
     ];
     VARIANTS.iter().copied()
   }
+
+  pub fn all_white() -> [PieceType; 6] {
+    [
+      PieceType::WhiteKing,
+      PieceType::WhiteQueen,
+      PieceType::WhiteBishop,
+      PieceType::WhiteKnight,
+      PieceType::WhiteRook,
+      PieceType::WhitePawn
+    ]
+  }
+
+  pub fn all_black() -> [PieceType; 6] {
+    [
+      PieceType::BlackKing,
+      PieceType::BlackQueen,
+      PieceType::BlackBishop,
+      PieceType::BlackKnight,
+      PieceType::BlackRook,
+      PieceType::BlackPawn
+    ]
+  }
+}
+impl PartialEq for PieceType {
+  fn eq(&self, other: &Self) -> bool {
+  *self as usize == *other as usize
+}
 }
 
 pub fn window_conf() -> Conf {
