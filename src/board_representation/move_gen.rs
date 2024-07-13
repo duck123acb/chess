@@ -21,7 +21,6 @@ pub fn pawn_moves(bitboard: &u64, friendly_bitboard: &u64, enemy_bitboard: &u64,
     if bitboard & (BOTTOM_RANK << RANK_SHIFT) != 0 { // if pawn is on 2nd rank
       let move_square  = bitboard << (RANK_SHIFT * 2);
       moves |= move_square;
-
       can_be_passented_square = Some(move_square);
     }
 
@@ -36,8 +35,7 @@ pub fn pawn_moves(bitboard: &u64, friendly_bitboard: &u64, enemy_bitboard: &u64,
     if bitboard & (TOP_RANK >> RANK_SHIFT) != 0 { // if pawn is on 7th rank
       let move_square  = bitboard >> (RANK_SHIFT * 2);
       moves |= move_square;
-
-      can_be_passented_square = Some(move_square)
+      can_be_passented_square = Some(move_square);
     }
 
     if bitboard & RIGHT_FILE == 0 { // if piece is not on the left file
@@ -50,13 +48,15 @@ pub fn pawn_moves(bitboard: &u64, friendly_bitboard: &u64, enemy_bitboard: &u64,
 
   moves ^= all_pieces & moves; // removes squares where another piece is. doesnt affect the pawn attacks
   attacks ^= attacks & friendly_bitboard; // removes attacks on friendly pieces
-  if let Some(square) = en_passent_square {
+
+  if let Some(square) = en_passent_square { // allows for the capture of en_passent
     let en_passent_attack = attacks & square;
-    if  en_passent_attack != 0 {
+    if en_passent_attack != 0 {
       moves |= en_passent_attack;
       is_passenting_square = Some(en_passent_attack);
     }
   }
+
   if attacks & all_pieces == 0 { // if the pawn attacks nothing
     attacks = 0; // attacks mean nothing
   }
