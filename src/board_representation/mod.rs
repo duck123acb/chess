@@ -209,6 +209,8 @@ impl Board {
     for i in 0..64 { // for each square on the board
       for piece_move in &self.moves.1[i] { // for move in the enemy moves
         if piece_move.end_square == square {
+          println!("{}", piece_move.moved_piece_type as usize);
+          println!("{}", square);
           return true;
         }
       }
@@ -336,25 +338,27 @@ impl Board {
   }
 
   fn castle_checks(&mut self) { // FIXME: also include piece attacks onto these squares
-    if !self.white_castling_flags.king_moved {
-      if !self.white_castling_flags.rook_kingside_moved && (self.all_white_pieces() & 0x6 == 0 && !(self.is_square_attacked(1) || self.is_square_attacked(2))) {
-        self.castling_rights.white_kingside = true;
+    if self.white_to_move {
+      if !self.white_castling_flags.king_moved {
+        if !self.white_castling_flags.rook_kingside_moved && (self.all_white_pieces() & 0x6 == 0 && (!self.is_square_attacked(1) || !self.is_square_attacked(2))) {
+          self.castling_rights.white_kingside = true;
+        }
+        else {
+          self.castling_rights.white_kingside = false;
+        }
+        if !self.white_castling_flags.rook_queenside_moved && (self.all_white_pieces() & 0x70 == 0 && !(self.is_square_attacked(4) || self.is_square_attacked(5))) {
+          self.castling_rights.white_queenside = true;
+        }
+        else {
+          self.castling_rights.white_queenside = false;
+        }
       }
       else {
         self.castling_rights.white_kingside = false;
-      }
-      if !self.white_castling_flags.rook_queenside_moved && (self.all_white_pieces() & 0x70 == 0 && !(self.is_square_attacked(4) || self.is_square_attacked(5))) {
-        self.castling_rights.white_queenside = true;
-      }
-      else {
         self.castling_rights.white_queenside = false;
       }
     }
-    else {
-      self.castling_rights.white_kingside = false;
-      self.castling_rights.white_queenside = false;
-    }
-
+  else {
     if !self.black_castling_flags.king_moved {
       if !self.black_castling_flags.rook_kingside_moved && (self.all_black_pieces() & 0x600000000000000 == 0 && !(self.is_square_attacked(57) || self.is_square_attacked(58))) {
         self.castling_rights.black_kingside =  true;
@@ -373,6 +377,7 @@ impl Board {
       self.castling_rights.black_kingside = false;
       self.castling_rights.black_queenside = false;
     }
+  }
   }
   pub fn make_move(&mut self, move_to_make: Move) {
     let new_piece_bitboard = 1 << move_to_make.end_square;
