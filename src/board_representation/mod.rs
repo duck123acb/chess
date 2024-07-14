@@ -205,6 +205,17 @@ impl Board {
   fn all_black_pieces(&self) -> u64 {
     self.bitboards[PieceType::BlackKing as usize] | self.bitboards[PieceType::BlackQueen as usize] | self.bitboards[PieceType::BlackBishop as usize] | self.bitboards[PieceType::BlackKnight as usize] | self.bitboards[PieceType::BlackRook as usize] | self.bitboards[PieceType::BlackPawn as usize]
   }
+  fn is_square_attacked(&self, square: i32) -> bool {
+    for i in 0..64 { // for each square on the board
+      for piece_move in &self.moves.1[i] { // for move in the enemy moves
+        if piece_move.end_square == square {
+          return true;
+        }
+      }
+    }
+
+    false
+  }
   // getters
   pub fn get_bitboards(&self) -> [u64; 12] {
     self.bitboards
@@ -326,13 +337,13 @@ impl Board {
 
   fn castle_checks(&mut self) { // FIXME: also include piece attacks onto these squares
     if !self.white_castling_flags.king_moved {
-      if !self.white_castling_flags.rook_kingside_moved && self.all_white_pieces() & 0x6 == 0 {
+      if !self.white_castling_flags.rook_kingside_moved && (self.all_white_pieces() & 0x6 == 0 && !(self.is_square_attacked(1) || self.is_square_attacked(2))) {
         self.castling_rights.white_kingside = true;
       }
       else {
         self.castling_rights.white_kingside = false;
       }
-      if !self.white_castling_flags.rook_queenside_moved && self.all_white_pieces() & 0x70 == 0 {
+      if !self.white_castling_flags.rook_queenside_moved && (self.all_white_pieces() & 0x70 == 0 && !(self.is_square_attacked(4) || self.is_square_attacked(5))) {
         self.castling_rights.white_queenside = true;
       }
       else {
@@ -345,13 +356,13 @@ impl Board {
     }
 
     if !self.black_castling_flags.king_moved {
-      if !self.black_castling_flags.rook_kingside_moved && self.all_black_pieces() & 0x600000000000000 == 0 {
+      if !self.black_castling_flags.rook_kingside_moved && (self.all_black_pieces() & 0x600000000000000 == 0 && !(self.is_square_attacked(57) || self.is_square_attacked(58))) {
         self.castling_rights.black_kingside =  true;
       }
       else {
         self.castling_rights.black_kingside = false;
       }
-      if !self.black_castling_flags.rook_queenside_moved && self.all_black_pieces() & 0x7000000000000000 != 0 {
+      if !self.black_castling_flags.rook_queenside_moved && (self.all_black_pieces() & 0x7000000000000000 != 0 && !(self.is_square_attacked(60) || self.is_square_attacked(61))) {
         self.castling_rights.black_queenside = true;
       }
       else {
