@@ -337,9 +337,9 @@ impl Board {
   }
   pub fn make_move(&mut self, move_to_make: Move) {
     let new_piece_bitboard = 1 << move_to_make.end_square;
-    let curr_piece_bitboard = 1 << move_to_make.start_square;
+    let old_piece_bitboard = 1 << move_to_make.start_square;
 
-    self.bitboards[move_to_make.moved_piece_type as usize] ^= curr_piece_bitboard | new_piece_bitboard; // move the piece in its own bitboard
+    self.bitboards[move_to_make.moved_piece_type as usize] ^= old_piece_bitboard | new_piece_bitboard; // move the piece in its own bitboard
     if let Some(piece_type) = move_to_make.captured_piece_type {
       self.bitboards[piece_type as usize] ^= new_piece_bitboard;
     }
@@ -366,6 +366,7 @@ impl Board {
       }
     }
 
+    // castling
     if let Some(castle_square) = move_to_make.kingside_castle_square {
       if castle_square & new_piece_bitboard != 0 {
         if self.white_to_move {
@@ -387,6 +388,45 @@ impl Board {
       }
     }
 
+    if PieceType::WhiteKing == move_to_make.moved_piece_type {
+      self.white_castling_flags.king_moved = true;
+    }
+    else if PieceType::BlackKing == move_to_make.moved_piece_type {
+      self.black_castling_flags.king_moved = true;
+    }
+    else if PieceType::WhiteRook == move_to_make.moved_piece_type { // if the rook moves
+      if old_piece_bitboard & 0x1 != 0 {
+        self.white_castling_flags.rook_kingside_moved = true;
+      }
+      else if old_piece_bitboard & 0x80 != 0 {
+        self.white_castling_flags.rook_queenside_moved = true;
+      }
+    }
+    else if move_to_make.captured_piece_type.is_some() && PieceType::WhiteRook == move_to_make.captured_piece_type.unwrap() { // if the rook is captured
+      if new_piece_bitboard & 0x1 != 0 {
+        self.white_castling_flags.rook_kingside_moved = true;
+      }
+      else if new_piece_bitboard & 0x80 != 0 {
+        self.white_castling_flags.rook_queenside_moved = true;
+      }
+    }
+    else if PieceType::BlackRook == move_to_make.moved_piece_type { // if the rook moves
+      if old_piece_bitboard & 0x1 != 0 {
+        self.white_castling_flags.rook_kingside_moved = true;
+      }
+      else if old_piece_bitboard & 0x80 != 0 {
+        self.white_castling_flags.rook_queenside_moved = true;
+      }
+    }
+    else if move_to_make.captured_piece_type.is_some() && PieceType::BlackRook == move_to_make.captured_piece_type.unwrap() { // if the rook is captured
+      if new_piece_bitboard & 0x100000000000000 != 0 {
+        self.white_castling_flags.rook_kingside_moved = true;
+      }
+      else if new_piece_bitboard & 0x8000000000000000 != 0 {
+        self.white_castling_flags.rook_queenside_moved = true;
+      }
+    }
+    
     self.castle_checks();
     self.white_to_move = !self.white_to_move;
 
