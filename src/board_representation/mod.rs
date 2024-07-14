@@ -209,8 +209,6 @@ impl Board {
     for i in 0..64 { // for each square on the board
       for piece_move in &self.moves.1[i] { // for move in the enemy moves
         if piece_move.end_square == square {
-          println!("{}", piece_move.moved_piece_type as usize);
-          println!("{}", square);
           return true;
         }
       }
