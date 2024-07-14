@@ -33,6 +33,20 @@ impl CastlingRights {
     }
   }
 }
+struct CastlingFlags {
+  king_moved: bool,
+  rook_kingside_moved: bool,
+  rook_queenside_moved: bool,
+}
+impl CastlingFlags {
+  fn new() -> Self {
+    Self {
+      king_moved: false,
+      rook_kingside_moved: false,
+      rook_queenside_moved: false,
+    }
+  }
+}
 
 #[derive(Clone)]
 pub struct Move {
@@ -43,17 +57,21 @@ pub struct Move {
   // flags
   pub captured_piece_type: Option<PieceType>,
   passentable_square: Option<u64>, // the passented square
-  passenting_square: Option<u64> // the square the passenting piece ends up on
+  passenting_square: Option<u64>, // the square the passenting piece ends up on\
+  kingside_castle_square: Option<u64>,
+  queenside_castle_square: Option<u64>
 }
 impl Move {
-  pub fn new(move_start_square: i32, move_end_square: i32, piece: PieceType, move_passentable_square: Option<u64>, en_passent_square: Option<u64>) -> Self {
+  pub fn new(move_start_square: i32, move_end_square: i32, piece: PieceType, move_passentable_square: Option<u64>, en_passent_square: Option<u64>, kingside_castle: Option<u64>, queenside_castle: Option<u64>) -> Self {
     Self {
       start_square: move_start_square,
       end_square: move_end_square,
       moved_piece_type: piece,
       captured_piece_type: None,
       passentable_square: move_passentable_square,
-      passenting_square: en_passent_square
+      passenting_square: en_passent_square,
+      kingside_castle_square: kingside_castle,
+      queenside_castle_square: queenside_castle
     }
   }
 }
@@ -64,13 +82,14 @@ impl PartialEq for Move {
 }
 
 pub struct Board {
-  bitboards: [u64; 12], // TODO: highlighted squares
+  bitboards: [u64; 12],
   white_to_move: bool,
   castling_rights: CastlingRights,
   en_passent_square: Option<u64>,
   halfmove_clock: i32,
   fullmove_num: i32,
-
+  white_castling_flags: CastlingFlags,
+  black_castling_flags: CastlingFlags,
   moves: [Vec<Move>; 64]
 }
 impl Board {
@@ -83,18 +102,20 @@ impl Board {
       en_passent_square: None,
       halfmove_clock: 0,
       fullmove_num: 0,
-
+      white_castling_flags: CastlingFlags::new(), // init these based on FEN somehow
+      black_castling_flags: CastlingFlags::new(),
       moves: [VEC; 64]
     };
     new_board.parse_fen(fen);
     new_board.get_all_legal_moves();
+    new_board.castle_checks();
     new_board
   }
   fn parse_fen(&mut self, fen: &str) {
     let mut parts = fen.split(' ');
     let position = parts.next().unwrap();
     let side_to_move = parts.next().unwrap();
-    let castling_rights  = parts.next().unwrap();
+    let _  = parts.next().unwrap(); // dont care about this part because thats not how my engine implements castling
     let en_passent_square  = parts.next().unwrap();
     let halfmove_clock  = parts.next().unwrap();
     let fullmove_num  = parts.next().unwrap();
@@ -146,29 +167,7 @@ impl Board {
     }
     self.white_to_move = side_to_move_chars[0] == 'w';
 
-    // castling rights
-    for c in castling_rights.chars() {
-      match c {
-        '-' => { // no castling rights
-          break;
-        },
-        'K' => {
-          self.castling_rights.white_kingside = true;
-        },
-        'Q' => {
-          self.castling_rights.white_queenside = true;
-        },
-        'k' => {
-          self.castling_rights.black_kingside = true;
-        },
-        'q' => {
-          self.castling_rights.black_queenside = true;
-        },
-        _ =>  {
-          panic!("Unexpected character in castling_rights field of FEN string");
-        }
-      }
-    }
+    // TODO: castling rights
 
     // en passent
     if en_passent_square != "-" {
@@ -215,11 +214,11 @@ impl Board {
   }
 
   /* MOVE GEN */
-  fn generate_moves_from_bitboard(&self, piece_square: i32, moves_bitboard: u64, piece_type: PieceType, passanted_square: Option<u64>, passenting_square: Option<u64>) -> Vec<Move>{
+  fn generate_moves_from_bitboard(&self, piece_square: i32, moves_bitboard: u64, piece_type: PieceType, passanted_square: Option<u64>, passenting_square: Option<u64>, kingside_castle_square: Option<u64>, queenside_castle_square: Option<u64>) -> Vec<Move>{
     let mut moves: Vec<Move> = Vec::new();
 
     for square in bits_to_indices(&moves_bitboard) {
-      let mut new_move = Move::new(piece_square, square, piece_type, passanted_square, passenting_square);
+      let mut new_move = Move::new(piece_square, square, piece_type, passanted_square, passenting_square, kingside_castle_square, queenside_castle_square);
 
       for piece_type in PieceType::iter() {
         if self.bitboards[piece_type as usize] & 1 << square != 0 { // if the square already has something on it
@@ -235,18 +234,22 @@ impl Board {
   fn get_legal_moves(&self, square_index: i32, piece_type: PieceType) -> Vec<Move> {
     let moves;
 
-    // move flags
+    // en passent flags
     let mut passented_square = None;
     let mut passenting_square = None;
+
+    // castling flags
+    let mut kingside_castle_square = None;
+    let mut queenside_castle_square = None;
 
     let bitboard = 1 << square_index;
 
     match piece_type {
       PieceType::WhiteKing => {
-        moves = king_moves(&bitboard, &self.all_white_pieces());
+        (moves, kingside_castle_square, queenside_castle_square) = king_moves(&bitboard, &self.all_white_pieces(), self.castling_rights.white_kingside, self.castling_rights.white_queenside);
       },
       PieceType::BlackKing => {
-        moves = king_moves(&bitboard, &self.all_black_pieces());
+        (moves, kingside_castle_square, queenside_castle_square) = king_moves(&bitboard, &self.all_black_pieces(), self.castling_rights.black_kingside, self.castling_rights.black_queenside);
       },
       PieceType::WhiteQueen => {
         moves = get_bishop_moves(square_index, &self.all_white_pieces(), &self.all_black_pieces()) | get_rook_moves(square_index, &self.all_white_pieces(), &self.all_black_pieces());
@@ -280,7 +283,7 @@ impl Board {
       }
     }
 
-    self.generate_moves_from_bitboard(square_index, moves, piece_type, passented_square, passenting_square) // take in an optional flags type then based onthe flag do stuff
+    self.generate_moves_from_bitboard(square_index, moves, piece_type, passented_square, passenting_square, kingside_castle_square, queenside_castle_square) // take in an optional flags type then based onthe flag do stuff
   }
   fn get_all_legal_moves(&mut self) {
     let mut moves: [Vec<Move>; 64] = [VEC; 64];
@@ -305,6 +308,33 @@ impl Board {
     self.moves = moves;
   }
 
+  fn castle_checks(&mut self) {
+    if self.all_white_pieces() & 0x6 != 0 {
+      self.castling_rights.white_kingside = false;
+    }
+    else {
+      self.castling_rights.white_kingside = true;
+    }
+    if self.all_white_pieces() & 0x70 != 0 {
+      self.castling_rights.white_queenside = false;
+    }
+    else {
+      self.castling_rights.white_queenside = true;
+    }
+
+    if self.all_black_pieces() & 0x600000000000000 != 0 {
+      self.castling_rights.black_kingside = false;
+    }
+    else {
+      self.castling_rights.black_kingside = true;
+    }
+    if self.all_black_pieces() & 0x7000000000000000 != 0 {
+      self.castling_rights.black_queenside = false;
+    }
+    else {
+      self.castling_rights.black_queenside = true;
+    }
+  }
   pub fn make_move(&mut self, move_to_make: Move) {
     let new_piece_bitboard = 1 << move_to_make.end_square;
     let curr_piece_bitboard = 1 << move_to_make.start_square;
@@ -336,6 +366,28 @@ impl Board {
       }
     }
 
+    if let Some(castle_square) = move_to_make.kingside_castle_square {
+      if castle_square & new_piece_bitboard != 0 {
+        if self.white_to_move {
+          self.bitboards[PieceType::WhiteRook as usize] ^= 0x5;
+        }
+        else {
+          self.bitboards[PieceType::BlackRook as usize] ^= 0x500000000000000;
+        }
+      }
+    }
+    if let Some(castle_square) = move_to_make.queenside_castle_square {
+      if castle_square & new_piece_bitboard != 0 {
+        if self.white_to_move {
+          self.bitboards[PieceType::WhiteRook as usize] ^= 0x90;
+        }
+        else {
+          self.bitboards[PieceType::BlackRook as usize] ^= 0x9000000000000000;
+        }
+      }
+    }
+
+    self.castle_checks();
     self.white_to_move = !self.white_to_move;
 
     self.get_all_legal_moves();
