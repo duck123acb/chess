@@ -70,7 +70,7 @@ async fn main() {
         piece_sprite.rect.x = mouse_x - (piece_sprite.rect.w / 2.0);
         piece_sprite.rect.y = mouse_y - (piece_sprite.rect.w / 2.0);
 
-        let moves = board.get_moves(piece_sprite.get_square());
+        let moves = board.get_friendly_moves(piece_sprite.get_square());
         piece_moves = moves.clone();
       }
 

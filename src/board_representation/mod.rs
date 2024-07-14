@@ -90,7 +90,7 @@ pub struct Board {
   fullmove_num: i32,
   white_castling_flags: CastlingFlags,
   black_castling_flags: CastlingFlags,
-  moves: [Vec<Move>; 64]
+  moves: ([Vec<Move>; 64], [Vec<Move>; 64])
 }
 impl Board {
   /* BOARD SETUP */
@@ -104,7 +104,7 @@ impl Board {
       fullmove_num: 0,
       white_castling_flags: CastlingFlags::new(), // init these based on FEN somehow
       black_castling_flags: CastlingFlags::new(),
-      moves: [VEC; 64]
+      moves: ([VEC; 64], [VEC; 64])
     };
     new_board.parse_fen(fen);
     new_board.get_all_legal_moves();
@@ -209,8 +209,8 @@ impl Board {
   pub fn get_bitboards(&self) -> [u64; 12] {
     self.bitboards
   }
-  pub fn get_moves(&self, index: i32) -> &Vec<Move> {
-    &self.moves[index as usize]
+  pub fn get_friendly_moves(&self, index: i32) -> &Vec<Move> {
+    &self.moves.0[index as usize]
   }
 
   /* MOVE GEN */
@@ -286,26 +286,42 @@ impl Board {
     self.generate_moves_from_bitboard(square_index, moves, piece_type, passented_square, passenting_square, kingside_castle_square, queenside_castle_square) // take in an optional flags type then based onthe flag do stuff
   }
   fn get_all_legal_moves(&mut self) {
-    let mut moves: [Vec<Move>; 64] = [VEC; 64];
+    let mut friendly_moves: [Vec<Move>; 64] = [VEC; 64];
+    let mut enemy_moves: [Vec<Move>; 64] = [VEC; 64];
 
-    let piece_types = if self.white_to_move { // which side's moves to generate
+    let friendly_types = if self.white_to_move { // which side's moves to generate
       PieceType::all_white()
     }
     else {
       PieceType::all_black()
     };
+    let enemy_types = if self.white_to_move { // which side's moves to generate
+      PieceType::all_black()
+    }
+    else {
+      PieceType::all_white()
+    };
 
-    for piece_type in piece_types {
+    for piece_type in friendly_types {
       for i in 0..64 {
         let bitboard = self.bitboards[piece_type as usize];
 
         if bitboard & (1 << i) != 0 {
-          moves[i as usize] = self.get_legal_moves(i, piece_type);
+          friendly_moves[i as usize] = self.get_legal_moves(i, piece_type);
+        }
+      }
+    }
+    for piece_type in enemy_types {
+      for i in 0..64 {
+        let bitboard = self.bitboards[piece_type as usize];
+
+        if bitboard & (1 << i) != 0 {
+          enemy_moves[i as usize] = self.get_legal_moves(i, piece_type);
         }
       }
     }
 
-    self.moves = moves;
+    self.moves = (friendly_moves, enemy_moves);
   }
 
   fn castle_checks(&mut self) { // FIXME: also include piece attacks onto these squares
