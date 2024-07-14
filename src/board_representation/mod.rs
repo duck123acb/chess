@@ -335,7 +335,7 @@ impl Board {
     self.moves = (friendly_moves, enemy_moves);
   }
 
-  fn castle_checks(&mut self) { // FIXME: also include piece attacks onto these squares
+  fn castle_checks(&mut self) { // FIXME: some squares still arent working for some reason??
     if self.white_to_move {
       if !self.white_castling_flags.king_moved {
         if !self.white_castling_flags.rook_kingside_moved && (self.all_white_pieces() & 0x6 == 0 && (!self.is_square_attacked(1) || !self.is_square_attacked(2))) {
