@@ -490,7 +490,6 @@ impl Board {
         }
       }
     }
-
     if !self.black_castling_flags.king_moved { // remove unneccecary checks
       if PieceType::BlackKing == move_to_make.moved_piece_type {
         self.black_castling_flags.king_moved = true;
