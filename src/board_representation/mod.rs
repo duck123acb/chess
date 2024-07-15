@@ -26,10 +26,10 @@ struct CastlingRights {
 impl CastlingRights {
   fn new() -> Self {
     Self {
-      white_kingside: false,
-      white_queenside: false,
-      black_kingside: false,
-      black_queenside: false
+      white_kingside: true,
+      white_queenside: true,
+      black_kingside: true,
+      black_queenside: true
     }
   }
 }
@@ -167,7 +167,13 @@ impl Board {
     }
     self.white_to_move = side_to_move_chars[0] == 'w';
 
-    // TODO: castling rights
+    // castling rights
+    if self.bitboards[PieceType::WhiteKing as usize] & 0x8 == 0 {
+      self.white_castling_flags.king_moved = true;
+    }
+    if self.bitboards[PieceType::BlackKing as usize] & 0x800000000000000 == 0 {
+      self.black_castling_flags.king_moved = true;
+    }
 
     // en passent
     if en_passent_square != "-" {
