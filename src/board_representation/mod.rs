@@ -414,11 +414,13 @@ impl Board {
       self.bitboards[move_to_make.moved_piece_type as usize] ^= old_piece_bitboard;
       self.bitboards[PieceType::WhiteQueen as usize] |= new_piece_bitboard; 
     }
-    self.bitboards[move_to_make.moved_piece_type as usize] ^= old_piece_bitboard | new_piece_bitboard; // move the piece in its own bitboard
+    else {
+      self.bitboards[move_to_make.moved_piece_type as usize] ^= old_piece_bitboard | new_piece_bitboard; // move the piece in its own bitboard
+    }
+    
     if let Some(piece_type) = move_to_make.captured_piece_type {
       self.bitboards[piece_type as usize] ^= new_piece_bitboard;
     }
-
 
     if let Some(square) = move_to_make.passentable_square {
       if new_piece_bitboard & square != 0 {
@@ -442,6 +444,7 @@ impl Board {
         }
         self.en_passent_square = None;
       }
+      // FIXME: en_passent lasting longer than one turn
     }
 
     // castling

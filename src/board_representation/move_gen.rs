@@ -61,8 +61,6 @@ pub fn pawn_moves(bitboard: &u64, friendly_bitboard: &u64, enemy_bitboard: &u64,
   }
 
   moves ^= all_pieces & moves; // removes squares where another piece is. doesnt affect the pawn attacks
-  attacks ^= attacks & friendly_bitboard; // removes attacks on friendly pieces
-
   if let Some(square) = en_passent_square { // allows for the capture of en_passent
     let en_passent_attack = attacks & square;
     if en_passent_attack != 0 {
@@ -70,6 +68,10 @@ pub fn pawn_moves(bitboard: &u64, friendly_bitboard: &u64, enemy_bitboard: &u64,
       is_passenting_square = Some(en_passent_attack);
     }
   }
+  
+  attacks ^= attacks & friendly_bitboard; // removes attacks on friendly pieces
+
+  
 
   if attacks & all_pieces == 0 { // if the pawn attacks nothing
     attacks = 0; // attacks mean nothing
