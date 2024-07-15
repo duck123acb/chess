@@ -166,7 +166,7 @@ pub fn get_bishop_moves(square_index: i32, friendly_bitboard: &u64, enemy_bitboa
   let relevant_bits = &BISHOP_BITS[square_index as usize];
 
   let mut moves = BISHOP_MOVES[square_index as usize][get_magic_index(*magic, *relevant_bits, *mask, &population)];
-  moves ^= friendly_bitboard & mask;
+  moves ^= moves & friendly_bitboard;
   
   moves
 }
@@ -178,7 +178,7 @@ pub fn get_rook_moves(square_index: i32, friendly_bitboard: &u64, enemy_bitboard
   let relevant_bits = &ROOK_BITS[square_index as usize];
 
   let mut moves = ROOK_MOVES[square_index as usize][get_magic_index(*magic, *relevant_bits, *mask, &population)];
-  moves ^= friendly_bitboard & mask;
+  moves ^= moves & friendly_bitboard;
   
   moves
 }
