@@ -344,7 +344,7 @@ impl Board {
         else {
           self.castling_rights.white_kingside = false;
         }
-        if !self.white_castling_flags.rook_queenside_moved && (self.all_white_pieces() & 0x70 == 0 && !(self.is_square_attacked(4) || self.is_square_attacked(5))) {
+        if !self.white_castling_flags.rook_queenside_moved && (self.all_white_pieces() & 0x70 == 0 && (!self.is_square_attacked(4) || !self.is_square_attacked(5))) {
           self.castling_rights.white_queenside = true;
         }
         else {
@@ -358,13 +358,13 @@ impl Board {
     }
   else {
     if !self.black_castling_flags.king_moved {
-      if !self.black_castling_flags.rook_kingside_moved && (self.all_black_pieces() & 0x600000000000000 == 0 && !(self.is_square_attacked(57) || self.is_square_attacked(58))) {
+      if !self.black_castling_flags.rook_kingside_moved && (self.all_black_pieces() & 0x600000000000000 == 0 && (!self.is_square_attacked(57) || !self.is_square_attacked(58))) {
         self.castling_rights.black_kingside =  true;
       }
       else {
         self.castling_rights.black_kingside = false;
       }
-      if !self.black_castling_flags.rook_queenside_moved && (self.all_black_pieces() & 0x7000000000000000 != 0 && !(self.is_square_attacked(60) || self.is_square_attacked(61))) {
+      if !self.black_castling_flags.rook_queenside_moved && (self.all_black_pieces() & 0x7000000000000000 != 0 && (!self.is_square_attacked(60) || !self.is_square_attacked(61))) {
         self.castling_rights.black_queenside = true;
       }
       else {
