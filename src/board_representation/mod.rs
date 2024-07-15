@@ -7,6 +7,11 @@ use crate::utils::PieceType;
 
 const VEC: Vec<Move> = Vec::new(); // have to store Vec::new() as a const as to allow for the copying of it
 
+const H1: u64 = 0x1;
+const A1: u64 = 0x80;
+const H8: u64 = 0x100000000000000;
+const A8: u64 = 0x8000000000000000;
+
 pub fn bits_to_indices(bitboard: &u64) -> Vec<i32> {
   let mut indices = Vec::new();
   for i in 0..64 {
@@ -171,19 +176,19 @@ impl Board {
     if self.bitboards[PieceType::WhiteKing as usize] & 0x8 == 0 {
       self.white_castling_flags.king_moved = true;
     }
-    if self.bitboards[PieceType::WhiteRook as usize] & 0x1 == 0 {
+    if self.bitboards[PieceType::WhiteRook as usize] & H1 == 0 {
       self.white_castling_flags.rook_kingside_moved = true;
     }
-    if self.bitboards[PieceType::WhiteRook as usize] & 0x80 == 0 {
+    if self.bitboards[PieceType::WhiteRook as usize] & A1 == 0 {
       self.white_castling_flags.rook_queenside_moved = true;
     }
     if self.bitboards[PieceType::BlackKing as usize] & 0x800000000000000 == 0 {
       self.black_castling_flags.king_moved = true;
     }
-    if self.bitboards[PieceType::BlackRook as usize] & 0x100000000000000 == 0 {
+    if self.bitboards[PieceType::BlackRook as usize] & H8 == 0 {
       self.black_castling_flags.rook_kingside_moved = true;
     }
-    if self.bitboards[PieceType::BlackRook as usize] & 0x8000000000000000 == 0 {
+    if self.bitboards[PieceType::BlackRook as usize] & A8 == 0 {
       self.black_castling_flags.rook_queenside_moved = true;
     }
 
@@ -456,18 +461,18 @@ impl Board {
         self.white_castling_flags.king_moved = true;
       }
       else if PieceType::WhiteRook == move_to_make.moved_piece_type { // if the rook moves
-        if old_piece_bitboard & 0x1 != 0 {
+        if old_piece_bitboard & H1 != 0 {
           self.white_castling_flags.rook_kingside_moved = true;
         }
-        else if old_piece_bitboard & 0x80 != 0 {
+        else if old_piece_bitboard & A1 != 0 {
           self.white_castling_flags.rook_queenside_moved = true;
         }
       }
       else if move_to_make.captured_piece_type.is_some() && PieceType::WhiteRook == move_to_make.captured_piece_type.unwrap() { // if the rook is captured
-        if new_piece_bitboard & 0x1 != 0 {
+        if new_piece_bitboard & H1 != 0 {
           self.white_castling_flags.rook_kingside_moved = true;
         }
-        else if new_piece_bitboard & 0x80 != 0 {
+        else if new_piece_bitboard & A1 != 0 {
           self.white_castling_flags.rook_queenside_moved = true;
         }
       }
@@ -478,18 +483,18 @@ impl Board {
         self.black_castling_flags.king_moved = true;
       }
       else if PieceType::BlackRook == move_to_make.moved_piece_type { // if the rook moves
-        if old_piece_bitboard & 0x1 != 0 {
+        if old_piece_bitboard & H1 != 0 {
           self.white_castling_flags.rook_kingside_moved = true;
         }
-        else if old_piece_bitboard & 0x80 != 0 {
+        else if old_piece_bitboard & A1 != 0 {
           self.white_castling_flags.rook_queenside_moved = true;
         }
       }
       else if move_to_make.captured_piece_type.is_some() && PieceType::BlackRook == move_to_make.captured_piece_type.unwrap() { // if the rook is captured
-        if new_piece_bitboard & 0x100000000000000 != 0 {
+        if new_piece_bitboard & H8 != 0 {
           self.white_castling_flags.rook_kingside_moved = true;
         }
-        else if new_piece_bitboard & 0x8000000000000000 != 0 {
+        else if new_piece_bitboard & A8 != 0 {
           self.white_castling_flags.rook_queenside_moved = true;
         }
       }
