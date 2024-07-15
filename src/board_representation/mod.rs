@@ -431,6 +431,9 @@ impl Board {
           Some(square << 8)
         };
       }
+      else {
+        self.en_passent_square = None;
+      }
     }
 
     // remove the passented piece
@@ -444,7 +447,6 @@ impl Board {
         }
         self.en_passent_square = None;
       }
-      // FIXME: en_passent lasting longer than one turn
     }
 
     // castling
