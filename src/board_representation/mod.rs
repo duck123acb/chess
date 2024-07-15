@@ -172,7 +172,7 @@ impl Board {
     }
     self.white_to_move = side_to_move_chars[0] == 'w';
 
-    // castling rights TODO: add consts for these values if they are used somewhere else
+    // castling rights
     if self.bitboards[PieceType::WhiteKing as usize] & 0x8 == 0 {
       self.white_castling_flags.king_moved = true;
     }
