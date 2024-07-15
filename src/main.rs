@@ -67,18 +67,16 @@ async fn main() {
       if piece_sprite.get_if_mouseonsprite() { // move the sprite based on where the mouse is
         piece_sprite.moved_piece = true;
         let (mouse_x, mouse_y) = mouse_position();
-        // piece_sprite.set_location_center(mouse_x - (self.rect.w / 2.0), mouse_y - (self.rect.w / 2.0));
         piece_sprite.rect.x = mouse_x - (piece_sprite.rect.w / 2.0);
         piece_sprite.rect.y = mouse_y - (piece_sprite.rect.w / 2.0);
 
-        let moves = board.get_moves(piece_sprite.get_square());
+        let moves = board.get_friendly_moves(piece_sprite.get_square());
         piece_moves = moves.clone();
       }
 
       else if piece_sprite.moved_piece && is_mouse_button_released(MouseButton::Left) { // make a move
-        // let piece_moves = board.get_legal_moves(piece_sprite.get_square(), piece_sprite.get_piecetype());
         let mouse_square_index = squares.iter().position(|&r| r == mouse_square).unwrap() as i32;
-        let piece_move = Move::new(piece_sprite.get_square(), mouse_square_index, piece_sprite.get_piecetype(), None, None);
+        let piece_move = Move::new(piece_sprite.get_square(), mouse_square_index, piece_sprite.get_piecetype(), None, None, None, None);
 
         if let Some(matching_move) = piece_moves.iter().find(|m| **m == piece_move) {
           board.make_move(matching_move.clone());

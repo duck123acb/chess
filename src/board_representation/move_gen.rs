@@ -9,7 +9,8 @@ const RIGHT_FILE: u64 = 0x0101010101010101;
 const RANK_SHIFT: i32 = 8; // value to shift if you want to move ranks
 const FILE_SHIFT: i32 = 1; // value to shift if you want to move files
 
-pub fn pawn_moves(bitboard: &u64, friendly_bitboard: &u64, enemy_bitboard: &u64, is_white: bool, en_passent_square: Option<u64>)  -> (u64, Option<u64>, Option<u64>) { // TODO: promotion, en_passent
+// TODO: promotion
+pub fn pawn_moves(bitboard: &u64, friendly_bitboard: &u64, enemy_bitboard: &u64, is_white: bool, en_passent_square: Option<u64>)  -> (u64, Option<u64>, Option<u64>) {
   let all_pieces = friendly_bitboard | enemy_bitboard;
   let mut moves: u64 = 0;
   let mut attacks: u64 = 0;
@@ -100,8 +101,10 @@ pub fn knight_moves(bitboard: &u64, friendly_bitboard: &u64) -> u64 {
 
   moves
 }
-pub fn king_moves(bitboard: &u64, friendly_bitboard: &u64) -> u64 { // TODO: castling
+pub fn king_moves(bitboard: &u64, friendly_bitboard: &u64, castle_kingside: bool, castle_queenside: bool) -> (u64, Option<u64>, Option<u64>) { // TODO: castling
   let mut moves = 0;
+  let mut is_castles_kingside = None;
+  let mut is_castles_queenside = None;
 
   if bitboard & TOP_RANK == 0 { // if not on the top of the board
     moves |= bitboard << RANK_SHIFT; // up
@@ -135,7 +138,18 @@ pub fn king_moves(bitboard: &u64, friendly_bitboard: &u64) -> u64 { // TODO: cas
     moves ^= false_attacks;
   }
 
-  moves
+  if castle_kingside {
+    let castle = bitboard >> 2;
+    moves |= castle;
+    is_castles_kingside = Some(castle);
+  }
+  if castle_queenside {
+    let castle = bitboard << 2;
+    moves |= castle;
+    is_castles_queenside = Some(castle)
+  }
+
+  (moves, is_castles_kingside, is_castles_queenside)
 }
 
 pub fn get_magic_index(magic: u64, index_bits: u32, mask: u64, population: &u64) -> usize {
@@ -143,7 +157,7 @@ pub fn get_magic_index(magic: u64, index_bits: u32, mask: u64, population: &u64)
 
   (blockers.wrapping_mul(magic) >> index_bits) as usize
 }
-
+// FIXME: sliding pieces can capture each other
 pub fn get_bishop_moves(square_index: i32, friendly_bitboard: &u64, enemy_bitboard: &u64) -> u64 {
   let population = friendly_bitboard | enemy_bitboard;
   
@@ -152,7 +166,7 @@ pub fn get_bishop_moves(square_index: i32, friendly_bitboard: &u64, enemy_bitboa
   let relevant_bits = &BISHOP_BITS[square_index as usize];
 
   let mut moves = BISHOP_MOVES[square_index as usize][get_magic_index(*magic, *relevant_bits, *mask, &population)];
-  moves ^= friendly_bitboard & mask;
+  moves ^= moves & friendly_bitboard;
   
   moves
 }
@@ -164,7 +178,7 @@ pub fn get_rook_moves(square_index: i32, friendly_bitboard: &u64, enemy_bitboard
   let relevant_bits = &ROOK_BITS[square_index as usize];
 
   let mut moves = ROOK_MOVES[square_index as usize][get_magic_index(*magic, *relevant_bits, *mask, &population)];
-  moves ^= friendly_bitboard & mask;
+  moves ^= moves & friendly_bitboard;
   
   moves
 }
