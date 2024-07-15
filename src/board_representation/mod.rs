@@ -107,8 +107,8 @@ impl Board {
       moves: ([VEC; 64], [VEC; 64])
     };
     new_board.parse_fen(fen);
-    new_board.get_all_legal_moves();
     new_board.castle_checks();
+    new_board.get_all_legal_moves();
     new_board
   }
   fn parse_fen(&mut self, fen: &str) {
@@ -167,12 +167,24 @@ impl Board {
     }
     self.white_to_move = side_to_move_chars[0] == 'w';
 
-    // castling rights
+    // castling rights TODO: add consts for these values if they are used somewhere else
     if self.bitboards[PieceType::WhiteKing as usize] & 0x8 == 0 {
       self.white_castling_flags.king_moved = true;
     }
+    if self.bitboards[PieceType::WhiteRook as usize] & 0x1 == 0 {
+      self.white_castling_flags.rook_kingside_moved = true;
+    }
+    if self.bitboards[PieceType::WhiteRook as usize] & 0x80 == 0 {
+      self.white_castling_flags.rook_queenside_moved = true;
+    }
     if self.bitboards[PieceType::BlackKing as usize] & 0x800000000000000 == 0 {
       self.black_castling_flags.king_moved = true;
+    }
+    if self.bitboards[PieceType::BlackRook as usize] & 0x100000000000000 == 0 {
+      self.black_castling_flags.rook_kingside_moved = true;
+    }
+    if self.bitboards[PieceType::BlackRook as usize] & 0x8000000000000000 == 0 {
+      self.black_castling_flags.rook_queenside_moved = true;
     }
 
     // en passent
@@ -362,26 +374,27 @@ impl Board {
         self.castling_rights.white_queenside = false;
       }
     }
-  else {
-    if !self.black_castling_flags.king_moved {
-      if !self.black_castling_flags.rook_kingside_moved && (self.all_black_pieces() & 0x600000000000000 == 0 && (!self.is_square_attacked(57) || !self.is_square_attacked(58))) {
-        self.castling_rights.black_kingside =  true;
+    else {
+      if !self.black_castling_flags.king_moved {
+        if !self.black_castling_flags.rook_kingside_moved && (self.all_black_pieces() & 0x600000000000000 == 0 && (!self.is_square_attacked(57) || !self.is_square_attacked(58))) {
+          self.castling_rights.black_kingside =  true;
+        }
+        else {
+          self.castling_rights.black_kingside = false;
+        }
+        if !self.black_castling_flags.rook_queenside_moved && (self.all_black_pieces() & 0x7000000000000000 == 0 && (!self.is_square_attacked(60) || !self.is_square_attacked(61))) {
+          println!("hi");
+          self.castling_rights.black_queenside = true;
+        }
+        else {
+          self.castling_rights.black_queenside = false;
+        }
       }
       else {
         self.castling_rights.black_kingside = false;
-      }
-      if !self.black_castling_flags.rook_queenside_moved && (self.all_black_pieces() & 0x7000000000000000 != 0 && (!self.is_square_attacked(60) || !self.is_square_attacked(61))) {
-        self.castling_rights.black_queenside = true;
-      }
-      else {
         self.castling_rights.black_queenside = false;
       }
     }
-    else {
-      self.castling_rights.black_kingside = false;
-      self.castling_rights.black_queenside = false;
-    }
-  }
   }
   pub fn make_move(&mut self, move_to_make: Move) {
     self.castle_checks();
