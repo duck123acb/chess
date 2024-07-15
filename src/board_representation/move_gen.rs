@@ -9,16 +9,24 @@ const RIGHT_FILE: u64 = 0x0101010101010101;
 const RANK_SHIFT: i32 = 8; // value to shift if you want to move ranks
 const FILE_SHIFT: i32 = 1; // value to shift if you want to move files
 
-// TODO: promotion
-pub fn pawn_moves(bitboard: &u64, friendly_bitboard: &u64, enemy_bitboard: &u64, is_white: bool, en_passent_square: Option<u64>)  -> (u64, Option<u64>, Option<u64>) {
+pub fn pawn_moves(bitboard: &u64, friendly_bitboard: &u64, enemy_bitboard: &u64, is_white: bool, en_passent_square: Option<u64>) -> (u64, Option<u64>, Option<u64>, bool) {
   let all_pieces = friendly_bitboard | enemy_bitboard;
   let mut moves: u64 = 0;
   let mut attacks: u64 = 0;
+
+  // flags
   let mut can_be_passented_square = None; // square that pawns can be passented  on (https://www.youtube.com/shorts/wOdObmJ-q9A)
   let mut is_passenting_square = None; // square that the passenting piece ends up on
+  let mut is_promotion = false;
 
   if is_white {
-    moves |= bitboard << RANK_SHIFT;
+    let pawn_move = bitboard << RANK_SHIFT;
+    moves |= pawn_move;
+
+    if pawn_move & TOP_RANK != 0 {
+      is_promotion = true;
+    }
+
     if bitboard & (BOTTOM_RANK << RANK_SHIFT) != 0 { // if pawn is on 2nd rank
       let move_square  = bitboard << (RANK_SHIFT * 2);
       moves |= move_square;
@@ -32,7 +40,12 @@ pub fn pawn_moves(bitboard: &u64, friendly_bitboard: &u64, enemy_bitboard: &u64,
       attacks |= bitboard << (RANK_SHIFT + 1);
     }
   } else {
-    moves |= bitboard >> RANK_SHIFT;
+    let pawn_move = bitboard >> RANK_SHIFT;
+    moves |= pawn_move;
+
+    if pawn_move & BOTTOM_RANK != 0 {
+      is_promotion = true
+    }
     if bitboard & (TOP_RANK >> RANK_SHIFT) != 0 { // if pawn is on 7th rank
       let move_square  = bitboard >> (RANK_SHIFT * 2);
       moves |= move_square;
@@ -63,7 +76,7 @@ pub fn pawn_moves(bitboard: &u64, friendly_bitboard: &u64, enemy_bitboard: &u64,
   }
 
   moves |= attacks;
-  (moves, can_be_passented_square, is_passenting_square)
+  (moves, can_be_passented_square, is_passenting_square, is_promotion)
 }
 
 pub fn knight_moves(bitboard: &u64, friendly_bitboard: &u64) -> u64 {
