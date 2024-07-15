@@ -335,7 +335,7 @@ impl Board {
     self.moves = (friendly_moves, enemy_moves);
   }
 
-  fn castle_checks(&mut self) { // FIXME: some squares still arent working for some reason??
+  fn castle_checks(&mut self) {
     if self.white_to_move {
       if !self.white_castling_flags.king_moved {
         if !self.white_castling_flags.rook_kingside_moved && (self.all_white_pieces() & 0x6 == 0 && (!self.is_square_attacked(1) || !self.is_square_attacked(2))) {
@@ -378,6 +378,8 @@ impl Board {
   }
   }
   pub fn make_move(&mut self, move_to_make: Move) {
+    self.castle_checks();
+
     let new_piece_bitboard = 1 << move_to_make.end_square;
     let old_piece_bitboard = 1 << move_to_make.start_square;
 
@@ -474,7 +476,6 @@ impl Board {
       }
     }
     
-    self.castle_checks();
     self.white_to_move = !self.white_to_move;
 
     self.get_all_legal_moves();
