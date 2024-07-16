@@ -78,7 +78,7 @@ async fn main() {
         let mouse_square_index = squares.iter().position(|&r| r == mouse_square).unwrap() as i32;
         let piece_move = Move::new(piece_sprite.get_square(), mouse_square_index, piece_sprite.get_piecetype(), None, None, None, None, false);
 
-        if let Some(matching_move) = piece_moves.iter().find(|m| **m == piece_move) {
+        if let Some(matching_move) = piece_moves.iter().find(|m| **m == piece_move) { // finds move in the list of legal moves
           board.make_move(matching_move.clone());
         }
 
