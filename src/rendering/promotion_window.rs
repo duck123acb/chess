@@ -20,6 +20,10 @@ impl Button {
     }
     None
   }
+  pub fn draw(&self) {
+    draw_rectangle(self.rect.x, self.rect.y, self.rect.w, self.rect.w, GRAY); // bg
+    self.sprite.draw();
+  }
 }
 struct Window {
   buttons: [Button; 4],
@@ -31,16 +35,16 @@ impl Window {
       buttons: if white_to_move {
         [
           Button::new(Rect::new(x, y, size, size), PieceType::WhiteQueen, texture),
-          Button::new(Rect::new(x, y, size, size), PieceType::WhiteKnight, texture),
-          Button::new(Rect::new(x, y, size, size), PieceType::WhiteBishop, texture),
-          Button::new(Rect::new(x, y, size, size), PieceType::WhiteRook, texture),
+          Button::new(Rect::new(x, y + size, size, size), PieceType::WhiteKnight, texture),
+          Button::new(Rect::new(x, y + (size * 2f32), size, size), PieceType::WhiteBishop, texture),
+          Button::new(Rect::new(x, y + (size * 3f32), size, size), PieceType::WhiteRook, texture),
         ]
       } else {
         [
           Button::new(Rect::new(x, y, size, size), PieceType::BlackQueen, texture),
-          Button::new(Rect::new(x, y, size, size), PieceType::BlackKnight, texture),
-          Button::new(Rect::new(x, y, size, size), PieceType::BlackBishop, texture),
-          Button::new(Rect::new(x, y, size, size), PieceType::BlackRook, texture),
+          Button::new(Rect::new(x, y - size, size, size), PieceType::BlackKnight, texture),
+          Button::new(Rect::new(x, y - (size * 2f32), size, size), PieceType::BlackBishop, texture),
+          Button::new(Rect::new(x, y - (size * 3f32), size, size), PieceType::BlackRook, texture),
         ]
       },
       selected_piece: None
@@ -51,6 +55,11 @@ impl Window {
       for button in &self.buttons {
         self.selected_piece = button.handle_click().cloned();
       }
+    }
+  }
+  fn draw(&self) {
+    for button in &self.buttons {
+      button.draw();
     }
   }
 }
