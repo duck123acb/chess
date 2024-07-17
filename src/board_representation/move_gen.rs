@@ -116,7 +116,7 @@ pub fn knight_moves(bitboard: &u64, friendly_bitboard: &u64) -> u64 {
 
   moves
 }
-pub fn king_moves(bitboard: &u64, friendly_bitboard: &u64, castle_kingside: bool, castle_queenside: bool) -> (u64, Option<u64>, Option<u64>) { // TODO: castling
+pub fn king_moves(bitboard: &u64, friendly_bitboard: &u64, castle_kingside: bool, castle_queenside: bool) -> (u64, Option<u64>, Option<u64>) {
   let mut moves = 0;
   let mut is_castles_kingside = None;
   let mut is_castles_queenside = None;
