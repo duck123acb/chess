@@ -78,7 +78,7 @@ async fn main() {
         let mouse_square_index = squares.iter().position(|&r| r == mouse_square).unwrap() as i32;
         let mut piece_move = Move::new(piece_sprite.get_square(), mouse_square_index, piece_sprite.get_piecetype(), None, None, None, None, false);
         
-        if mouse_square_index > 55 {
+        if mouse_square_index > 55 || mouse_square_index < 8 {
           if is_key_down(KeyCode::N) || is_key_down(KeyCode::K) {
             piece_move.promotion_piece = if board.get_if_white_to_move() { Some(PieceType::WhiteKnight) } else { Some(PieceType::BlackKnight) };
           }
