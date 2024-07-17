@@ -83,10 +83,6 @@ impl Move {
       promotion_piece: None
     }
   }
-
-  pub fn get_if_promotion(&self) -> bool {
-    self.is_promotion
-  }
 }
 impl PartialEq for Move {
   fn eq(&self, other: &Self) -> bool {
