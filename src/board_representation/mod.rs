@@ -60,12 +60,13 @@ pub struct Move {
   moved_piece_type: PieceType,
 
   // flags
-  pub captured_piece_type: Option<PieceType>,
+  captured_piece_type: Option<PieceType>,
   passentable_square: Option<u64>, // the passented square
   passenting_square: Option<u64>, // the square the passenting piece ends up on\
   kingside_castle_square: Option<u64>,
   queenside_castle_square: Option<u64>,
-  is_promotion: bool
+  is_promotion: bool,
+  pub promotion_piece: Option<PieceType>
 }
 impl Move {
   pub fn new(move_start_square: i32, move_end_square: i32, piece: PieceType, move_passentable_square: Option<u64>, en_passent_square: Option<u64>, kingside_castle: Option<u64>, queenside_castle: Option<u64>, promotion: bool) -> Self {
@@ -78,13 +79,18 @@ impl Move {
       passenting_square: en_passent_square,
       kingside_castle_square: kingside_castle,
       queenside_castle_square: queenside_castle,
-      is_promotion: promotion
+      is_promotion: promotion,
+      promotion_piece: None
     }
+  }
+
+  pub fn get_if_promotion(&self) -> bool {
+    self.is_promotion
   }
 }
 impl PartialEq for Move {
   fn eq(&self, other: &Self) -> bool {
-    self.start_square == other.start_square && self.end_square == other.end_square
+    self.start_square == other.start_square && self.end_square == other.end_square && self.promotion_piece == other.promotion_piece
   }
 }
 
@@ -245,6 +251,9 @@ impl Board {
   pub fn get_bitboards(&self) -> [u64; 12] {
     self.bitboards
   }
+  pub fn get_if_white_to_move(&self) -> bool {
+    self.white_to_move
+  }
   pub fn get_friendly_moves(&self, index: i32) -> &Vec<Move> {
     &self.moves.0[index as usize]
   }
@@ -262,7 +271,31 @@ impl Board {
         }
       }
 
-      moves.push(new_move);
+      if is_promotion {
+        if self.white_to_move {
+          new_move.promotion_piece = Some(PieceType::WhiteQueen);
+          moves.push(new_move.clone());
+          new_move.promotion_piece = Some(PieceType::WhiteKnight);
+          moves.push(new_move.clone());
+          new_move.promotion_piece = Some(PieceType::WhiteBishop);
+          moves.push(new_move.clone());
+          new_move.promotion_piece = Some(PieceType::WhiteRook);
+          moves.push(new_move.clone());
+        }
+        else {
+          new_move.promotion_piece = Some(PieceType::BlackQueen);
+          moves.push(new_move.clone());
+          new_move.promotion_piece = Some(PieceType::BlackKnight);
+          moves.push(new_move.clone());
+          new_move.promotion_piece = Some(PieceType::BlackBishop);
+          moves.push(new_move.clone());
+          new_move.promotion_piece = Some(PieceType::BlackRook);
+          moves.push(new_move.clone());
+        }
+      }
+      else {
+        moves.push(new_move);
+      }
     }
 
     moves
@@ -412,7 +445,7 @@ impl Board {
 
     if move_to_make.is_promotion {
       self.bitboards[move_to_make.moved_piece_type as usize] ^= old_piece_bitboard;
-      self.bitboards[PieceType::WhiteQueen as usize] |= new_piece_bitboard; 
+      self.bitboards[move_to_make.promotion_piece.unwrap() as usize] |= new_piece_bitboard; 
     }
     else {
       self.bitboards[move_to_make.moved_piece_type as usize] ^= old_piece_bitboard | new_piece_bitboard; // move the piece in its own bitboard
