@@ -34,7 +34,7 @@ impl PieceType {
     VARIANTS.iter().copied()
   }
 
-  pub fn all_white() -> [PieceType; 6] {
+  pub fn all_white() -> [Self; 6] {
     [
       PieceType::WhiteKing,
       PieceType::WhiteQueen,
@@ -44,8 +44,7 @@ impl PieceType {
       PieceType::WhitePawn
     ]
   }
-
-  pub fn all_black() -> [PieceType; 6] {
+  pub fn all_black() -> [Self; 6] {
     [
       PieceType::BlackKing,
       PieceType::BlackQueen,
@@ -53,6 +52,16 @@ impl PieceType {
       PieceType::BlackKnight,
       PieceType::BlackRook,
       PieceType::BlackPawn
+    ]
+  }
+  pub fn all_sliding() -> [Self; 6] {
+    [
+      PieceType::WhiteQueen,
+      PieceType::BlackQueen,
+      PieceType::WhiteBishop,
+      PieceType::BlackBishop,
+      PieceType::WhiteRook,
+      PieceType::BlackRook
     ]
   }
 }

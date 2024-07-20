@@ -101,7 +101,6 @@ pub struct Board {
   white_castling_flags: CastlingFlags,
   black_castling_flags: CastlingFlags,
   moves: ([Vec<Move>; 64], [Vec<Move>; 64]),
-  sliding_piece_rays: Vec<u64>,
 }
 impl Board {
   /* BOARD SETUP */
@@ -116,7 +115,6 @@ impl Board {
       white_castling_flags: CastlingFlags::new(), // init these based on FEN somehow
       black_castling_flags: CastlingFlags::new(),
       moves: ([VEC; 64], [VEC; 64]),
-      sliding_piece_rays: Vec::new(),
     };
     new_board.parse_fen(fen);
     new_board.castle_checks();
@@ -300,14 +298,8 @@ impl Board {
       }
     }
   }
-  fn detect_check_rays(&self) {
-    let mut check_rays = Vec::new();
-    let king = if self.white_to_move { self.bitboards[PieceType::WhiteKing as usize] } else { self.bitboards[PieceType::BlackKing as usize] };
-    for ray in &self.sliding_piece_rays {
-      if ray & king != 0 {
-        check_rays.push(ray);
-      }
-    }
+  fn is_in_check(&self) {
+    // sliding pieces
   }
 
   fn generate_moves_from_bitboard(&self, piece_square: i32, moves_bitboard: u64, piece_type: PieceType, passanted_square: Option<u64>, passenting_square: Option<u64>, kingside_castle_square: Option<u64>, queenside_castle_square: Option<u64>, is_promotion: bool) -> Vec<Move>{
@@ -377,31 +369,17 @@ impl Board {
         let diagonal_moves = get_bishop_moves(square_index, &self.all_white_pieces(), &self.all_black_pieces());
         let orthogonal_moves = get_rook_moves(square_index, &self.all_white_pieces(), &self.all_black_pieces());
         moves = diagonal_moves | orthogonal_moves;
-        if !self.white_to_move {
-          self.sliding_piece_rays.push(diagonal_moves);
-          self.sliding_piece_rays.push(orthogonal_moves);
-        }
       },
       PieceType::BlackQueen => {
         let diagonal_moves = get_bishop_moves(square_index, &self.all_black_pieces(), &self.all_white_pieces());
         let orthogonal_moves = get_rook_moves(square_index, &self.all_black_pieces(), &self.all_white_pieces());
         moves = diagonal_moves | orthogonal_moves;
-        if self.white_to_move {
-          self.sliding_piece_rays.push(diagonal_moves);
-          self.sliding_piece_rays.push(orthogonal_moves);
-        }
       },
       PieceType::WhiteBishop => {
         moves = get_bishop_moves(square_index, &self.all_white_pieces(), &self.all_black_pieces());
-        if !self.white_to_move {
-          self.sliding_piece_rays.push(moves);
-        }
       },
       PieceType::BlackBishop => {
         moves = get_bishop_moves(square_index, &self.all_black_pieces(), &self.all_white_pieces());
-        if self.white_to_move {
-          self.sliding_piece_rays.push(moves);
-        }
       },
       PieceType::WhiteKnight => {
         moves = knight_moves(&bitboard, &self.all_white_pieces());
@@ -411,15 +389,9 @@ impl Board {
       },
       PieceType::WhiteRook => {
         moves = get_rook_moves(square_index, &self.all_white_pieces(), &self.all_black_pieces());
-        if !self.white_to_move {
-          self.sliding_piece_rays.push(moves);
-        }
       },
       PieceType::BlackRook => {
         moves = get_rook_moves(square_index, &self.all_black_pieces(), &self.all_white_pieces());
-        if self.white_to_move {
-          self.sliding_piece_rays.push(moves);
-        }
       },
       PieceType::WhitePawn => {
         (moves, passented_square, passenting_square, is_promotion) = pawn_moves(&bitboard, &self.all_white_pieces(), &self.all_black_pieces(), true, self.en_passent_square);
