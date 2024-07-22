@@ -88,13 +88,14 @@ async fn main() {
           else if is_key_down(KeyCode::R) {
             piece_move.promotion_piece = if board.get_if_white_to_move() { Some(PieceType::WhiteRook) } else { Some(PieceType::BlackRook) };
           }
-          else {
+          else if is_key_down(KeyCode::Q) {
             piece_move.promotion_piece = if board.get_if_white_to_move() { Some(PieceType::WhiteQueen) } else { Some(PieceType::BlackQueen) };
           }
           
         }
 
         if let Some(matching_move) = piece_moves.iter().find(|m| **m == piece_move) { // finds move in the list of legal moves
+
           board.make_move(matching_move.clone());
         }
 

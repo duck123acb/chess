@@ -259,18 +259,8 @@ impl Board {
   fn castle_checks(&mut self) {
     if self.white_to_move {
       if !self.white_castling_flags.king_moved {
-        if !self.white_castling_flags.rook_kingside_moved && (self.all_white_pieces() & 0x6 == 0 && (!self.is_square_attacked(1) || !self.is_square_attacked(2))) {
-          self.castling_rights.white_kingside = true;
-        }
-        else {
-          self.castling_rights.white_kingside = false;
-        }
-        if !self.white_castling_flags.rook_queenside_moved && (self.all_white_pieces() & 0x70 == 0 && (!self.is_square_attacked(4) || !self.is_square_attacked(5))) {
-          self.castling_rights.white_queenside = true;
-        }
-        else {
-          self.castling_rights.white_queenside = false;
-        }
+        self.castling_rights.white_kingside = !self.white_castling_flags.rook_kingside_moved && self.all_white_pieces() & 0x6 == 0 && !(self.is_square_attacked(1) || self.is_square_attacked(2));       
+        self.castling_rights.white_queenside = !self.white_castling_flags.rook_queenside_moved && (self.all_white_pieces() & 0x70 == 0 && (!self.is_square_attacked(4) || !self.is_square_attacked(5)));
       }
       else {
         self.castling_rights.white_kingside = false;
@@ -279,18 +269,8 @@ impl Board {
     }
     else {
       if !self.black_castling_flags.king_moved {
-        if !self.black_castling_flags.rook_kingside_moved && (self.all_black_pieces() & 0x600000000000000 == 0 && (!self.is_square_attacked(57) || !self.is_square_attacked(58))) {
-          self.castling_rights.black_kingside =  true;
-        }
-        else {
-          self.castling_rights.black_kingside = false;
-        }
-        if !self.black_castling_flags.rook_queenside_moved && (self.all_black_pieces() & 0x7000000000000000 == 0 && (!self.is_square_attacked(60) || !self.is_square_attacked(61))) {
-          self.castling_rights.black_queenside = true;
-        }
-        else {
-          self.castling_rights.black_queenside = false;
-        }
+        self.castling_rights.black_kingside = !self.black_castling_flags.rook_kingside_moved && (self.all_black_pieces() & 0x600000000000000 == 0 && (!self.is_square_attacked(57) || !self.is_square_attacked(58)));
+        self.castling_rights.black_queenside = !self.black_castling_flags.rook_queenside_moved && (self.all_black_pieces() & 0x7000000000000000 == 0 && (!self.is_square_attacked(60) || !self.is_square_attacked(61)));
       }
       else {
         self.castling_rights.black_kingside = false;
@@ -552,8 +532,8 @@ impl Board {
       }
     }
 
+    self.castle_checks();
     self.white_to_move = !self.white_to_move;
-
     self.get_all_legal_moves();
   }
 }
