@@ -9,14 +9,60 @@ const RIGHT_FILE: u64 = 0x0101010101010101;
 const RANK_SHIFT: i32 = 8; // value to shift if you want to move ranks
 const FILE_SHIFT: i32 = 1; // value to shift if you want to move files
 
-pub fn pawn_moves(bitboard: &u64, friendly_bitboard: &u64, enemy_bitboard: &u64, is_white: bool, en_passent_square: Option<u64>) -> (u64, Option<u64>, Option<u64>, bool) {
-  let all_pieces = friendly_bitboard | enemy_bitboard;
-  let mut moves: u64 = 0;
+pub fn pawn_attacks(bitboard: &u64, friendly_bitboard: &u64, enemy_bitboard: &u64, is_white: bool, en_passent_square: Option<u64>) -> (u64, bool, bool) {
+  let occupancy = friendly_bitboard | enemy_bitboard;
   let mut attacks: u64 = 0;
 
   // flags
+  let mut can_be_en_passent = false; // square that the passenting piece ends up on
+  let mut is_promotion = false;
+
+  if is_white {
+    if bitboard & RIGHT_FILE == 0 { // if piece is not on the left file
+      attacks |= bitboard << (RANK_SHIFT - 1)
+    }
+    if bitboard & LEFT_FILE == 0 { // if piece is not on the right file
+      attacks |= bitboard << (RANK_SHIFT + 1);
+    }
+
+    if attacks & TOP_RANK != 0 {
+      is_promotion = true;
+    }
+  } else {
+    if bitboard & RIGHT_FILE == 0 { // if piece is not on the left file
+      attacks |= bitboard >> (RANK_SHIFT + 1)
+    }
+    if bitboard & LEFT_FILE == 0 { // if piece is not on the right file
+      attacks |= bitboard >> (RANK_SHIFT - 1);
+    }
+
+    if attacks & BOTTOM_RANK != 0 {
+      is_promotion = true;
+    }
+  }
+
+
+  if let Some(square) = en_passent_square { // allows for the capture of en_passent
+    let en_passent_attack = attacks & square;
+    if en_passent_attack != 0 {
+      attacks |= en_passent_attack;
+      can_be_en_passent = true;
+    }
+
+    attacks &= (occupancy | square) == 0 { // if the pawn attacks nothing but the en_passent_square, the other attacks are removed
+  }
+  else {
+    attacks &= occupancy; // if the pawn attacks nothing, attacks mean nothing
+  }
+  
+  attacks ^= attacks & friendly_bitboard; // removes attacks on friendly pieces
+
+  (attacks, can_be_en_passent, is_promotion)
+}
+pub fn pawn_moves(bitboard: &u64, occupancy: &u64, is_white: bool) -> (u64, Option<u64>, bool) {
+  let mut moves: u64 = 0;
+
   let mut can_be_passented_square = None; // square that pawns can be passented  on (https://www.youtube.com/shorts/wOdObmJ-q9A)
-  let mut is_passenting_square = None; // square that the passenting piece ends up on
   let mut is_promotion = false;
 
   if is_white {
@@ -32,13 +78,6 @@ pub fn pawn_moves(bitboard: &u64, friendly_bitboard: &u64, enemy_bitboard: &u64,
       moves |= move_square;
       can_be_passented_square = Some(move_square);
     }
-
-    if bitboard & RIGHT_FILE == 0 { // if piece is not on the left file
-      attacks |= bitboard << (RANK_SHIFT - 1)
-    }
-    if bitboard & LEFT_FILE == 0 { // if piece is not on the right file
-      attacks |= bitboard << (RANK_SHIFT + 1);
-    }
   } else {
     let pawn_move = bitboard >> RANK_SHIFT;
     moves |= pawn_move;
@@ -51,34 +90,11 @@ pub fn pawn_moves(bitboard: &u64, friendly_bitboard: &u64, enemy_bitboard: &u64,
       moves |= move_square;
       can_be_passented_square = Some(move_square);
     }
-
-    if bitboard & RIGHT_FILE == 0 { // if piece is not on the left file
-      attacks |= bitboard >> (RANK_SHIFT + 1)
-    }
-    if bitboard & LEFT_FILE == 0 { // if piece is not on the right file
-      attacks |= bitboard >> (RANK_SHIFT - 1);
-    }
   }
 
-  moves ^= all_pieces & moves; // removes squares where another piece is. doesnt affect the pawn attacks
-  if let Some(square) = en_passent_square { // allows for the capture of en_passent
-    let en_passent_attack = attacks & square;
-    if en_passent_attack != 0 {
-      moves |= en_passent_attack;
-      is_passenting_square = Some(en_passent_attack);
-    }
-  }
-  
-  attacks ^= attacks & friendly_bitboard; // removes attacks on friendly pieces
+  moves ^= occupancy & moves;
 
-  
-
-  if attacks & all_pieces == 0 { // if the pawn attacks nothing
-    attacks = 0; // attacks mean nothing
-  }
-
-  moves |= attacks;
-  (moves, can_be_passented_square, is_passenting_square, is_promotion)
+  (moves, can_be_passented_square, is_promotion)
 }
 
 pub fn knight_moves(bitboard: &u64, friendly_bitboard: &u64) -> u64 {
