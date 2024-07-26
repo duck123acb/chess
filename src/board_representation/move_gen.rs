@@ -9,7 +9,7 @@ const RIGHT_FILE: u64 = 0x0101010101010101;
 const RANK_SHIFT: i32 = 8; // value to shift if you want to move ranks
 const FILE_SHIFT: i32 = 1; // value to shift if you want to move files
 
-pub fn pawn_attacks(bitboard: &u64, occupancy: &u64, is_white: bool, en_passent_square: Option<u64>) -> (u64, bool, bool) {
+pub fn pawn_attacks(bitboard: &u64, is_white: bool, en_passent_square: Option<u64>) -> (u64, bool, bool) {
   let mut attacks: u64 = 0;
 
   // flags
@@ -47,11 +47,6 @@ pub fn pawn_attacks(bitboard: &u64, occupancy: &u64, is_white: bool, en_passent_
       attacks |= en_passent_attack;
       can_be_en_passent = true;
     }
-
-    attacks &= occupancy | square; // if the pawn attacks nothing but the en_passent_square, the other attacks are removed
-  }
-  else {
-    attacks &= occupancy; // if the pawn attacks nothing, attacks mean nothing
   }
   
   (attacks, can_be_en_passent, is_promotion)
@@ -180,7 +175,7 @@ pub fn get_bishop_moves(square_index: i32, population: &u64) -> u64 {
   let mask = &BISHOP_MASKS[square_index as usize];
   let relevant_bits = &BISHOP_BITS[square_index as usize];
 
-  let mut moves = BISHOP_MOVES[square_index as usize][get_magic_index(*magic, *relevant_bits, *mask, &population)];
+  let moves = BISHOP_MOVES[square_index as usize][get_magic_index(*magic, *relevant_bits, *mask, &population)];
   
   moves
 }
@@ -189,7 +184,7 @@ pub fn get_rook_moves(square_index: i32, population: &u64) -> u64 {
   let mask = &ROOK_MASKS[square_index as usize];
   let relevant_bits = &ROOK_BITS[square_index as usize];
 
-  let mut moves = ROOK_MOVES[square_index as usize][get_magic_index(*magic, *relevant_bits, *mask, &population)];
+  let moves = ROOK_MOVES[square_index as usize][get_magic_index(*magic, *relevant_bits, *mask, &population)];
   
   moves
 }

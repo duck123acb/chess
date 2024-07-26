@@ -117,7 +117,7 @@ pub struct Board {
   white_castling_flags: CastlingFlags,
   black_castling_flags: CastlingFlags,
 
-  moves: ([Vec<Move>; 64], [Vec<Move>; 64]),
+  moves: [Vec<Move>; 64],
   enemy_attacks: u64
 }
 impl Board {
@@ -133,10 +133,11 @@ impl Board {
       white_castling_flags: CastlingFlags::new(), // init these based on FEN somehow
       black_castling_flags: CastlingFlags::new(),
 
-      moves: ([EMPTY_VEC; 64], [EMPTY_VEC; 64]),
+      moves: [EMPTY_VEC; 64],
       enemy_attacks: 0
     };
     new_board.parse_fen(fen);
+    new_board.get_opponents_attacks();
     new_board.castle_checks();
     new_board.get_all_legal_moves();
     new_board
@@ -253,16 +254,8 @@ impl Board {
   fn all_black_pieces(&self) -> u64 {
     self.bitboards[PieceType::BlackKing as usize] | self.bitboards[PieceType::BlackQueen as usize] | self.bitboards[PieceType::BlackBishop as usize] | self.bitboards[PieceType::BlackKnight as usize] | self.bitboards[PieceType::BlackRook as usize] | self.bitboards[PieceType::BlackPawn as usize]
   }
-  fn is_square_attacked(&self, square: i32) -> bool {
-    for i in 0..64 { // for each square on the board
-      for piece_move in &self.moves.1[i] { // for move in the enemy moves
-        if piece_move.end_square == square {
-          return true;
-        }
-      }
-    }
-
-    false
+  fn are_squares_attacked(&self, squares: u64) -> bool {
+    self.enemy_attacks & squares != 0
   }
   // getters
   pub fn get_bitboards(&self) -> [u64; 12] {
@@ -271,8 +264,8 @@ impl Board {
   pub fn get_if_white_to_move(&self) -> bool {
     self.white_to_move
   }
-  pub fn get_friendly_moves(&self, index: i32) -> &Vec<Move> {
-    &self.moves.0[index as usize]
+  pub fn get_moves(&self, index: i32) -> &Vec<Move> {
+    &self.moves[index as usize]
   }
 
   /* MOVE GEN */
@@ -285,30 +278,26 @@ impl Board {
         self.enemy_attacks |= self.get_legal_moves(square, piece_type, true).0;
       }
     }
-
-    println!("{:b}", self.enemy_attacks);
   }
   fn castle_checks(&mut self) {
-    if self.white_to_move {
-      if !self.white_castling_flags.king_moved {
-        self.castling_rights.white_kingside = !self.white_castling_flags.rook_kingside_moved && self.all_white_pieces() & 0x6 == 0 && !(self.is_square_attacked(1) || self.is_square_attacked(2));       
-        self.castling_rights.white_queenside = !self.white_castling_flags.rook_queenside_moved && (self.all_white_pieces() & 0x70 == 0 && (!self.is_square_attacked(4) || !self.is_square_attacked(5)));
-      }
-      else {
-        self.castling_rights.white_kingside = false;
-        self.castling_rights.white_queenside = false;
-      }
+    if !self.white_castling_flags.king_moved {
+      self.castling_rights.white_kingside = !self.white_castling_flags.rook_kingside_moved && self.all_white_pieces() & 0x6 == 0 && self.are_squares_attacked(0x6);       
+      self.castling_rights.white_queenside = !self.white_castling_flags.rook_queenside_moved && self.all_white_pieces() & 0x70 == 0 && self.are_squares_attacked(0x70);
     }
     else {
-      if !self.black_castling_flags.king_moved {
-        self.castling_rights.black_kingside = !self.black_castling_flags.rook_kingside_moved && (self.all_black_pieces() & 0x600000000000000 == 0 && (!self.is_square_attacked(57) || !self.is_square_attacked(58)));
-        self.castling_rights.black_queenside = !self.black_castling_flags.rook_queenside_moved && (self.all_black_pieces() & 0x7000000000000000 == 0 && (!self.is_square_attacked(60) || !self.is_square_attacked(61)));
-      }
-      else {
-        self.castling_rights.black_kingside = false;
-        self.castling_rights.black_queenside = false;
-      }
+      self.castling_rights.white_kingside = false;
+      self.castling_rights.white_queenside = false;
     }
+  
+    if !self.black_castling_flags.king_moved {
+      self.castling_rights.black_kingside = !self.black_castling_flags.rook_kingside_moved && self.all_black_pieces() & 0x600000000000000 == 0 && self.are_squares_attacked(0x600000000000000);
+      self.castling_rights.black_queenside = !self.black_castling_flags.rook_queenside_moved && self.all_black_pieces() & 0x7000000000000000 == 0 && self.are_squares_attacked(0x7000000000000000);
+    }
+    else {
+      self.castling_rights.black_kingside = false;
+      self.castling_rights.black_queenside = false;
+    }
+    
   }
   // fn is_in_check(&self) {
   //   // sliding pieces
@@ -356,7 +345,7 @@ impl Board {
     moves
   }
   fn get_legal_moves(&mut self, square_index: i32, piece_type: PieceType, only_attacks: bool) -> (u64, MoveFlags) {
-    let mut moves;
+    let mut moves = 0;
     let mut flags = MoveFlags::new();
 
     let bitboard = 1 << square_index;
@@ -368,6 +357,7 @@ impl Board {
         
         if !only_attacks {
           moves ^= moves & self.all_white_pieces(); 
+          moves ^= moves & self.enemy_attacks;
         }
       },
       PieceType::BlackKing => {
@@ -375,6 +365,7 @@ impl Board {
 
         if !only_attacks {
           moves ^= moves & self.all_black_pieces(); 
+          moves ^= moves & self.enemy_attacks;
         }
       },
       PieceType::WhiteQueen => {
@@ -438,36 +429,45 @@ impl Board {
         }
       },
       PieceType::WhitePawn => {
-        let attacks;
-        let (is_move_promotion, is_attack_promotion) = (false, false);
+        let mut attacks;
+        let mut is_move_promotion = false;
+        let is_attack_promotion;
 
-        if only_attacks {
+        (attacks, flags.can_be_en_passent, is_attack_promotion) = pawn_attacks(&bitboard, true, self.en_passent_square);
+        if !only_attacks {
           (moves, flags.passented_square, is_move_promotion) = pawn_moves(&bitboard, &occupancy, true);
+        
+          if flags.can_be_en_passent {
+            attacks &= self.all_black_pieces() | self.en_passent_square.unwrap();
+          }
+          else {
+            attacks &= self.all_black_pieces();
+          }
         }
-        (attacks, flags.can_be_en_passent, is_attack_promotion) = pawn_attacks(&bitboard, &occupancy, true, self.en_passent_square);
 
         flags.is_promotion = is_move_promotion || is_attack_promotion;
         moves |= attacks;
-
-        if !only_attacks {
-          moves ^= moves & self.all_white_pieces(); 
-        }
+         
       },
       PieceType::BlackPawn => {
-        let attacks;
-        let (is_move_promotion, is_attack_promotion) = (false, false);
+        let mut attacks;
+        let mut is_move_promotion = false;
+        let is_attack_promotion;
 
-        if only_attacks {
+        (attacks, flags.can_be_en_passent, is_attack_promotion) = pawn_attacks(&bitboard, false, self.en_passent_square);
+        if !only_attacks {
           (moves, flags.passented_square, is_move_promotion) = pawn_moves(&bitboard, &occupancy, false);
+
+          if flags.can_be_en_passent {
+            attacks &= self.all_white_pieces() | self.en_passent_square.unwrap();
+          }
+          else {
+            attacks &= self.all_white_pieces();
+          }
         }
-        (attacks, flags.can_be_en_passent, is_attack_promotion) = pawn_attacks(&bitboard, &occupancy, false, self.en_passent_square);
         
         flags.is_promotion = is_move_promotion || is_attack_promotion;
         moves |= attacks;
-
-        if !only_attacks {
-          moves ^= moves & self.all_black_pieces();
-        }
       }
     }
 
@@ -489,8 +489,7 @@ impl Board {
     else {
       PieceType::all_white()
     };
-
-    // TODO: make this more efficient if needed
+    
     for piece_type in friendly_types {
       for i in 0..64 {
         let bitboard = self.bitboards[piece_type as usize];
@@ -501,24 +500,12 @@ impl Board {
         }
       }
     }
-    for piece_type in enemy_types {
-      for i in 0..64 {
-        let bitboard = self.bitboards[piece_type as usize];
 
-        if bitboard & (1 << i) != 0 {
-          let moves = self.get_legal_moves(i, piece_type, false);
-          enemy_moves[i as usize] = self.generate_moves_from_bitboard(i, moves.0, piece_type, moves.1);
-        }
-      }
-    }
-
-    self.moves = (friendly_moves, enemy_moves);
+    self.moves = friendly_moves;
   }
 
   pub fn make_move(&mut self, move_to_make: Move) {
     self.castle_checks();
-    self.get_opponents_attacks();
-
     let new_piece_bitboard = 1 << move_to_make.end_square;
     let old_piece_bitboard = 1 << move_to_make.start_square;
 
@@ -626,8 +613,8 @@ impl Board {
       }
     }
 
-    self.castle_checks();
     self.white_to_move = !self.white_to_move;
+    self.get_opponents_attacks();
     self.get_all_legal_moves();
   }
 }
