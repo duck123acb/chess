@@ -76,7 +76,7 @@ async fn main() {
 
       else if piece_sprite.moved_piece && is_mouse_button_released(MouseButton::Left) { // make a move
         let mouse_square_index = squares.iter().position(|&r| r == mouse_square).unwrap() as i32;
-        let mut piece_move = Move::new(piece_sprite.get_square(), mouse_square_index, piece_sprite.get_piecetype(), None, false, None, None, false);
+        let mut piece_move = Move::new(piece_sprite.get_square(), mouse_square_index, piece_sprite.get_piecetype(), MoveFlags::new());
         
         if mouse_square_index > 55 || mouse_square_index < 8 {
           if is_key_down(KeyCode::N) || is_key_down(KeyCode::K) {
