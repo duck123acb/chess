@@ -118,7 +118,9 @@ pub struct Board {
   black_castling_flags: CastlingFlags,
 
   moves: [Vec<Move>; 64],
-  enemy_attacks: u64
+  enemy_attacks: u64,
+
+  non_sliding_checks: Vec<u64>
 }
 impl Board {
   /* BOARD SETUP */
@@ -134,7 +136,9 @@ impl Board {
       black_castling_flags: CastlingFlags::new(),
 
       moves: [EMPTY_VEC; 64],
-      enemy_attacks: 0
+      enemy_attacks: 0,
+
+      non_sliding_checks: Vec::new()
     };
     new_board.parse_fen(fen);
     new_board.get_opponents_attacks();
@@ -257,6 +261,10 @@ impl Board {
   fn are_squares_attacked(&self, squares: u64) -> bool {
     self.enemy_attacks & squares != 0
   }
+  fn is_in_check(&self) -> bool {
+    let king = if self.white_to_move { self.bitboards[PieceType::WhiteKing as usize] } else { self.bitboards[PieceType::BlackKing as usize] };
+    king & self.enemy_attacks != 0
+  }
   // getters
   pub fn get_bitboards(&self) -> [u64; 12] {
     self.bitboards
@@ -299,9 +307,6 @@ impl Board {
     }
     
   }
-  // fn is_in_check(&self) {
-  //   // sliding pieces
-  // }
 
   fn generate_moves_from_bitboard(&self, piece_square: i32, moves_bitboard: u64, piece_type: PieceType, flags: MoveFlags) -> Vec<Move>{
     let mut moves: Vec<Move> = Vec::new();
@@ -471,37 +476,49 @@ impl Board {
       }
     }
 
-    (moves, flags)
-  }
-  fn get_all_legal_moves(&mut self) {
-    let mut friendly_moves: [Vec<Move>; 64] = [EMPTY_VEC; 64];
-    let mut enemy_moves: [Vec<Move>; 64] = [EMPTY_VEC; 64];
-
-    let friendly_types = if self.white_to_move { // which side's moves to generate
-      PieceType::all_white()
-    }
-    else {
-      PieceType::all_black()
-    };
-    let enemy_types = if self.white_to_move { // which side's moves to generate
-      PieceType::all_black()
-    }
-    else {
-      PieceType::all_white()
-    };
-    
-    for piece_type in friendly_types {
-      for i in 0..64 {
-        let bitboard = self.bitboards[piece_type as usize];
-
-        if bitboard & (1 << i) != 0 {
-          let moves = self.get_legal_moves(i, piece_type, false);
-          friendly_moves[i as usize] = self.generate_moves_from_bitboard(i, moves.0, piece_type, moves.1);
+    if !only_attacks {
+      let enemy_king = if self.white_to_move { self.bitboards[PieceType::BlackKing as usize] } else { self.bitboards[PieceType::WhiteKing as usize] };
+      match piece_type {
+        PieceType::WhiteKnight | PieceType::BlackKnight | PieceType::WhitePawn | PieceType::BlackPawn => {
+          let check_move = moves & enemy_king;
+          if check_move != 0 {
+            self.non_sliding_checks.push(check_move & bitboard);
+          }
+        },
+        PieceType::WhiteQueen | PieceType::BlackQueen | PieceType::WhiteBishop | PieceType::BlackBishop | PieceType::WhiteRook | PieceType::BlackRook => {
+          let check_ray = todo!();
+          // push the check ray to the boards check_rays vector
+        }
+        _ => {
+          // do nothin
         }
       }
     }
 
-    self.moves = friendly_moves;
+    (moves, flags)
+  }
+  fn get_all_legal_moves(&mut self) {
+    let mut moves: [Vec<Move>; 64] = [EMPTY_VEC; 64];
+
+    let types = if self.white_to_move { // which side's moves to generate
+      PieceType::all_white()
+    }
+    else {
+      PieceType::all_black()
+    };
+    
+    for piece_type in types {
+      for i in 0..64 {
+        let bitboard = self.bitboards[piece_type as usize];
+
+        if bitboard & (1 << i) != 0 {
+          let piece_moves = self.get_legal_moves(i, piece_type, false);
+          moves[i as usize] = self.generate_moves_from_bitboard(i, piece_moves.0, piece_type, piece_moves.1);
+        }
+      }
+    }
+
+    self.moves = moves;
   }
 
   pub fn make_move(&mut self, move_to_make: Move) {

@@ -54,16 +54,6 @@ impl PieceType {
       PieceType::BlackPawn
     ]
   }
-  pub fn all_sliding() -> [Self; 6] {
-    [
-      PieceType::WhiteQueen,
-      PieceType::BlackQueen,
-      PieceType::WhiteBishop,
-      PieceType::BlackBishop,
-      PieceType::WhiteRook,
-      PieceType::BlackRook
-    ]
-  }
 }
 impl PartialEq for PieceType {
   fn eq(&self, other: &Self) -> bool {
