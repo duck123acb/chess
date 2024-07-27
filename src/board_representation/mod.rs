@@ -307,6 +307,30 @@ impl Board {
     }
     
   }
+  fn find_check_moves(&mut self) {
+    for i in 0..63 {
+      for piece_type in PieceType::iter() {
+        let moves = self.get_legal_moves(i, piece_type, false).0;
+        let enemy_king = if self.white_to_move { self.bitboards[PieceType::BlackKing as usize] } else { self.bitboards[PieceType::WhiteKing as usize] };
+        let check_move = moves & enemy_king;
+        if check_move == 0 {
+          continue;
+        }
+        match piece_type {
+          PieceType::WhiteKnight | PieceType::BlackKnight | PieceType::WhitePawn | PieceType::BlackPawn => {
+            self.non_sliding_checks.push(check_move | (1 << i));
+          },
+          PieceType::WhiteQueen | PieceType::BlackQueen | PieceType::WhiteBishop | PieceType::BlackBishop | PieceType::WhiteRook | PieceType::BlackRook => {
+            //
+            // push the check ray to the boards check_rays vector
+          }
+          _ => {
+            // do nothin
+          }
+        }
+      }
+    }
+  }
 
   fn generate_moves_from_bitboard(&self, piece_square: i32, moves_bitboard: u64, piece_type: PieceType, flags: MoveFlags) -> Vec<Move>{
     let mut moves: Vec<Move> = Vec::new();
@@ -473,25 +497,6 @@ impl Board {
         
         flags.is_promotion = is_move_promotion || is_attack_promotion;
         moves |= attacks;
-      }
-    }
-
-    if !only_attacks {
-      let enemy_king = if self.white_to_move { self.bitboards[PieceType::BlackKing as usize] } else { self.bitboards[PieceType::WhiteKing as usize] };
-      match piece_type {
-        PieceType::WhiteKnight | PieceType::BlackKnight | PieceType::WhitePawn | PieceType::BlackPawn => {
-          let check_move = moves & enemy_king;
-          if check_move != 0 {
-            self.non_sliding_checks.push(check_move & bitboard);
-          }
-        },
-        PieceType::WhiteQueen | PieceType::BlackQueen | PieceType::WhiteBishop | PieceType::BlackBishop | PieceType::WhiteRook | PieceType::BlackRook => {
-          let check_ray = todo!();
-          // push the check ray to the boards check_rays vector
-        }
-        _ => {
-          // do nothin
-        }
       }
     }
 
