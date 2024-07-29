@@ -120,7 +120,8 @@ pub struct Board {
   moves: [Vec<Move>; 64],
   enemy_attacks: u64,
 
-  non_sliding_checks: Vec<u64>
+  non_sliding_checks: Vec<u64>,
+  check_rays: Vec<u64>
 }
 impl Board {
   /* BOARD SETUP */
@@ -138,7 +139,8 @@ impl Board {
       moves: [EMPTY_VEC; 64],
       enemy_attacks: 0,
 
-      non_sliding_checks: Vec::new()
+      non_sliding_checks: Vec::new(),
+      check_rays: Vec::new()
     };
     new_board.parse_fen(fen);
     new_board.get_opponents_attacks();
@@ -308,11 +310,14 @@ impl Board {
     
   }
   fn find_check_moves(&mut self) {
+    self.non_sliding_checks = Vec::new();
+    self.check_rays = Vec::new();
+
     for i in 0..63 {
       for piece_type in PieceType::iter() {
-        let moves = self.get_legal_moves(i, piece_type, false).0;
+        let moves_bitboards = self.get_legal_moves(i, piece_type, false).0;
         let enemy_king = if self.white_to_move { self.bitboards[PieceType::BlackKing as usize] } else { self.bitboards[PieceType::WhiteKing as usize] };
-        let check_move = moves & enemy_king;
+        let check_move = moves_bitboards & enemy_king; // if the move is capturing the king
         if check_move == 0 {
           continue;
         }
@@ -321,8 +326,24 @@ impl Board {
             self.non_sliding_checks.push(check_move | (1 << i));
           },
           PieceType::WhiteQueen | PieceType::BlackQueen | PieceType::WhiteBishop | PieceType::BlackBishop | PieceType::WhiteRook | PieceType::BlackRook => {
-            //
-            // push the check ray to the boards check_rays vector
+            let delta = i - enemy_king.trailing_zeros() as i32;
+            let direction = match delta {
+              d if d % 8 == 0 => 8, // vertical
+              d if d % 7 == 0 => 7, // diagonal /
+              d if d % 9 == 0 => 9, // diagonal \
+              d if d.abs() < 8 => 1, // horizontal
+              _ => 0,
+            };
+            let mut ray = 0;
+            let mut pos = i as i32;
+            while pos >= 0 && pos < 64 {
+              ray |= 1 << pos;
+              pos += direction;
+              if pos == enemy_king.trailing_zeros() as i32 {
+                break;
+              }
+            }
+            self.check_rays.push(ray);
           }
           _ => {
             // do nothin
