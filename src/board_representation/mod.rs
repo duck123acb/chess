@@ -205,24 +205,12 @@ impl Board {
     self.white_to_move = side_to_move_chars[0] == 'w';
 
     // castling rights
-    if self.bitboards[PieceType::WhiteKing as usize] & 0x8 == 0 {
-      self.white_castling_flags.king_moved = true;
-    }
-    if self.bitboards[PieceType::WhiteRook as usize] & H1 == 0 {
-      self.white_castling_flags.rook_kingside_moved = true;
-    }
-    if self.bitboards[PieceType::WhiteRook as usize] & A1 == 0 {
-      self.white_castling_flags.rook_queenside_moved = true;
-    }
-    if self.bitboards[PieceType::BlackKing as usize] & 0x800000000000000 == 0 {
-      self.black_castling_flags.king_moved = true;
-    }
-    if self.bitboards[PieceType::BlackRook as usize] & H8 == 0 {
-      self.black_castling_flags.rook_kingside_moved = true;
-    }
-    if self.bitboards[PieceType::BlackRook as usize] & A8 == 0 {
-      self.black_castling_flags.rook_queenside_moved = true;
-    }
+    self.white_castling_flags.king_moved = self.bitboards[PieceType::WhiteKing as usize] & 0x8 == 0;
+    self.white_castling_flags.rook_kingside_moved = self.bitboards[PieceType::WhiteRook as usize] & H1 == 0;
+    self.white_castling_flags.rook_queenside_moved = self.bitboards[PieceType::WhiteRook as usize] & A1 == 0;
+    self.black_castling_flags.king_moved = self.bitboards[PieceType::BlackKing as usize] & 0x800000000000000 == 0;
+    self.black_castling_flags.rook_kingside_moved = self.bitboards[PieceType::BlackRook as usize] & H8 == 0;
+    self.black_castling_flags.rook_queenside_moved = self.bitboards[PieceType::BlackRook as usize] & A8 == 0;
 
     // en passent
     if en_passent_square != "-" {
@@ -309,23 +297,28 @@ impl Board {
     }
     
   }
-  fn find_check_moves(&mut self) {
+  fn detect_check(&mut self) {
     self.non_sliding_checks = Vec::new();
     self.check_rays = Vec::new();
 
     for i in 0..63 {
-      for piece_type in PieceType::iter() {
+      for piece_type in PieceType::all_white() {
+        if 1 << i & self.bitboards[piece_type as usize] == 0 {
+          continue;
+        }
         let moves_bitboards = self.get_legal_moves(i, piece_type, false).0;
-        let enemy_king = if self.white_to_move { self.bitboards[PieceType::BlackKing as usize] } else { self.bitboards[PieceType::WhiteKing as usize] };
+        // let enemy_king = if self.white_to_move { self.bitboards[PieceType::BlackKing as usize] } else { self.bitboards[PieceType::WhiteKing as usize] };
+        let enemy_king = self.bitboards[PieceType::BlackKing as usize];
         let check_move = moves_bitboards & enemy_king; // if the move is capturing the king
         if check_move == 0 {
           continue;
         }
+        println!("{:b}, {}", check_move | (1 << i), piece_type as usize);
         match piece_type {
-          PieceType::WhiteKnight | PieceType::BlackKnight | PieceType::WhitePawn | PieceType::BlackPawn => {
+          PieceType::WhiteKnight | PieceType::WhitePawn => {
             self.non_sliding_checks.push(check_move | (1 << i));
           },
-          PieceType::WhiteQueen | PieceType::BlackQueen | PieceType::WhiteBishop | PieceType::BlackBishop | PieceType::WhiteRook | PieceType::BlackRook => {
+          PieceType::WhiteQueen | PieceType::WhiteBishop | PieceType::WhiteRook => {
             let delta = i - enemy_king.trailing_zeros() as i32;
             let direction = match delta {
               d if d % 8 == 0 => 8, // vertical
@@ -656,6 +649,7 @@ impl Board {
       }
     }
 
+    self.detect_check();
     self.white_to_move = !self.white_to_move;
     self.get_opponents_attacks();
     self.get_all_legal_moves();
