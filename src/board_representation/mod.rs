@@ -121,7 +121,8 @@ pub struct Board {
   enemy_attacks: u64,
 
   non_sliding_check_piece_square: i32,
-  check_rays: Vec<u64>
+  check_rays: Vec<u64>,
+  moveable_pieces_in_check: u64
 }
 impl Board {
   /* BOARD SETUP */
@@ -140,7 +141,8 @@ impl Board {
       enemy_attacks: 0,
 
       non_sliding_check_piece_square: 0,
-      check_rays: Vec::new()
+      check_rays: Vec::new(),
+      moveable_pieces_in_check: 0
     };
     new_board.parse_fen(fen);
     new_board.get_opponents_attacks();
@@ -344,7 +346,7 @@ impl Board {
     }
   }
 
-  fn generate_moves_from_bitboard(&self, piece_square: i32, moves_bitboard: u64, piece_type: PieceType, flags: MoveFlags) -> Vec<Move>{
+  fn generate_moves_from_bitboard(&mut self, piece_square: i32, moves_bitboard: u64, piece_type: PieceType, flags: MoveFlags) -> Vec<Move>{
     let mut pseudo_legal_moves: Vec<Move> = Vec::new();
 
     for square in bits_to_indices(&moves_bitboard) {
@@ -387,17 +389,16 @@ impl Board {
     if self.non_sliding_check_piece_square != 0 {
       for piece_move in &pseudo_legal_moves {
         if piece_move.moved_piece_type == PieceType::WhiteKing || piece_move.moved_piece_type == PieceType::BlackKing || piece_move.end_square == self.non_sliding_check_piece_square {
+          self.moveable_pieces_in_check |= 1 << piece_move.start_square;
           moves.push(*piece_move);
-          println!("hi");
         }
       }
     }
 
     if moves.is_empty() { // if the other things did not add any more things
-      println!("hihihi");
       return pseudo_legal_moves; // if not in check, the pseudo legal moves are the real moves
     }
-    pseudo_legal_moves
+    moves
   }
   fn get_legal_moves(&mut self, square_index: i32, piece_type: PieceType, only_attacks: bool) -> (u64, MoveFlags) {
     let mut moves = 0;
@@ -538,16 +539,22 @@ impl Board {
       PieceType::all_black()
     };
     
-    for piece_type in types {
-      for i in 0..64 {
-        let bitboard = self.bitboards[piece_type as usize];
+    // println!("{:b}", self.moveable_pieces_in_check);
+    for i in 0..64 {
+      for piece_type in types {
+        let square_bitboard = 1 << i;
+        let piece_moves_bitboard = self.get_legal_moves(i, piece_type, false);
+        let piece_moves = self.generate_moves_from_bitboard(i, piece_moves_bitboard.0, piece_type, piece_moves_bitboard.1);
 
-        if bitboard & (1 << i) != 0 {
-          let piece_moves = self.get_legal_moves(i, piece_type, false);
-          moves[i as usize] = self.generate_moves_from_bitboard(i, piece_moves.0, piece_type, piece_moves.1);
+        if self.moveable_pieces_in_check == 0 { // if there are no pieces invert it so that we dont have to waste time calling functions we dont need
+          self.moveable_pieces_in_check = 0xFFFFFFFFFFFFFFFF;
+        }
+        if self.bitboards[piece_type as usize] & square_bitboard != 0 && self.moveable_pieces_in_check & square_bitboard != 0 {
+          moves[i as usize] = piece_moves;
         }
       }
     }
+    self.moveable_pieces_in_check = 0;
 
     self.moves = moves;
   }
