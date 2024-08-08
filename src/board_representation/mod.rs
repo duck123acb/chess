@@ -77,7 +77,7 @@ impl MoveFlags {
   }
 }
 
-#[derive(Clone)]
+#[derive(Copy, Clone)]
 pub struct Move {
   start_square: i32,
   end_square: i32,
@@ -120,7 +120,7 @@ pub struct Board {
   moves: [Vec<Move>; 64],
   enemy_attacks: u64,
 
-  non_sliding_checks: Vec<u64>,
+  non_sliding_check_piece_square: i32,
   check_rays: Vec<u64>
 }
 impl Board {
@@ -139,7 +139,7 @@ impl Board {
       moves: [EMPTY_VEC; 64],
       enemy_attacks: 0,
 
-      non_sliding_checks: Vec::new(),
+      non_sliding_check_piece_square: 0,
       check_rays: Vec::new()
     };
     new_board.parse_fen(fen);
@@ -294,11 +294,10 @@ impl Board {
     else {
       self.castling_rights.black_kingside = false;
       self.castling_rights.black_queenside = false;
-    }
-    
+    } 
   }
-  fn detect_check(&mut self) {
-    self.non_sliding_checks = Vec::new();
+  fn detect_checks(&mut self) {
+    self.non_sliding_check_piece_square = 0;
     self.check_rays = Vec::new();
 
     for i in 0..63 {
@@ -306,17 +305,16 @@ impl Board {
         if 1 << i & self.bitboards[piece_type as usize] == 0 {
           continue;
         }
-        let moves_bitboards = self.get_legal_moves(i, piece_type, false).0;
+        let moves_bitboards = self.get_legal_moves(i, piece_type, true).0;
         // let enemy_king = if self.white_to_move { self.bitboards[PieceType::BlackKing as usize] } else { self.bitboards[PieceType::WhiteKing as usize] };
         let enemy_king = self.bitboards[PieceType::BlackKing as usize];
         let check_move = moves_bitboards & enemy_king; // if the move is capturing the king
         if check_move == 0 {
           continue;
         }
-        println!("{:b}, {}", check_move | (1 << i), piece_type as usize);
         match piece_type {
           PieceType::WhiteKnight | PieceType::WhitePawn => {
-            self.non_sliding_checks.push(check_move | (1 << i));
+            self.non_sliding_check_piece_square = i;
           },
           PieceType::WhiteQueen | PieceType::WhiteBishop | PieceType::WhiteRook => {
             let delta = i - enemy_king.trailing_zeros() as i32;
@@ -347,7 +345,7 @@ impl Board {
   }
 
   fn generate_moves_from_bitboard(&self, piece_square: i32, moves_bitboard: u64, piece_type: PieceType, flags: MoveFlags) -> Vec<Move>{
-    let mut moves: Vec<Move> = Vec::new();
+    let mut pseudo_legal_moves: Vec<Move> = Vec::new();
 
     for square in bits_to_indices(&moves_bitboard) {
       let mut new_move = Move::new(piece_square, square, piece_type, flags);
@@ -361,31 +359,45 @@ impl Board {
       if flags.is_promotion {
         if self.white_to_move {
           new_move.promotion_piece = Some(PieceType::WhiteQueen);
-          moves.push(new_move.clone());
+          pseudo_legal_moves.push(new_move.clone());
           new_move.promotion_piece = Some(PieceType::WhiteKnight);
-          moves.push(new_move.clone());
+          pseudo_legal_moves.push(new_move.clone());
           new_move.promotion_piece = Some(PieceType::WhiteBishop);
-          moves.push(new_move.clone());
+          pseudo_legal_moves.push(new_move.clone());
           new_move.promotion_piece = Some(PieceType::WhiteRook);
-          moves.push(new_move.clone());
+          pseudo_legal_moves.push(new_move.clone());
         }
         else {
           new_move.promotion_piece = Some(PieceType::BlackQueen);
-          moves.push(new_move.clone());
+          pseudo_legal_moves.push(new_move.clone());
           new_move.promotion_piece = Some(PieceType::BlackKnight);
-          moves.push(new_move.clone());
+          pseudo_legal_moves.push(new_move.clone());
           new_move.promotion_piece = Some(PieceType::BlackBishop);
-          moves.push(new_move.clone());
+          pseudo_legal_moves.push(new_move.clone());
           new_move.promotion_piece = Some(PieceType::BlackRook);
-          moves.push(new_move.clone());
+          pseudo_legal_moves.push(new_move.clone());
         }
       }
       else {
-        moves.push(new_move);
+        pseudo_legal_moves.push(new_move);
       }
     }
 
-    moves
+    let mut moves = Vec::new();
+    if self.non_sliding_check_piece_square != 0 {
+      for piece_move in &pseudo_legal_moves {
+        if piece_move.moved_piece_type == PieceType::WhiteKing || piece_move.moved_piece_type == PieceType::BlackKing || piece_move.end_square == self.non_sliding_check_piece_square {
+          moves.push(*piece_move);
+          println!("hi");
+        }
+      }
+    }
+
+    if moves.is_empty() { // if the other things did not add any more things
+      println!("hihihi");
+      return pseudo_legal_moves; // if not in check, the pseudo legal moves are the real moves
+    }
+    pseudo_legal_moves
   }
   fn get_legal_moves(&mut self, square_index: i32, piece_type: PieceType, only_attacks: bool) -> (u64, MoveFlags) {
     let mut moves = 0;
@@ -649,7 +661,7 @@ impl Board {
       }
     }
 
-    self.detect_check();
+    self.detect_checks();
     self.white_to_move = !self.white_to_move;
     self.get_opponents_attacks();
     self.get_all_legal_moves();
