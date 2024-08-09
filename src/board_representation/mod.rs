@@ -77,7 +77,7 @@ impl MoveFlags {
   }
 }
 
-#[derive(Clone)]
+#[derive(Copy, Clone)]
 pub struct Move {
   start_square: i32,
   end_square: i32,
@@ -120,7 +120,7 @@ pub struct Board {
   moves: [Vec<Move>; 64],
   enemy_attacks: u64,
 
-  non_sliding_checks: Vec<u64>,
+  non_sliding_check_square: i32,
   check_rays: Vec<u64>
 }
 impl Board {
@@ -139,7 +139,7 @@ impl Board {
       moves: [EMPTY_VEC; 64],
       enemy_attacks: 0,
 
-      non_sliding_checks: Vec::new(),
+      non_sliding_check_square: 0,
       check_rays: Vec::new()
     };
     new_board.parse_fen(fen);
@@ -251,10 +251,6 @@ impl Board {
   fn are_squares_attacked(&self, squares: u64) -> bool {
     self.enemy_attacks & squares != 0
   }
-  fn is_in_check(&self) -> bool {
-    let king = if self.white_to_move { self.bitboards[PieceType::WhiteKing as usize] } else { self.bitboards[PieceType::BlackKing as usize] };
-    king & self.enemy_attacks != 0
-  }
   // getters
   pub fn get_bitboards(&self) -> [u64; 12] {
     self.bitboards
@@ -298,7 +294,7 @@ impl Board {
     
   }
   fn detect_check(&mut self) {
-    self.non_sliding_checks = Vec::new();
+    self.non_sliding_check_square = 0;
     self.check_rays = Vec::new();
 
     for i in 0..63 {
@@ -313,10 +309,9 @@ impl Board {
         if check_move == 0 {
           continue;
         }
-        println!("{:b}, {}", check_move | (1 << i), piece_type as usize);
         match piece_type {
           PieceType::WhiteKnight | PieceType::WhitePawn => {
-            self.non_sliding_checks.push(check_move | (1 << i));
+            self.non_sliding_check_square = i;
           },
           PieceType::WhiteQueen | PieceType::WhiteBishop | PieceType::WhiteRook => {
             let delta = i - enemy_king.trailing_zeros() as i32;
@@ -517,7 +512,7 @@ impl Board {
     (moves, flags)
   }
   fn get_all_legal_moves(&mut self) {
-    let mut moves: [Vec<Move>; 64] = [EMPTY_VEC; 64];
+    let mut all_pseudo_legal_moves: [Vec<Move>; 64] = [EMPTY_VEC; 64];
 
     let types = if self.white_to_move { // which side's moves to generate
       PieceType::all_white()
@@ -532,12 +527,30 @@ impl Board {
 
         if bitboard & (1 << i) != 0 {
           let piece_moves = self.get_legal_moves(i, piece_type, false);
-          moves[i as usize] = self.generate_moves_from_bitboard(i, piece_moves.0, piece_type, piece_moves.1);
+          all_pseudo_legal_moves[i as usize] = self.generate_moves_from_bitboard(i, piece_moves.0, piece_type, piece_moves.1);
         }
       }
     }
 
-    self.moves = moves;
+    let mut all_moves: [Vec<Move>; 64] = [EMPTY_VEC; 64];
+    if self.non_sliding_check_square != 0 {
+      for (i, piece_moves) in all_pseudo_legal_moves.iter().enumerate() {
+        let mut moves = Vec::new();
+        for piece_move in piece_moves {
+          if piece_move.moved_piece_type == PieceType::WhiteKing || piece_move.moved_piece_type == PieceType::BlackKing || piece_move.end_square == self.non_sliding_check_square {
+            moves.push(*piece_move);
+          }
+        }
+        all_moves[i] = moves;
+      }
+    }
+
+    let is_all_empty = all_moves.iter().all(|m| m.is_empty());
+    if is_all_empty {
+      self.moves = all_pseudo_legal_moves;
+      return;
+    }
+    self.moves = all_moves;
   }
 
   pub fn make_move(&mut self, move_to_make: Move) {
