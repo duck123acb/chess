@@ -668,3 +668,4 @@ impl Board {
     self.get_all_legal_moves();
   }
 }
+
