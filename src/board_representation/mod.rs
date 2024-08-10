@@ -120,8 +120,7 @@ pub struct Board {
   moves: [Vec<Move>; 64],
   enemy_attacks: u64,
 
-  non_sliding_check_square: i32,
-  check_rays: Vec<u64>
+  checks: Vec<u64>
 }
 impl Board {
   /* BOARD SETUP */
@@ -133,14 +132,13 @@ impl Board {
       en_passent_square: None,
       halfmove_clock: 0,
       fullmove_num: 0,
-      white_castling_flags: CastlingFlags::new(), // init these based on FEN somehow
+      white_castling_flags: CastlingFlags::new(),
       black_castling_flags: CastlingFlags::new(),
 
       moves: [EMPTY_VEC; 64],
       enemy_attacks: 0,
 
-      non_sliding_check_square: 0,
-      check_rays: Vec::new()
+      checks: Vec::new()
     };
     new_board.parse_fen(fen);
     new_board.get_opponents_attacks();
@@ -293,8 +291,7 @@ impl Board {
     
   }
   fn detect_check(&mut self) {
-    self.non_sliding_check_square = 0;
-    self.check_rays = Vec::new();
+    self.checks = Vec::new();
 
     for i in 0..63 {
       for piece_type in PieceType::get_colour_types(self.white_to_move) {
@@ -309,7 +306,7 @@ impl Board {
         }
         match piece_type {
           PieceType::WhiteKnight | PieceType::BlackKnight | PieceType::WhitePawn | PieceType::BlackPawn => {
-            self.non_sliding_check_square = i;
+            self.checks.push(1 << i);
           },
           PieceType::WhiteQueen | PieceType::BlackQueen | PieceType::WhiteBishop | PieceType::BlackBishop | PieceType::WhiteRook | PieceType::BlackRook  => {
             let delta = i - enemy_king.trailing_zeros() as i32;
@@ -323,13 +320,13 @@ impl Board {
             let mut ray = 0;
             let mut pos = i as i32;
             while pos >= 0 && pos < 64 {
-              ray |= 1 << pos;
-              pos += direction;
               if pos == enemy_king.trailing_zeros() as i32 {
                 break;
               }
+              ray |= 1 << pos;
+              pos += direction;
             }
-            self.check_rays.push(ray);
+            self.checks.push(ray | (1 << i));
           }
           _ => {
             // do nothin
@@ -524,11 +521,11 @@ impl Board {
     }
 
     let mut all_moves: [Vec<Move>; 64] = [EMPTY_VEC; 64];
-    if self.non_sliding_check_square != 0 {
+    for check in &self.checks {
       for (i, piece_moves) in all_pseudo_legal_moves.iter().enumerate() {
         let mut moves = Vec::new();
         for piece_move in piece_moves {
-          if piece_move.moved_piece_type == PieceType::WhiteKing || piece_move.moved_piece_type == PieceType::BlackKing || piece_move.end_square == self.non_sliding_check_square {
+          if piece_move.moved_piece_type == PieceType::WhiteKing || piece_move.moved_piece_type == PieceType::BlackKing || check & 1 << piece_move.end_square != 0 {
             moves.push(*piece_move);
           }
         }
