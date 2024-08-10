@@ -266,8 +266,7 @@ impl Board {
   fn get_opponents_attacks(&mut self) {
     self.enemy_attacks = 0;
 
-    let piece_types = if self.white_to_move { PieceType::all_black() } else { PieceType::all_white() };
-    for piece_type in piece_types {
+    for piece_type in PieceType::get_colour_types(self.white_to_move) {
       for square in bits_to_indices(&self.bitboards[piece_type as usize]) {
         self.enemy_attacks |= self.get_legal_moves(square, piece_type, true).0;
       }
@@ -298,22 +297,21 @@ impl Board {
     self.check_rays = Vec::new();
 
     for i in 0..63 {
-      for piece_type in PieceType::all_white() {
+      for piece_type in PieceType::get_colour_types(self.white_to_move) {
         if 1 << i & self.bitboards[piece_type as usize] == 0 {
           continue;
         }
         let moves_bitboards = self.get_legal_moves(i, piece_type, false).0;
-        // let enemy_king = if self.white_to_move { self.bitboards[PieceType::BlackKing as usize] } else { self.bitboards[PieceType::WhiteKing as usize] };
-        let enemy_king = self.bitboards[PieceType::BlackKing as usize];
+        let enemy_king = if self.white_to_move { self.bitboards[PieceType::BlackKing as usize] } else { self.bitboards[PieceType::WhiteKing as usize] };
         let check_move = moves_bitboards & enemy_king; // if the move is capturing the king
         if check_move == 0 {
           continue;
         }
         match piece_type {
-          PieceType::WhiteKnight | PieceType::WhitePawn => {
+          PieceType::WhiteKnight | PieceType::BlackKnight | PieceType::WhitePawn | PieceType::BlackPawn => {
             self.non_sliding_check_square = i;
           },
-          PieceType::WhiteQueen | PieceType::WhiteBishop | PieceType::WhiteRook => {
+          PieceType::WhiteQueen | PieceType::BlackQueen | PieceType::WhiteBishop | PieceType::BlackBishop | PieceType::WhiteRook | PieceType::BlackRook  => {
             let delta = i - enemy_king.trailing_zeros() as i32;
             let direction = match delta {
               d if d % 8 == 0 => 8, // vertical
@@ -513,15 +511,8 @@ impl Board {
   }
   fn get_all_legal_moves(&mut self) {
     let mut all_pseudo_legal_moves: [Vec<Move>; 64] = [EMPTY_VEC; 64];
-
-    let types = if self.white_to_move { // which side's moves to generate
-      PieceType::all_white()
-    }
-    else {
-      PieceType::all_black()
-    };
     
-    for piece_type in types {
+    for piece_type in PieceType::get_colour_types(self.white_to_move) {
       for i in 0..64 {
         let bitboard = self.bitboards[piece_type as usize];
 
