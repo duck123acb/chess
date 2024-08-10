@@ -70,13 +70,13 @@ async fn main() {
         piece_sprite.rect.x = mouse_x - (piece_sprite.rect.w / 2.0);
         piece_sprite.rect.y = mouse_y - (piece_sprite.rect.w / 2.0);
 
-        let moves = board.get_friendly_moves(piece_sprite.get_square());
+        let moves = board.get_moves(piece_sprite.get_square());
         piece_moves = moves.clone();
       }
 
       else if piece_sprite.moved_piece && is_mouse_button_released(MouseButton::Left) { // make a move
         let mouse_square_index = squares.iter().position(|&r| r == mouse_square).unwrap() as i32;
-        let mut piece_move = Move::new(piece_sprite.get_square(), mouse_square_index, piece_sprite.get_piecetype(), None, None, None, None, false);
+        let mut piece_move = Move::new(piece_sprite.get_square(), mouse_square_index, piece_sprite.get_piecetype(), MoveFlags::new());
         
         if mouse_square_index > 55 || mouse_square_index < 8 {
           if is_key_down(KeyCode::N) || is_key_down(KeyCode::K) {
@@ -88,13 +88,13 @@ async fn main() {
           else if is_key_down(KeyCode::R) {
             piece_move.promotion_piece = if board.get_if_white_to_move() { Some(PieceType::WhiteRook) } else { Some(PieceType::BlackRook) };
           }
-          else {
+          else if is_key_down(KeyCode::Q) {
             piece_move.promotion_piece = if board.get_if_white_to_move() { Some(PieceType::WhiteQueen) } else { Some(PieceType::BlackQueen) };
           }
-          
         }
 
         if let Some(matching_move) = piece_moves.iter().find(|m| **m == piece_move) { // finds move in the list of legal moves
+
           board.make_move(matching_move.clone());
         }
 
