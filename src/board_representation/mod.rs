@@ -394,11 +394,12 @@ impl Board {
             mask
           }
         };
-
         let ray = orthogonal_rays & directional_mask;
 
-        
-        // if their own piece is blocking it break
+        let enemy_occupation = if self.white_to_move { self.all_black_pieces() } else { self.all_white_pieces() };
+        if enemy_occupation & ray != 0 { // TODO: make sure the ray ends just BEFORE  the piece. for now (if needed) just XOR the piece from the ray
+          continue;
+        }
         // if your own pieces are blocking it
           // how many of ur pieces are blocking it
           // if only 1 is blocking
