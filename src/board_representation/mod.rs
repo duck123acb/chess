@@ -137,7 +137,8 @@ impl Board {
 
       moves: [EMPTY_VEC; 64],
       enemy_attacks: 0,
-      checks: Vec::new()
+      checks: Vec::new(),
+      pinned_pieces: 0
     };
     new_board.parse_fen(fen);
     new_board.get_opponents_attacks();
@@ -593,9 +594,14 @@ impl Board {
     
     for piece_type in PieceType::get_colour_types(self.white_to_move) {
       for i in 0..64 {
+        let square_bitboard = 1 << i;
+        if square_bitboard & self.pinned_pieces != 0 {
+          continue;
+        }
+
         let bitboard = self.bitboards[piece_type as usize];
 
-        if bitboard & (1 << i) != 0 {
+        if bitboard & square_bitboard != 0 {
           let piece_moves = self.get_legal_moves(i, piece_type, false);
           all_pseudo_legal_moves[i as usize] = self.generate_moves_from_bitboard(i, piece_moves.0, piece_type, piece_moves.1);
         }
