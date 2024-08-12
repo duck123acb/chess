@@ -271,7 +271,6 @@ impl Board {
     }
   }
   fn castle_checks(&mut self) {
-    println!("{}", !self.are_squares_attacked(0x6));
     if !self.white_castling_flags.king_moved {
       self.castling_rights.white_kingside = !self.white_castling_flags.rook_kingside_moved && self.all_white_pieces() & 0x6 == 0 && self.are_squares_attacked(0x6);       
       self.castling_rights.white_queenside = !self.white_castling_flags.rook_queenside_moved && self.all_white_pieces() & 0x70 == 0 && self.are_squares_attacked(0x70);
@@ -735,7 +734,6 @@ impl Board {
     }
 
     self.detect_check();
-    self.castle_checks();
     self.white_to_move = !self.white_to_move;
     self.find_pinned_pieces();
     self.get_opponents_attacks();
