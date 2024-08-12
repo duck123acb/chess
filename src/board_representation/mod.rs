@@ -335,6 +335,58 @@ impl Board {
       }
     }
   }
+  fn find_pinned_pieces(&self) {
+    let king = if self.white_to_move { self.bitboards[PieceType::WhiteKing as usize] } else { self.bitboards[PieceType::BlackKing as usize] };
+    let king_square = king.trailing_zeros() as i32;
+    let orthogonal_sliders = if self.white_to_move {
+      [PieceType::BlackQueen, PieceType::BlackRook]
+    } else {
+      [PieceType::WhiteQueen, PieceType::WhiteRook]
+    }
+    let orthogonal_rays = get_rook_moves(king_square, 0);
+    let diagonal_rays = get_bishop_moves(king_square, 0);
+
+    for slider_type in orthogonal_sliders {
+      let slider_type_bitboard = self.bitboards[slider_type as usize];
+      if slider_type_bitboard & orthogonal_rays == 0 {
+        continue;
+      }
+
+      for i in 0..63 {
+        let piece_bitboard = 1 << i;
+        if piece_bitboard & slider_type_bitboard == 0 {
+          continue;
+        }
+        
+        let delta = king_square - i;
+        let mask = todo!();
+        // let mask = if delta > 0 {
+        //   if delta > 7 {
+        //     // up
+        //   }
+        //   else {
+        //     // left
+        //   }
+        // } else {
+        //   if delta.abs() > 7 {
+        //     // down
+        //   }
+        //   else {
+        //     // right
+        //   }
+        // };
+
+        let ray = orthogonal_rays & mask;
+
+        
+        // if their own piece is blocking it break
+        // if your own pieces are blocking it
+          // how many of ur pieces are blocking it
+          // if only 1 is blocking
+            // add piece to pinned bitboard or something
+      }
+    }
+  }
 
   fn generate_moves_from_bitboard(&self, piece_square: i32, moves_bitboard: u64, piece_type: PieceType, flags: MoveFlags) -> Vec<Move>{
     let mut moves: Vec<Move> = Vec::new();
