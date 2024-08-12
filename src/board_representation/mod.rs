@@ -342,9 +342,9 @@ impl Board {
       [PieceType::BlackQueen, PieceType::BlackRook]
     } else {
       [PieceType::WhiteQueen, PieceType::WhiteRook]
-    }
-    let orthogonal_rays = get_rook_moves(king_square, 0);
-    let diagonal_rays = get_bishop_moves(king_square, 0);
+    };
+    let orthogonal_rays = get_rook_moves(king_square, &0);
+    let diagonal_rays = get_bishop_moves(king_square, &0);
 
     for slider_type in orthogonal_sliders {
       let slider_type_bitboard = self.bitboards[slider_type as usize];
@@ -359,24 +359,43 @@ impl Board {
         }
         
         let delta = king_square - i;
-        let mask = todo!();
-        // let mask = if delta > 0 {
-        //   if delta > 7 {
-        //     // up
-        //   }
-        //   else {
-        //     // left
-        //   }
-        // } else {
-        //   if delta.abs() > 7 {
-        //     // down
-        //   }
-        //   else {
-        //     // right
-        //   }
-        // };
+        let directional_mask = if delta > 0 {
+          if delta > 7 {
+            // up
+            let mut mask = 0;
+            for rank in (king_square / 8 + 1)..8 {
+              mask |= 1 << (rank * 8 + (king_square % 8));
+            }
+            mask
+          }
+          else {
+            // left
+            let mut mask = 0;
+            for file in (0..(king_square % 8)).rev() {
+              mask |= 1 << (king_square / 8 * 8 + file);
+            }
+            mask
+          }
+        } else {
+          // down
+          if delta.abs() > 7 {
+            let mut mask = 0;
+            for rank in (0..(king_square / 8)).rev() {
+              mask |= 1 << (rank * 8 + (king_square % 8));
+            }
+            mask
+          }
+          else {
+            // right
+            let mut mask = 0;
+            for file in (king_square % 8 + 1)..8 {
+              mask |= 1 << (king_square / 8 * 8 + file);
+            }
+            mask
+          }
+        };
 
-        let ray = orthogonal_rays & mask;
+        let ray = orthogonal_rays & directional_mask;
 
         
         // if their own piece is blocking it break
