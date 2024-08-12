@@ -119,8 +119,8 @@ pub struct Board {
 
   moves: [Vec<Move>; 64],
   enemy_attacks: u64,
-
-  checks: Vec<u64>
+  checks: Vec<u64>,
+  pinned_pieces: u64
 }
 impl Board {
   /* BOARD SETUP */
@@ -137,7 +137,6 @@ impl Board {
 
       moves: [EMPTY_VEC; 64],
       enemy_attacks: 0,
-
       checks: Vec::new()
     };
     new_board.parse_fen(fen);
@@ -335,7 +334,8 @@ impl Board {
       }
     }
   }
-  fn find_pinned_pieces(&self) {
+  fn find_pinned_pieces(&mut self) {
+    self.pinned_pieces = 0;
     // let king = if self.white_to_move { self.bitboards[PieceType::BlackKing as usize] } else { self.bitboards[PieceType::WhiteKing as usize] };
     let king = self.bitboards[PieceType::BlackKing as usize];
     let king_square = king.trailing_zeros() as i32;
@@ -359,10 +359,9 @@ impl Board {
         if piece_bitboard & slider_type_bitboard == 0 {
           continue;
         }
-        println!("{}, {}", king_square, i);
         
         let delta = king_square - i;
-        let directional_mask = if delta > 0 {
+        let directional_mask = if delta < 0 {
           if delta > 7 {
             // up
             let mut mask = 0;
@@ -397,13 +396,13 @@ impl Board {
             mask
           }
         };
-        let ray = orthogonal_rays & directional_mask;
-
-        let enemy_occupation = if self.white_to_move { self.all_black_pieces() } else { self.all_white_pieces() };
-        if enemy_occupation & ray != 0 { // TODO: make sure the ray ends just BEFORE  the piece. for now (if needed) just XOR the piece from the ray
+        let ray = (orthogonal_rays & directional_mask) ^ piece_bitboard;
+        
+        let enemy_occupation = self.all_white_pieces();
+        if enemy_occupation & ray != 0 {
           continue;
         }
-
+        
         let friendly_occupation = if self.white_to_move { self.all_white_pieces() } else { self.all_black_pieces() };
         let friendly_blockers = friendly_occupation & ray;
         if friendly_blockers == 0 {
@@ -413,7 +412,7 @@ impl Board {
           continue;
         }
 
-        println!("{}", i);
+        self.pinned_pieces |= friendly_blockers;
       }
     }
   }
