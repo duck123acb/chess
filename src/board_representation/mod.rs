@@ -119,8 +119,8 @@ pub struct Board {
 
   moves: [Vec<Move>; 64],
   enemy_attacks: u64,
-
-  checks: Vec<u64>
+  checks: Vec<u64>,
+  pinned_pieces: u64
 }
 impl Board {
   /* BOARD SETUP */
@@ -137,7 +137,6 @@ impl Board {
 
       moves: [EMPTY_VEC; 64],
       enemy_attacks: 0,
-
       checks: Vec::new()
     };
     new_board.parse_fen(fen);
@@ -264,7 +263,7 @@ impl Board {
   fn get_opponents_attacks(&mut self) {
     self.enemy_attacks = 0;
 
-    for piece_type in PieceType::get_colour_types(self.white_to_move) {
+    for piece_type in PieceType::get_colour_types(!self.white_to_move) {
       for square in bits_to_indices(&self.bitboards[piece_type as usize]) {
         self.enemy_attacks |= self.get_legal_moves(square, piece_type, true).0;
       }
@@ -335,6 +334,88 @@ impl Board {
       }
     }
   }
+  fn find_pinned_pieces(&mut self) {
+    self.pinned_pieces = 0;
+    // let king = if self.white_to_move { self.bitboards[PieceType::BlackKing as usize] } else { self.bitboards[PieceType::WhiteKing as usize] };
+    let king = self.bitboards[PieceType::BlackKing as usize];
+    let king_square = king.trailing_zeros() as i32;
+    // let orthogonal_sliders = if self.white_to_move {
+    //   [PieceType::BlackQueen, PieceType::BlackRook]
+    // } else {
+    //   [PieceType::WhiteQueen, PieceType::WhiteRook]
+    // };
+    let orthogonal_sliders = [PieceType::WhiteQueen, PieceType::WhiteRook];
+    let orthogonal_rays = get_rook_moves(king_square, &0);
+    let diagonal_rays = get_bishop_moves(king_square, &0);
+    
+    for slider_type in orthogonal_sliders {
+      let slider_type_bitboard = self.bitboards[slider_type as usize];
+      if slider_type_bitboard & orthogonal_rays == 0 {
+        continue;
+      }
+      
+      for i in 0..63 {
+        let piece_bitboard = 1 << i;
+        if piece_bitboard & slider_type_bitboard == 0 {
+          continue;
+        }
+        
+        let delta = king_square - i;
+        let directional_mask = if delta < 0 {
+          if delta > 7 {
+            // up
+            let mut mask = 0;
+            for rank in (king_square / 8 + 1)..8 {
+              mask |= 1 << (rank * 8 + (king_square % 8));
+            }
+            mask
+          }
+          else {
+            // left
+            let mut mask = 0;
+            for file in (0..(king_square % 8)).rev() {
+              mask |= 1 << (king_square / 8 * 8 + file);
+            }
+            mask
+          }
+        } else {
+          // down
+          if delta.abs() > 7 {
+            let mut mask = 0;
+            for rank in (0..(king_square / 8)).rev() {
+              mask |= 1 << (rank * 8 + (king_square % 8));
+            }
+            mask
+          }
+          else {
+            // right
+            let mut mask = 0;
+            for file in (king_square % 8 + 1)..8 {
+              mask |= 1 << (king_square / 8 * 8 + file);
+            }
+            mask
+          }
+        };
+        let ray = (orthogonal_rays & directional_mask) ^ piece_bitboard;
+        
+        let enemy_occupation = self.all_white_pieces();
+        if enemy_occupation & ray != 0 {
+          continue;
+        }
+        
+        let friendly_occupation = if self.white_to_move { self.all_white_pieces() } else { self.all_black_pieces() };
+        let friendly_blockers = friendly_occupation & ray;
+        if friendly_blockers == 0 {
+          continue; // currently already detecting checks. TODO: use this for the sliding check detection
+        }
+        if friendly_blockers.count_ones() > 1 {
+          continue;
+        }
+
+        self.pinned_pieces |= friendly_blockers;
+      }
+    }
+  }
 
   fn generate_moves_from_bitboard(&self, piece_square: i32, moves_bitboard: u64, piece_type: PieceType, flags: MoveFlags) -> Vec<Move>{
     let mut moves: Vec<Move> = Vec::new();
@@ -386,6 +467,7 @@ impl Board {
 
     match piece_type {
       PieceType::WhiteKing => {
+        
         (moves, flags.kingside_castle_square, flags.queenside_castle_square) = king_moves(&bitboard, self.castling_rights.white_kingside, self.castling_rights.white_queenside);
         
         if !only_attacks {
@@ -652,6 +734,7 @@ impl Board {
 
     self.detect_check();
     self.white_to_move = !self.white_to_move;
+    self.find_pinned_pieces();
     self.get_opponents_attacks();
     self.get_all_legal_moves();
   }
