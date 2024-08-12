@@ -264,13 +264,14 @@ impl Board {
   fn get_opponents_attacks(&mut self) {
     self.enemy_attacks = 0;
 
-    for piece_type in PieceType::get_colour_types(self.white_to_move) {
+    for piece_type in PieceType::get_colour_types(!self.white_to_move) {
       for square in bits_to_indices(&self.bitboards[piece_type as usize]) {
         self.enemy_attacks |= self.get_legal_moves(square, piece_type, true).0;
       }
     }
   }
   fn castle_checks(&mut self) {
+    println!("{}", !self.are_squares_attacked(0x6));
     if !self.white_castling_flags.king_moved {
       self.castling_rights.white_kingside = !self.white_castling_flags.rook_kingside_moved && self.all_white_pieces() & 0x6 == 0 && self.are_squares_attacked(0x6);       
       self.castling_rights.white_queenside = !self.white_castling_flags.rook_queenside_moved && self.all_white_pieces() & 0x70 == 0 && self.are_squares_attacked(0x70);
@@ -336,27 +337,30 @@ impl Board {
     }
   }
   fn find_pinned_pieces(&self) {
-    let king = if self.white_to_move { self.bitboards[PieceType::WhiteKing as usize] } else { self.bitboards[PieceType::BlackKing as usize] };
+    // let king = if self.white_to_move { self.bitboards[PieceType::BlackKing as usize] } else { self.bitboards[PieceType::WhiteKing as usize] };
+    let king = self.bitboards[PieceType::BlackKing as usize];
     let king_square = king.trailing_zeros() as i32;
-    let orthogonal_sliders = if self.white_to_move {
-      [PieceType::BlackQueen, PieceType::BlackRook]
-    } else {
-      [PieceType::WhiteQueen, PieceType::WhiteRook]
-    };
+    // let orthogonal_sliders = if self.white_to_move {
+    //   [PieceType::BlackQueen, PieceType::BlackRook]
+    // } else {
+    //   [PieceType::WhiteQueen, PieceType::WhiteRook]
+    // };
+    let orthogonal_sliders = [PieceType::WhiteQueen, PieceType::WhiteRook];
     let orthogonal_rays = get_rook_moves(king_square, &0);
     let diagonal_rays = get_bishop_moves(king_square, &0);
-
+    
     for slider_type in orthogonal_sliders {
       let slider_type_bitboard = self.bitboards[slider_type as usize];
       if slider_type_bitboard & orthogonal_rays == 0 {
         continue;
       }
-
+      
       for i in 0..63 {
         let piece_bitboard = 1 << i;
         if piece_bitboard & slider_type_bitboard == 0 {
           continue;
         }
+        println!("{}, {}", king_square, i);
         
         let delta = king_square - i;
         let directional_mask = if delta > 0 {
@@ -410,7 +414,7 @@ impl Board {
           continue;
         }
 
-        // add to pinned bitboard
+        println!("{}", i);
       }
     }
   }
@@ -465,6 +469,7 @@ impl Board {
 
     match piece_type {
       PieceType::WhiteKing => {
+        
         (moves, flags.kingside_castle_square, flags.queenside_castle_square) = king_moves(&bitboard, self.castling_rights.white_kingside, self.castling_rights.white_queenside);
         
         if !only_attacks {
@@ -730,7 +735,9 @@ impl Board {
     }
 
     self.detect_check();
+    self.castle_checks();
     self.white_to_move = !self.white_to_move;
+    self.find_pinned_pieces();
     self.get_opponents_attacks();
     self.get_all_legal_moves();
   }
