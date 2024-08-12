@@ -400,10 +400,17 @@ impl Board {
         if enemy_occupation & ray != 0 { // TODO: make sure the ray ends just BEFORE  the piece. for now (if needed) just XOR the piece from the ray
           continue;
         }
-        // if your own pieces are blocking it
-          // how many of ur pieces are blocking it
-          // if only 1 is blocking
-            // add piece to pinned bitboard or something
+
+        let friendly_occupation = if self.white_to_move { self.all_white_pieces() } else { self.all_black_pieces() };
+        let friendly_blockers = friendly_occupation & ray;
+        if friendly_blockers == 0 {
+          continue; // currently already detecting checks. TODO: use this for the sliding check detection
+        }
+        if friendly_blockers.count_ones() > 1 {
+          continue;
+        }
+
+        // add to pinned bitboard
       }
     }
   }
