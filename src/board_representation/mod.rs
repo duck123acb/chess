@@ -367,7 +367,6 @@ impl Board {
           if is_diagonal {
             if delta % 9 == 0 {
               // up left
-              println!("up left");
               let mut mask = 0;
               let mut square = king;
           
@@ -384,7 +383,6 @@ impl Board {
             }
             else if delta % 7 == 0 {
               // up right
-              println!("up right");
               let mut mask = 0;
               let mut square = king;
           
@@ -406,7 +404,6 @@ impl Board {
           else {
             if delta > 7 {
               // up
-              println!("up");
               let mut mask = 0;
               let mut square = king;
           
@@ -423,7 +420,6 @@ impl Board {
             }
             else {
               // left
-              println!("left");
               let mut mask = 0;
               let mut square = king;
           
@@ -444,7 +440,6 @@ impl Board {
           if is_diagonal {
             if delta.abs() % 9 == 0 {
               // down right
-              println!("down right");
               let mut mask = 0;
               let mut square = king;
           
@@ -461,7 +456,6 @@ impl Board {
             }
             else if delta.abs() % 7 == 0{
               // down left
-              println!("down left");
               let mut mask = 0;
               let mut square = king;
           
@@ -483,7 +477,6 @@ impl Board {
           else {
             if delta.abs() > 7 {
               // down
-              println!("down");
               let mut mask = 0;
               let mut square = king;
           
@@ -500,7 +493,6 @@ impl Board {
             }
             else {
               // right
-              println!("right");
               let mut mask = 0;
               let mut square = king;
           
@@ -537,8 +529,6 @@ impl Board {
         self.pinned_pieces |= friendly_blockers;
       }
     }
-
-    println!("{:b}", self.pinned_pieces);
   }
 
   fn generate_moves_from_bitboard(&self, piece_square: i32, moves_bitboard: u64, piece_type: PieceType, flags: MoveFlags) -> Vec<Move>{
