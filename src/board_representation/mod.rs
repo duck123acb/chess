@@ -137,7 +137,8 @@ impl Board {
 
       moves: [EMPTY_VEC; 64],
       enemy_attacks: 0,
-      checks: Vec::new()
+      checks: Vec::new(),
+      pinned_pieces: 0
     };
     new_board.parse_fen(fen);
     new_board.get_opponents_attacks();
@@ -336,21 +337,22 @@ impl Board {
   }
   fn find_pinned_pieces(&mut self) {
     self.pinned_pieces = 0;
-    // let king = if self.white_to_move { self.bitboards[PieceType::BlackKing as usize] } else { self.bitboards[PieceType::WhiteKing as usize] };
-    let king = self.bitboards[PieceType::BlackKing as usize];
+
+    let king = if self.white_to_move { self.bitboards[PieceType::WhiteKing as usize] } else { self.bitboards[PieceType::BlackKing as usize] };
     let king_square = king.trailing_zeros() as i32;
-    // let orthogonal_sliders = if self.white_to_move {
-    //   [PieceType::BlackQueen, PieceType::BlackRook]
-    // } else {
-    //   [PieceType::WhiteQueen, PieceType::WhiteRook]
-    // };
-    let orthogonal_sliders = [PieceType::WhiteQueen, PieceType::WhiteRook];
+    let sliders = if self.white_to_move {
+      [PieceType::BlackQueen, PieceType::BlackRook, PieceType::BlackQueen, PieceType::BlackBishop]
+    } else {
+      [PieceType::WhiteQueen, PieceType::WhiteRook, PieceType::WhiteQueen, PieceType::WhiteBishop]
+    };
     let orthogonal_rays = get_rook_moves(king_square, &0);
     let diagonal_rays = get_bishop_moves(king_square, &0);
     
-    for slider_type in orthogonal_sliders {
-      let slider_type_bitboard = self.bitboards[slider_type as usize];
-      if slider_type_bitboard & orthogonal_rays == 0 {
+    for (i, slider_type) in sliders.iter().enumerate() {
+      let is_diagonal = i > 1; // if the itteration count is past the second one, its diagonal
+
+      let slider_type_bitboard = self.bitboards[*slider_type as usize];
+      if slider_type_bitboard & (orthogonal_rays | diagonal_rays) == 0 {
         continue;
       }
       
@@ -362,43 +364,155 @@ impl Board {
         
         let delta = king_square - i;
         let directional_mask = if delta < 0 {
-          if delta > 7 {
-            // up
-            let mut mask = 0;
-            for rank in (king_square / 8 + 1)..8 {
-              mask |= 1 << (rank * 8 + (king_square % 8));
+          if is_diagonal {
+            if delta % 9 == 0 {
+              // up left
+              let mut mask = 0;
+              let mut square = king;
+          
+              while square & (TOP_RANK | LEFT_FILE) == 0 {
+                square = square << 9;
+                if square & piece_bitboard != 0 {
+                  break;
+                }
+
+                mask |= square;
+              }
+          
+              mask
             }
-            mask
+            else if delta % 7 == 0 {
+              // up right
+              let mut mask = 0;
+              let mut square = king;
+          
+              while square & (TOP_RANK | RIGHT_FILE) == 0 {
+                square = square << 7;
+                if square & piece_bitboard != 0 {
+                  break;
+                }
+
+                mask |= square;
+              }
+          
+              mask
+            }
+            else {
+              0
+            }
           }
           else {
-            // left
-            let mut mask = 0;
-            for file in (0..(king_square % 8)).rev() {
-              mask |= 1 << (king_square / 8 * 8 + file);
+            if delta > 7 {
+              // up
+              let mut mask = 0;
+              let mut square = king;
+          
+              while square & TOP_RANK == 0 {
+                square = square << 8;
+                if square & piece_bitboard != 0 {
+                  break;
+                }
+
+                mask |= square;
+              }
+            
+              mask
             }
-            mask
+            else {
+              // left
+              let mut mask = 0;
+              let mut square = king;
+          
+              while square & LEFT_FILE == 0 {
+                square = square << 1;
+                if square & piece_bitboard != 0 {
+                  break;
+                }
+
+                mask |= square;
+              }
+            
+              mask
+            }
           }
-        } else {
-          // down
-          if delta.abs() > 7 {
-            let mut mask = 0;
-            for rank in (0..(king_square / 8)).rev() {
-              mask |= 1 << (rank * 8 + (king_square % 8));
+        }
+        else {
+          if is_diagonal {
+            if delta.abs() % 9 == 0 {
+              // down right
+              let mut mask = 0;
+              let mut square = king;
+          
+              while square & (BOTTOM_RANK | RIGHT_FILE) == 0 {
+                square = square >> 9;
+                if square & piece_bitboard != 0 {
+                  break;
+                }
+
+                mask |= square;
+              }
+          
+              mask
             }
-            mask
+            else if delta.abs() % 7 == 0{
+              // down left
+              let mut mask = 0;
+              let mut square = king;
+          
+              while square & (BOTTOM_RANK | LEFT_FILE) == 0 {
+                square = square >> 7;
+                if square & piece_bitboard != 0 {
+                  break;
+                }
+
+                mask |= square;
+              }
+          
+              mask
+            }
+            else {
+              0
+            }
           }
           else {
-            // right
-            let mut mask = 0;
-            for file in (king_square % 8 + 1)..8 {
-              mask |= 1 << (king_square / 8 * 8 + file);
+            if delta.abs() > 7 {
+              // down
+              let mut mask = 0;
+              let mut square = king;
+          
+              while square & BOTTOM_RANK == 0 {
+                square = square >> 8;
+                if square & piece_bitboard != 0 {
+                  break;
+                }
+
+                mask |= square;
+              }
+            
+              mask
             }
-            mask
+            else {
+              // right
+              let mut mask = 0;
+              let mut square = king;
+          
+              while square & RIGHT_FILE == 0 {
+                square = square >> 1;
+                if square & piece_bitboard != 0 {
+                  break;
+                }
+
+                mask |= square;
+              }
+            
+              mask
+            }
           }
         };
-        let ray = (orthogonal_rays & directional_mask) ^ piece_bitboard;
+        let rays = if is_diagonal { diagonal_rays } else { orthogonal_rays };
+        let ray = rays & directional_mask;
         
-        let enemy_occupation = self.all_white_pieces();
+        let enemy_occupation = if self.white_to_move { self.all_black_pieces() } else { self.all_white_pieces() };
         if enemy_occupation & ray != 0 {
           continue;
         }
@@ -593,9 +707,14 @@ impl Board {
     
     for piece_type in PieceType::get_colour_types(self.white_to_move) {
       for i in 0..64 {
+        let square_bitboard = 1 << i;
+        if square_bitboard & self.pinned_pieces != 0 {
+          continue;
+        }
+
         let bitboard = self.bitboards[piece_type as usize];
 
-        if bitboard & (1 << i) != 0 {
+        if bitboard & square_bitboard != 0 {
           let piece_moves = self.get_legal_moves(i, piece_type, false);
           all_pseudo_legal_moves[i as usize] = self.generate_moves_from_bitboard(i, piece_moves.0, piece_type, piece_moves.1);
         }
