@@ -506,7 +506,6 @@ impl Board {
         };
         let rays = if is_diagonal { diagonal_rays } else { orthogonal_rays };
         let ray = rays & directional_mask;
-        println!("{:b}, {}", ray, is_diagonal);
         
         let enemy_occupation = self.all_white_pieces();
         if enemy_occupation & ray != 0 {
