@@ -290,11 +290,13 @@ impl Board {
     }
     
   }
-  fn detect_check(&mut self) {
+  fn detect_non_sliding_check(&mut self) {
     self.checks = Vec::new();
 
+    let types = if self.white_to_move { [PieceType::WhiteKnight, PieceType::WhitePawn] } else { [PieceType::BlackKnight, PieceType::BlackPawn] };
+
     for i in 0..63 {
-      for piece_type in PieceType::get_colour_types(self.white_to_move) {
+      for piece_type in types {
         if 1 << i & self.bitboards[piece_type as usize] == 0 {
           continue;
         }
@@ -304,38 +306,11 @@ impl Board {
         if check_move == 0 {
           continue;
         }
-        match piece_type {
-          PieceType::WhiteKnight | PieceType::BlackKnight | PieceType::WhitePawn | PieceType::BlackPawn => {
-            self.checks.push(1 << i);
-          },
-          PieceType::WhiteQueen | PieceType::BlackQueen | PieceType::WhiteBishop | PieceType::BlackBishop | PieceType::WhiteRook | PieceType::BlackRook  => {
-            let delta = i - enemy_king.trailing_zeros() as i32;
-            let direction = match delta {
-              d if d % 8 == 0 => 8, // vertical
-              d if d % 7 == 0 => 7, // diagonal /
-              d if d % 9 == 0 => 9, // diagonal \
-              d if d.abs() < 8 => 1, // horizontal
-              _ => 0,
-            };
-            let mut ray = 0;
-            let mut pos = i as i32;
-            while pos >= 0 && pos < 64 {
-              if pos == enemy_king.trailing_zeros() as i32 {
-                break;
-              }
-              ray |= 1 << pos;
-              pos += direction;
-            }
-            self.checks.push(ray | (1 << i));
-          }
-          _ => {
-            // do nothin
-          }
-        }
+        self.checks.push(1 << i);
       }
     }
   }
-  fn find_pinned_pieces(&mut self) {
+  fn analyze_king_rays(&mut self) {
     self.pinned_pieces = 0;
 
     let king = if self.white_to_move { self.bitboards[PieceType::WhiteKing as usize] } else { self.bitboards[PieceType::BlackKing as usize] };
@@ -520,7 +495,8 @@ impl Board {
         let friendly_occupation = if self.white_to_move { self.all_white_pieces() } else { self.all_black_pieces() };
         let friendly_blockers = friendly_occupation & ray;
         if friendly_blockers == 0 {
-          continue; // currently already detecting checks. TODO: use this for the sliding check detection
+          self.checks.push(ray | piece_bitboard);
+          continue;
         }
         if friendly_blockers.count_ones() > 1 {
           continue;
@@ -851,9 +827,9 @@ impl Board {
       }
     }
 
-    self.detect_check();
+    self.detect_non_sliding_check();
     self.white_to_move = !self.white_to_move;
-    self.find_pinned_pieces();
+    self.analyze_king_rays();
     self.get_opponents_attacks();
     self.get_all_legal_moves();
   }
