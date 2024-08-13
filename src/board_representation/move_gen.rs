@@ -1,10 +1,10 @@
 use crate::board_representation::precompiled_bitboards::*;
 
 // from white's perspective
-const TOP_RANK: u64 = 0xFF00000000000000;
-const BOTTOM_RANK: u64 = 0x00000000000000FF;
-const LEFT_FILE: u64 = 0x8080808080808080;
-const RIGHT_FILE: u64 = 0x0101010101010101;
+pub const TOP_RANK: u64 = 0xFF00000000000000;
+pub const BOTTOM_RANK: u64 = 0x00000000000000FF;
+pub const LEFT_FILE: u64 = 0x8080808080808080;
+pub const RIGHT_FILE: u64 = 0x0101010101010101;
 
 const RANK_SHIFT: i32 = 8; // value to shift if you want to move ranks
 const FILE_SHIFT: i32 = 1; // value to shift if you want to move files
