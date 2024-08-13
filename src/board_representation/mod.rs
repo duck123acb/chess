@@ -337,15 +337,14 @@ impl Board {
   }
   fn find_pinned_pieces(&mut self) {
     self.pinned_pieces = 0;
-    // let king = if self.white_to_move { self.bitboards[PieceType::BlackKing as usize] } else { self.bitboards[PieceType::WhiteKing as usize] };
-    let king = self.bitboards[PieceType::BlackKing as usize];
+    
+    let king = if self.white_to_move { self.bitboards[PieceType::WhiteKing as usize] } else { self.bitboards[PieceType::BlackKing as usize] };
     let king_square = king.trailing_zeros() as i32;
-    // let orthogonal_sliders = if self.white_to_move {
-    //   [PieceType::BlackQueen, PieceType::BlackRook]
-    // } else {
-    //   [PieceType::WhiteQueen, PieceType::WhiteRook]
-    // };
-    let sliders = [PieceType::WhiteQueen, PieceType::WhiteRook, PieceType::WhiteQueen, PieceType::WhiteBishop];
+    let sliders = if self.white_to_move {
+      [PieceType::BlackQueen, PieceType::BlackRook, PieceType::BlackQueen, PieceType::BlackBishop]
+    } else {
+      [PieceType::WhiteQueen, PieceType::WhiteRook, PieceType::WhiteQueen, PieceType::WhiteBishop]
+    };
     let orthogonal_rays = get_rook_moves(king_square, &0);
     let diagonal_rays = get_bishop_moves(king_square, &0);
     
@@ -507,7 +506,7 @@ impl Board {
         let rays = if is_diagonal { diagonal_rays } else { orthogonal_rays };
         let ray = rays & directional_mask;
         
-        let enemy_occupation = self.all_white_pieces();
+        let enemy_occupation = if self.white_to_move { self.all_black_pieces() } else { self.all_white_pieces() };
         if enemy_occupation & ray != 0 {
           continue;
         }
