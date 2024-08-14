@@ -141,8 +141,10 @@ impl Board {
       pinned_pieces: 0
     };
     new_board.parse_fen(fen);
+    new_board.detect_check();
     new_board.get_opponents_attacks();
     new_board.castle_checks();
+    new_board.find_pinned_pieces();
     new_board.get_all_legal_moves();
     new_board
   }
