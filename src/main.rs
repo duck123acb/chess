@@ -10,9 +10,11 @@ use board_representation::*;
 use utils::*;
 use macroquad::prelude::*;
 
+const FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+
 #[macroquad::main(window_conf)]
 async fn main() {
-  let mut board = Board::new("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+  let mut board = Board::new(FEN);
   let mut piece_moves: Vec<Move> = Vec::new();
 
   let texture_atlas = load_texture(TEXTURE_PATH).await.unwrap();
