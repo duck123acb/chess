@@ -261,6 +261,17 @@ impl Board {
   pub fn get_moves(&self, index: i32) -> &Vec<Move> {
     &self.moves[index as usize]
   }
+  pub fn get_all_moves(&self) -> Vec<Move> {
+    let mut moves = Vec::new();
+
+    for piece_moves in &self.moves {
+      for piece_move in piece_moves {
+        moves.push(piece_move.clone());
+      }
+    }
+
+    moves
+  }
 
   /* MOVE GEN */
   fn get_opponents_attacks(&mut self) {
