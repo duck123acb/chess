@@ -1,19 +1,18 @@
 use crate::board_representation::Board;
 use crate::board_representation::Move;
 
-struct Bot {
-  is_white_player: bool,
-  board: Board,
+pub struct Bot {
+  is_white_player: bool
 }
 impl Bot {
-  pub fn new(is_white: bool, internal_board: Board) -> Self {
+  pub fn new(is_white: bool) -> Self {
     Self {
       is_white_player: is_white,
-      board: internal_board
     }
   }
 
-  pub fn get_best_move(moves: Vec<Move>) -> Move {
+  pub fn get_best_move(&self, board: Board) -> Move {
+    let moves = board.get_all_moves();
     moves[0] // for now, return the first move
   }
 }

@@ -22,6 +22,7 @@ pub fn bits_to_indices(bitboard: &u64) -> Vec<i32> {
   indices
 }
 
+#[derive(Clone)]
 struct CastlingRights {
   white_kingside: bool,
   white_queenside: bool,
@@ -38,6 +39,8 @@ impl CastlingRights {
     }
   }
 }
+
+#[derive(Clone)]
 struct CastlingFlags {
   king_moved: bool,
   rook_kingside_moved: bool,
@@ -107,6 +110,7 @@ impl PartialEq for Move {
   }
 }
 
+#[derive(Clone)]
 pub struct Board {
   bitboards: [u64; 12],
   white_to_move: bool,
@@ -747,10 +751,12 @@ impl Board {
       }
     }
 
-    let is_all_empty = all_moves.iter().all(|m| m.is_empty());
-    if is_all_empty {
-      self.moves = all_pseudo_legal_moves;
-      return;
+    if self.checks.len() == 0 {
+      let is_all_empty = all_moves.iter().all(|m| m.is_empty());
+      if is_all_empty {
+        self.moves = all_pseudo_legal_moves;
+        return;
+      }
     }
     self.moves = all_moves;
   }

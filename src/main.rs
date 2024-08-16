@@ -8,6 +8,7 @@ mod utils;
 use rendering::piece_sprite::*;
 use rendering::square::*;
 use board_representation::*;
+use bot::Bot;
 use utils::*;
 use macroquad::prelude::*;
 
@@ -26,6 +27,7 @@ fn window_conf() -> Conf {
 #[macroquad::main(window_conf)]
 async fn main() {
   let mut board = Board::new(FEN);
+  let bot = Bot::new(false);
   let mut piece_moves: Vec<Move> = Vec::new();
 
   let texture_atlas = load_texture(TEXTURE_PATH).await.unwrap();
@@ -60,7 +62,8 @@ async fn main() {
     }
   }
 
-  loop {
+  let mut game_over = false;
+  while !game_over {
     clear_background(GRAY);
 
     for square in &squares {
@@ -107,8 +110,17 @@ async fn main() {
         }
 
         if let Some(matching_move) = piece_moves.iter().find(|m| **m == piece_move) { // finds move in the list of legal moves
-
           board.make_move(matching_move.clone());
+          if board.get_all_moves().len() == 0 { // checkmate
+            game_over = true;
+            break;
+          }
+          let bot_move = bot.get_best_move(board.clone());
+          board.make_move(bot_move);
+          if board.get_all_moves().len() == 0 { // checkmate
+            game_over = true;
+            break;
+          }
         }
 
         piece_sprite.moved_piece = false;
