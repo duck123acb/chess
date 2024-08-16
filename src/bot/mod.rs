@@ -22,7 +22,7 @@ fn evaluate_position(board: Board) -> i32 {
   0 // lmaooooo best evaluation
 }
 
-fn minimax(board: Board, move_to_search: Move, depth: i32, maximizing_player: bool) -> EvalMove {
+fn minimax(board: Board, move_to_search: Move, depth: i32, maximizing_player: bool) -> EvalMove { // thanks to Sebastian Lague!! https://www.youtube.com/watch?v=l-hh51ncgDI
   if depth == 0 || board.is_game_over() {
     return EvalMove::new(move_to_search, evaluate_position(board))
   }
@@ -77,7 +77,8 @@ impl Bot {
 
   pub fn get_best_move(&self, board: Board) -> Move {
     let moves = board.get_all_moves();
-    let best_move = minimax(board, moves[moves.len() - 1], 4, self.is_white_player);
-    best_move.board_move
+    // let best_move = minimax(board, moves[moves.len() - 1], 3, self.is_white_player);
+    // best_move.board_move
+    moves[moves.len() - 1]
   }
 }
