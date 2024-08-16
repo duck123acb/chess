@@ -876,4 +876,8 @@ impl Board {
     self.get_opponents_attacks();
     self.get_all_legal_moves();
   }
+
+  pub fn is_game_over(&self) -> bool {
+    self.get_all_moves().len() == 0
+  }
 }

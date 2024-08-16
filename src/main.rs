@@ -111,13 +111,13 @@ async fn main() {
 
         if let Some(matching_move) = piece_moves.iter().find(|m| **m == piece_move) { // finds move in the list of legal moves
           board.make_move(matching_move.clone());
-          if board.get_all_moves().len() == 0 { // checkmate
+          if board.is_game_over() { // checkmate
             game_over = true;
             break;
           }
           let bot_move = bot.get_best_move(board.clone());
           board.make_move(bot_move);
-          if board.get_all_moves().len() == 0 { // checkmate
+          if board.is_game_over() { // checkmate
             game_over = true;
             break;
           }
