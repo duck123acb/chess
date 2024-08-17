@@ -18,11 +18,11 @@ impl EvalMove {
   }
 }
 
-fn evaluate_position(board: Board) -> i32 {
+fn evaluate_position(board: &Board) -> i32 {
   0 // lmaooooo best evaluation
 }
 
-fn minimax(board: Board, move_to_search: Move, depth: i32, maximizing_player: bool) -> EvalMove { // thanks to Sebastian Lague!! https://www.youtube.com/watch?v=l-hh51ncgDI
+fn minimax(board: &mut Board, move_to_search: Move, depth: i32, maximizing_player: bool) -> EvalMove { // thanks to Sebastian Lague!! https://www.youtube.com/watch?v=l-hh51ncgDI
   if depth == 0 || board.is_game_over() {
     return EvalMove::new(move_to_search, evaluate_position(board))
   }
@@ -31,16 +31,17 @@ fn minimax(board: Board, move_to_search: Move, depth: i32, maximizing_player: bo
     let mut max_eval = EvalMove::new(move_to_search, NEGATIVE_INIFINITY);
 
     for piece_move in board.get_all_moves() {
-      let mut iteration_board = board.clone();
-      iteration_board.make_move(piece_move);
+      board.make_move(piece_move);
 
-      let eval_move = minimax(iteration_board, piece_move, depth - 1, false);
+      let eval_move = minimax(board, piece_move, depth - 1, false);
       let better_eval = if max_eval.eval < eval_move.eval {
         eval_move
       } else {
         max_eval
       };
       max_eval = better_eval;
+
+      board.undo_move(piece_move);
     }
 
     return max_eval;
@@ -49,16 +50,17 @@ fn minimax(board: Board, move_to_search: Move, depth: i32, maximizing_player: bo
     let mut min_eval = EvalMove::new(move_to_search, INIFINITY);
 
     for piece_move in board.get_all_moves() {
-      let mut iteration_board = board.clone();
-      iteration_board.make_move(piece_move);
+      board.make_move(piece_move);
 
-      let eval_move = minimax(iteration_board, piece_move, depth - 1, true);
+      let eval_move = minimax(board, piece_move, depth - 1, true);
       let better_eval = if min_eval.eval > eval_move.eval {
         eval_move
       } else {
         min_eval
       };
       min_eval = better_eval;
+
+      board.undo_move(piece_move);
     }
     
     return min_eval;
@@ -75,10 +77,10 @@ impl Bot {
     }
   }
 
-  pub fn get_best_move(&self, board: Board) -> Move {
+  pub fn get_best_move(&self, board: &mut Board) -> Move {
     let moves = board.get_all_moves();
-    // let best_move = minimax(board, moves[moves.len() - 1], 3, self.is_white_player);
-    // best_move.board_move
-    moves[moves.len() - 1]
+    let best_move = minimax(board, moves[0], 3, self.is_white_player);
+    best_move.board_move
+    // moves[moves.len() - 1]
   }
 }
