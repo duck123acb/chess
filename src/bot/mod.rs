@@ -1,3 +1,5 @@
+use std::cmp;
+
 use crate::board_representation::Board;
 use crate::board_representation::Move;
 
@@ -5,6 +7,7 @@ use crate::board_representation::Move;
 const INIFINITY: i32 = i32::MAX;
 const NEGATIVE_INIFINITY: i32 = i32::MIN;
 
+#[derive(Copy, Clone)]
 struct EvalMove {
   pub board_move: Move,
   pub eval: i32
@@ -22,7 +25,7 @@ fn evaluate_position(board: &Board) -> i32 {
   0 // lmaooooo best evaluation
 }
 
-fn minimax(board: &mut Board, move_to_search: Move, depth: i32, maximizing_player: bool) -> EvalMove { // thanks to Sebastian Lague!! https://www.youtube.com/watch?v=l-hh51ncgDI
+fn minimax(board: &mut Board, move_to_search: Move, depth: i32, alpha: &mut i32, beta: &mut i32, maximizing_player: bool) -> EvalMove { // thanks to Sebastian Lague!! https://www.youtube.com/watch?v=l-hh51ncgDI
   if depth == 0 || board.is_game_over() {
     return EvalMove::new(move_to_search, evaluate_position(board))
   }
@@ -33,7 +36,7 @@ fn minimax(board: &mut Board, move_to_search: Move, depth: i32, maximizing_playe
     for piece_move in board.get_all_moves() {
       board.make_move(piece_move);
 
-      let eval_move = minimax(board, piece_move, depth - 1, false);
+      let eval_move = minimax(board, piece_move, depth - 1, alpha, beta, false);
       let better_eval = if max_eval.eval < eval_move.eval {
         eval_move
       } else {
@@ -42,6 +45,11 @@ fn minimax(board: &mut Board, move_to_search: Move, depth: i32, maximizing_playe
       max_eval = better_eval;
 
       board.undo_move(piece_move);
+
+      *alpha = cmp::max(*alpha, eval_move.eval);
+      if beta <= alpha {
+        break;
+      }
     }
 
     return max_eval;
@@ -52,7 +60,7 @@ fn minimax(board: &mut Board, move_to_search: Move, depth: i32, maximizing_playe
     for piece_move in board.get_all_moves() {
       board.make_move(piece_move);
 
-      let eval_move = minimax(board, piece_move, depth - 1, true);
+      let eval_move = minimax(board, piece_move, depth - 1, alpha, beta, true);
       let better_eval = if min_eval.eval > eval_move.eval {
         eval_move
       } else {
@@ -61,6 +69,11 @@ fn minimax(board: &mut Board, move_to_search: Move, depth: i32, maximizing_playe
       min_eval = better_eval;
 
       board.undo_move(piece_move);
+      
+      *beta = cmp::min(*beta, eval_move.eval);
+      if beta <= alpha {
+        break;
+      }
     }
     
     return min_eval;
@@ -79,7 +92,7 @@ impl Bot {
 
   pub fn get_best_move(&self, board: &mut Board) -> Move {
     let moves = board.get_all_moves();
-    let best_move = minimax(board, moves[0], 3, self.is_white_player);
+    let best_move = minimax(board, moves[0], 3, &mut NEGATIVE_INIFINITY, &mut INIFINITY, self.is_white_player);
     best_move.board_move
     // moves[moves.len() - 1]
   }
