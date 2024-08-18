@@ -47,6 +47,7 @@ fn minimax(board: &mut Board, move_to_search: Move, depth: i32, alpha: &mut i32,
 
       board.undo_move(piece_move);
       board.print();
+      println!("____________________________________________________________");
 
       *alpha = cmp::max(*alpha, eval_move.eval);
       if beta <= alpha {
@@ -73,6 +74,8 @@ fn minimax(board: &mut Board, move_to_search: Move, depth: i32, alpha: &mut i32,
 
       board.undo_move(piece_move);
       board.print();
+      println!("____________________________________________________________");
+      println!("____________________________________________________________");
       
       *beta = cmp::min(*beta, eval_move.eval);
       if beta <= alpha {
@@ -97,7 +100,7 @@ impl Bot {
   pub fn get_best_move(&self, board: &mut Board) -> Move {
     let moves = board.get_all_moves();
     let best_move = minimax(board, moves[0], 3, &mut NEGATIVE_INIFINITY, &mut INIFINITY, self.is_white_player);
-    println!("{:b}", (1u64 << best_move.board_move.start_square) | (1u64 << best_move.board_move.end_square));
+    // println!("{:b}", (1u64 << best_move.board_move.start_square) | (1u64 << best_move.board_move.end_square));
     best_move.board_move
     // moves[moves.len() - 1]
   }
