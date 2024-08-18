@@ -26,7 +26,7 @@ fn evaluate_position(board: &Board) -> i32 {
 }
 
 fn minimax(board: &mut Board, move_to_search: Move, depth: i32, alpha: &mut i32, beta: &mut i32, maximizing_player: bool) -> EvalMove { 
-  if depth == 0 || board.is_game_over() {
+  if depth == 0 || board.is_checkmate() {
     return EvalMove::new(move_to_search, evaluate_position(board));
   }
 

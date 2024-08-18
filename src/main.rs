@@ -113,16 +113,16 @@ async fn main() {
 
         if let Some(matching_move) = piece_moves.iter().find(|m| **m == piece_move) { // finds move in the list of legal moves
           board.make_move(matching_move.clone());
-          if board.is_game_over() { // checkmate
+          if board.is_checkmate() { // checkmate
             game_over = true;
             break;
           }
-          let bot_move = bot.get_best_move(&mut board);
-          board.make_move(bot_move);
-          if board.is_game_over() { // checkmate
-            game_over = true;
-            break;
-          }
+          // let bot_move = bot.get_best_move(&mut board);
+          // board.make_move(bot_move);
+          // if board.is_checkmate() { // checkmate
+          //   game_over = true;
+          //   break;
+          // }
         }
 
         piece_sprite.moved_piece = false;

@@ -661,7 +661,11 @@ impl Board {
         }
       },
       PieceType::WhiteRook => {
-        moves = get_rook_moves(square_index, &occupancy);
+        moves = if !only_attacks {
+          get_rook_moves(square_index, &occupancy)
+        } else {
+          get_rook_moves(square_index, &0)
+        };
 
         if !only_attacks {
           moves ^= moves & self.all_white_pieces(); 
@@ -973,7 +977,7 @@ impl Board {
     self.get_all_legal_moves();
   }
 
-  pub fn is_game_over(&self) -> bool {
-    self.get_all_moves().len() == 0
+  pub fn is_checkmate(&self) -> bool {
+    self.get_all_moves().len() == 0 && self.checks.len() != 0
   }
 }
