@@ -117,12 +117,12 @@ async fn main() {
             game_over = true;
             break;
           }
-          // let bot_move = bot.get_best_move(&mut board);
-          // board.make_move(bot_move);
-          // if board.is_checkmate() { // checkmate
-          //   game_over = true;
-          //   break;
-          // }
+          let bot_move = bot.get_best_move(&mut board);
+          board.make_move(bot_move);
+          if board.is_checkmate() { // checkmate
+            game_over = true;
+            break;
+          }
         }
 
         piece_sprite.moved_piece = false;
