@@ -179,7 +179,7 @@ pub fn get_bishop_moves(square_index: i32, population: &u64) -> u64 {
   
   moves
 }
-pub fn get_rook_moves(square_index: i32, population: &u64) -> u64 {
+pub fn get_rook_moves(square_index: i32, population: &u64) -> u64 { // FIXME: for some reason the rook cant reach the edge of the board in some cases
   let magic = &ROOK_MAGICS[square_index as usize];
   let mask = &ROOK_MASKS[square_index as usize];
   let relevant_bits = &ROOK_BITS[square_index as usize];
