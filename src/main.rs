@@ -1,20 +1,35 @@
 /* MODULES */
 mod rendering;
 mod board_representation;
+mod bot;
 mod utils;
 
 /* IMPORTS */
 use rendering::piece_sprite::*;
 use rendering::square::*;
 use board_representation::*;
+use bot::Bot;
 use utils::*;
 use macroquad::prelude::*;
 
-const FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+// const FEN: &str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+const FEN: &str = "8/8/8/3k4/8/8/8/RR2K3 w - - 0 1";
+
+
+fn window_conf() -> Conf {
+  Conf {
+    window_title: "chess".to_string(),
+    window_width: 800,
+    window_height: 800,
+    window_resizable: false,
+    ..Default::default()
+  }
+}
 
 #[macroquad::main(window_conf)]
 async fn main() {
   let mut board = Board::new(FEN);
+  let bot = Bot::new(false);
   let mut piece_moves: Vec<Move> = Vec::new();
 
   let texture_atlas = load_texture(TEXTURE_PATH).await.unwrap();
@@ -49,7 +64,8 @@ async fn main() {
     }
   }
 
-  loop {
+  let mut game_over = false;
+  while !game_over {
     clear_background(GRAY);
 
     for square in &squares {
@@ -96,8 +112,17 @@ async fn main() {
         }
 
         if let Some(matching_move) = piece_moves.iter().find(|m| **m == piece_move) { // finds move in the list of legal moves
-
           board.make_move(matching_move.clone());
+          if board.is_checkmate() { // checkmate
+            game_over = true;
+            break;
+          }
+          let bot_move = bot.get_best_move(&mut board);
+          board.make_move(bot_move);
+          if board.is_checkmate() { // checkmate
+            game_over = true;
+            break;
+          }
         }
 
         piece_sprite.moved_piece = false;

@@ -22,6 +22,7 @@ pub fn bits_to_indices(bitboard: &u64) -> Vec<i32> {
   indices
 }
 
+#[derive(Clone)]
 struct CastlingRights {
   white_kingside: bool,
   white_queenside: bool,
@@ -38,6 +39,8 @@ impl CastlingRights {
     }
   }
 }
+
+#[derive(Clone)]
 struct CastlingFlags {
   king_moved: bool,
   rook_kingside_moved: bool,
@@ -79,8 +82,8 @@ impl MoveFlags {
 
 #[derive(Copy, Clone)]
 pub struct Move {
-  start_square: i32,
-  end_square: i32,
+  pub start_square: i32,
+  pub end_square: i32,
   moved_piece_type: PieceType,
 
   // flags
@@ -107,6 +110,7 @@ impl PartialEq for Move {
   }
 }
 
+#[derive(Clone)]
 pub struct Board {
   bitboards: [u64; 12],
   white_to_move: bool,
@@ -260,6 +264,17 @@ impl Board {
   }
   pub fn get_moves(&self, index: i32) -> &Vec<Move> {
     &self.moves[index as usize]
+  }
+  pub fn get_all_moves(&self) -> Vec<Move> {
+    let mut moves = Vec::new();
+
+    for piece_moves in &self.moves {
+      for piece_move in piece_moves {
+        moves.push(piece_move.clone());
+      }
+    }
+
+    moves
   }
 
   /* MOVE GEN */
@@ -646,7 +661,11 @@ impl Board {
         }
       },
       PieceType::WhiteRook => {
-        moves = get_rook_moves(square_index, &occupancy);
+        moves = if !only_attacks {
+          get_rook_moves(square_index, &occupancy)
+        } else {
+          get_rook_moves(square_index, &0)
+        };
 
         if !only_attacks {
           moves ^= moves & self.all_white_pieces(); 
@@ -736,10 +755,12 @@ impl Board {
       }
     }
 
-    let is_all_empty = all_moves.iter().all(|m| m.is_empty());
-    if is_all_empty {
-      self.moves = all_pseudo_legal_moves;
-      return;
+    if self.checks.len() == 0 {
+      let is_all_empty = all_moves.iter().all(|m| m.is_empty());
+      if is_all_empty {
+        self.moves = all_pseudo_legal_moves;
+        return;
+      }
     }
     self.moves = all_moves;
   }
@@ -754,7 +775,7 @@ impl Board {
       self.bitboards[move_to_make.promotion_piece.unwrap() as usize] |= new_piece_bitboard; 
     }
     else {
-      self.bitboards[move_to_make.moved_piece_type as usize] ^= old_piece_bitboard | new_piece_bitboard; // move the piece in its own bitboard
+      self.bitboards[move_to_make.moved_piece_type as usize] ^= old_piece_bitboard | new_piece_bitboard;
     }
     
     if let Some(piece_type) = move_to_make.captured_piece_type {
@@ -858,5 +879,105 @@ impl Board {
     self.find_pinned_pieces();
     self.get_opponents_attacks();
     self.get_all_legal_moves();
+  }
+  pub fn undo_move(&mut self, move_to_undo: Move) {
+    self.castle_checks();
+    let new_piece_bitboard = 1 << move_to_undo.end_square;
+    let old_piece_bitboard = 1 << move_to_undo.start_square;
+
+    if move_to_undo.flags.is_promotion {
+      self.bitboards[move_to_undo.moved_piece_type as usize] |= old_piece_bitboard;
+      self.bitboards[move_to_undo.promotion_piece.unwrap() as usize] ^= new_piece_bitboard; 
+    }
+    else {
+      self.bitboards[move_to_undo.moved_piece_type as usize] ^= old_piece_bitboard | new_piece_bitboard;
+    }
+    
+    if let Some(piece_type) = move_to_undo.captured_piece_type {
+      self.bitboards[piece_type as usize] |= new_piece_bitboard;
+    }
+
+    // remove the passented piece
+    if move_to_undo.flags.can_be_en_passent {
+      if self.en_passent_square.unwrap() & new_piece_bitboard != 0 {
+        if self.white_to_move {
+          self.bitboards[PieceType::BlackPawn as usize] |= self.en_passent_square.unwrap() >> 8;
+        }
+        else {
+          self.bitboards[PieceType::WhitePawn as usize] |= self.en_passent_square.unwrap() << 8;
+        }
+      }
+    }
+
+    // castling
+    if let Some(castle_square) = move_to_undo.flags.kingside_castle_square {
+      if castle_square & new_piece_bitboard != 0 {
+        if self.white_to_move {
+          self.bitboards[PieceType::WhiteRook as usize] ^= 0x5;
+        }
+        else {
+          self.bitboards[PieceType::BlackRook as usize] ^= 0x500000000000000;
+        }
+      }
+    }
+    if let Some(castle_square) = move_to_undo.flags.queenside_castle_square {
+      if castle_square & new_piece_bitboard != 0 {
+        if self.white_to_move {
+          self.bitboards[PieceType::WhiteRook as usize] ^= 0x90;
+        }
+        else {
+          self.bitboards[PieceType::BlackRook as usize] ^= 0x9000000000000000;
+        }
+      }
+    }
+
+    if PieceType::WhiteKing == move_to_undo.moved_piece_type {
+      self.white_castling_flags.king_moved = false;
+    }
+    else if PieceType::WhiteRook == move_to_undo.moved_piece_type { // if the rook moves
+      if old_piece_bitboard & H1 != 0 {
+        self.white_castling_flags.rook_kingside_moved = false;
+      }
+      else if old_piece_bitboard & A1 != 0 {
+        self.white_castling_flags.rook_queenside_moved = false;
+      }
+    }
+    else if move_to_undo.captured_piece_type.is_some() && PieceType::WhiteRook == move_to_undo.captured_piece_type.unwrap() { // if the rook is captured
+      if new_piece_bitboard & H1 != 0 {
+        self.white_castling_flags.rook_kingside_moved = false;
+      }
+      else if new_piece_bitboard & A1 != 0 {
+        self.white_castling_flags.rook_queenside_moved = false;
+      }
+    }
+    if PieceType::BlackKing == move_to_undo.moved_piece_type {
+      self.black_castling_flags.king_moved = false;
+    }
+    else if PieceType::BlackRook == move_to_undo.moved_piece_type { // if the rook moves
+      if old_piece_bitboard & H1 != 0 {
+        self.white_castling_flags.rook_kingside_moved = false;
+      }
+      else if old_piece_bitboard & A1 != 0 {
+        self.white_castling_flags.rook_queenside_moved = false;
+      }
+    }
+    else if move_to_undo.captured_piece_type.is_some() && PieceType::BlackRook == move_to_undo.captured_piece_type.unwrap() { // if the rook is captured
+      if new_piece_bitboard & H8 != 0 {
+        self.white_castling_flags.rook_kingside_moved = false;
+      }
+      else if new_piece_bitboard & A8 != 0 {
+        self.white_castling_flags.rook_queenside_moved = false;
+      }
+    }
+
+    self.detect_check();
+    self.white_to_move = !self.white_to_move;
+    self.find_pinned_pieces();
+    self.get_opponents_attacks();
+    self.get_all_legal_moves();
+  }
+
+  pub fn is_checkmate(&self) -> bool {
+    self.get_all_moves().len() == 0 && self.checks.len() != 0
   }
 }
