@@ -35,7 +35,8 @@ fn minimax(board: &mut Board, move_to_search: Move, depth: i32, alpha: &mut i32,
       board.make_move(piece_move);
 
       let eval_move = minimax(board, piece_move, depth - 1, alpha, beta, false);
-      if eval_move.eval > max_eval.eval {
+      if eval_move.eval >= max_eval.eval {
+        println!("HI");
         max_eval = EvalMove::new(piece_move, eval_move.eval);
       }
 
@@ -56,7 +57,8 @@ fn minimax(board: &mut Board, move_to_search: Move, depth: i32, alpha: &mut i32,
       board.make_move(piece_move);
 
       let eval_move = minimax(board, piece_move, depth - 1, alpha, beta, true);
-      if eval_move.eval < min_eval.eval {
+      if eval_move.eval <= min_eval.eval {
+        println!("HI2");
         min_eval = EvalMove::new(piece_move, eval_move.eval);
       }
 
@@ -89,7 +91,6 @@ impl Bot {
     let mut beta = INIFINITY;
     
     let best_move = minimax(board, moves[0], 5, &mut alpha, &mut beta, self.is_white_player);
-    println!("{}", best_move.eval);
     best_move.board_move
   }
 }
