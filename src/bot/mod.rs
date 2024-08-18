@@ -1,7 +1,9 @@
-use std::cmp;
+mod evaluation;
 
+use std::cmp;
 use crate::board_representation::Board;
 use crate::board_representation::Move;
+use evaluation::*;
 
 // names are slightly misleading, but they might as well be as they are as high as high can be (for 32 bit integers)
 const INIFINITY: i32 = i32::MAX;
@@ -19,10 +21,6 @@ impl EvalMove {
       eval: value
     }
   }
-}
-
-fn evaluate_position(board: &Board) -> i32 {
-  0 // lmaooooo best evaluation
 }
 
 fn minimax(board: &mut Board, move_to_search: Move, depth: i32, alpha: &mut i32, beta: &mut i32, maximizing_player: bool) -> EvalMove { 
@@ -91,6 +89,7 @@ impl Bot {
     let mut beta = INIFINITY;
     
     let best_move = minimax(board, moves[0], 5, &mut alpha, &mut beta, self.is_white_player);
+    println!("{}", best_move.eval);
     best_move.board_move
   }
 }

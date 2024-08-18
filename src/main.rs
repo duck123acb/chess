@@ -13,7 +13,7 @@ use utils::*;
 use macroquad::prelude::*;
 
 // const FEN: &str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-const FEN: &str = "8/8/8/3k4/8/8/8/RR2K3 w - - 0 1";
+const FEN: &str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
 
 fn window_conf() -> Conf {
