@@ -990,5 +990,8 @@ impl Board {
   enemy_attacks: u64,
   checks: Vec<u64>,
   pinned_pieces: u64 */
+  println!("{:b}", self.bitboards[PieceType::BlackKing as usize]);
+  println!("{:b}", self.bitboards[PieceType::WhiteKing as usize]);
+  println!("{:b}", self.bitboards[PieceType::WhiteRook as usize]);
 }
 }
