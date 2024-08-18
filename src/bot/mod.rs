@@ -60,7 +60,7 @@ fn minimax(board: &mut Board, move_to_search: Move, depth: i32, alpha: &mut i32,
     for piece_move in board.get_all_moves() {
       board.make_move(piece_move);
 
-      let eval_move = minimax(&mut board.clone(), piece_move.clone(), depth - 1, alpha, beta, true);
+      let eval_move = minimax(board, piece_move, depth - 1, alpha, beta, true);
       let better_eval = if min_eval.eval >= eval_move.eval {
         eval_move
       } else {
