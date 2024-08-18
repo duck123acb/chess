@@ -87,9 +87,10 @@ impl Bot {
 
   pub fn get_best_move(&self, board: &mut Board) -> Move {
     let moves = board.get_all_moves();
-    let best_move = minimax(board, moves[0], 5, &mut NEGATIVE_INIFINITY, &mut INIFINITY, self.is_white_player);
-    // println!("{:b}", (1u64 << best_move.board_move.start_square) | (1u64 << best_move.board_move.end_square));
+    let mut alpha = NEGATIVE_INIFINITY;
+    let mut beta = INIFINITY;
+    
+    let best_move = minimax(board, moves[0], 5, &mut alpha, &mut beta, self.is_white_player);
     best_move.board_move
-    // moves[moves.len() - 1]
   }
 }
