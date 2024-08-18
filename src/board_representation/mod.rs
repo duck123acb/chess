@@ -82,8 +82,8 @@ impl MoveFlags {
 
 #[derive(Copy, Clone)]
 pub struct Move {
-  start_square: i32,
-  end_square: i32,
+  pub start_square: i32,
+  pub end_square: i32,
   moved_piece_type: PieceType,
 
   // flags
@@ -976,4 +976,19 @@ impl Board {
   pub fn is_game_over(&self) -> bool {
     self.get_all_moves().len() == 0
   }
+
+  pub fn print(&self) {
+    /*
+  castling_rights: CastlingRights,
+  en_passent_square: Option<u64>,
+  halfmove_clock: i32,
+  fullmove_num: i32,
+  white_castling_flags: CastlingFlags,
+  black_castling_flags: CastlingFlags,
+
+  moves: [Vec<Move>; 64],
+  enemy_attacks: u64,
+  checks: Vec<u64>,
+  pinned_pieces: u64 */
+}
 }
