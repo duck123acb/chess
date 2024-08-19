@@ -45,7 +45,7 @@ fn get_piece_value(piece_type: PieceType) -> i32 {
   }
 }
 
-pub fn evaluate_position(board: &Board) -> i32 {
+pub fn evaluate_position(board: Board) -> i32 {
   let mut eval = 0;
 
   for piece_type in PieceType::iter() {

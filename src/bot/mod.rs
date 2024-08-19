@@ -23,7 +23,7 @@ impl EvalMove {
   }
 }
 
-fn minimax(board: &mut Board, move_to_search: Move, depth: i32, alpha: &mut i32, beta: &mut i32, maximizing_player: bool) -> EvalMove { 
+fn minimax(board: Board, move_to_search: Move, depth: i32, alpha: &mut i32, beta: &mut i32, maximizing_player: bool) -> EvalMove { 
   if depth == 0 || board.is_checkmate() {
     return EvalMove::new(move_to_search, evaluate_position(board));
   }
@@ -35,12 +35,10 @@ fn minimax(board: &mut Board, move_to_search: Move, depth: i32, alpha: &mut i32,
       let mut itteration_board = board.clone();
       itteration_board.make_move(piece_move);
 
-      let eval_move = minimax(&mut itteration_board, piece_move, depth - 1, alpha, beta, false);
+      let eval_move = minimax(itteration_board, piece_move, depth - 1, alpha, beta, false);
       if eval_move.eval > max_eval.eval {
         max_eval = EvalMove::new(piece_move, eval_move.eval);
       }
-
-      // board.undo_move(piece_move);
 
       *alpha = cmp::max(*alpha, max_eval.eval);
       if *beta <= *alpha {
@@ -57,13 +55,11 @@ fn minimax(board: &mut Board, move_to_search: Move, depth: i32, alpha: &mut i32,
       let mut itteration_board = board.clone();
       itteration_board.make_move(piece_move);
 
-      let eval_move = minimax(&mut itteration_board, piece_move, depth - 1, alpha, beta, true);
+      let eval_move = minimax(itteration_board, piece_move, depth - 1, alpha, beta, true);
       if eval_move.eval < min_eval.eval {
         min_eval = EvalMove::new(piece_move, eval_move.eval);
       }
 
-      // board.undo_move(piece_move);
-      
       *beta = cmp::min(*beta, min_eval.eval);
       if *beta <= *alpha {
         break;
@@ -86,7 +82,7 @@ impl Bot {
     }
   }
 
-  pub fn get_best_move(&self, board: &mut Board) -> Move {
+  pub fn get_best_move(&self, board: Board) -> Move {
     let moves = board.get_all_moves();
     let mut alpha = NEGATIVE_INIFINITY;
     let mut beta = INIFINITY;
