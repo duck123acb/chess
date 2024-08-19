@@ -66,7 +66,6 @@ fn minimax(board: Board, move_to_search: Move, depth: i32, alpha: &mut i32, beta
       }
     }
 
-    println!("{}, {}, {}", min_eval.board_move.start_square, min_eval.board_move.end_square, min_eval.eval);
     return min_eval;
   }
 }
@@ -87,7 +86,7 @@ impl Bot {
     let mut alpha = NEGATIVE_INIFINITY;
     let mut beta = INIFINITY;
     
-    let best_move = minimax(board, moves[0], 1, &mut alpha, &mut beta, self.is_white_player);
+    let best_move = minimax(board, moves[0], 3, &mut alpha, &mut beta, !self.is_white_player); // the initial move passed in here doesnt matter
     println!("{}, {}, {}", best_move.board_move.start_square, best_move.board_move.end_square, best_move.eval);
     best_move.board_move
   }
