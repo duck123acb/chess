@@ -32,14 +32,15 @@ fn minimax(board: &mut Board, move_to_search: Move, depth: i32, alpha: &mut i32,
     let mut max_eval = EvalMove::new(move_to_search, NEGATIVE_INIFINITY);
 
     for piece_move in board.get_all_moves() {
-      board.make_move(piece_move);
+      let mut itteration_board = board.clone();
+      itteration_board.make_move(piece_move);
 
-      let eval_move = minimax(board, piece_move, depth - 1, alpha, beta, false);
+      let eval_move = minimax(&mut itteration_board, piece_move, depth - 1, alpha, beta, false);
       if eval_move.eval > max_eval.eval {
         max_eval = EvalMove::new(piece_move, eval_move.eval);
       }
 
-      board.undo_move(piece_move);
+      // board.undo_move(piece_move);
 
       *alpha = cmp::max(*alpha, max_eval.eval);
       if *beta <= *alpha {
@@ -53,14 +54,15 @@ fn minimax(board: &mut Board, move_to_search: Move, depth: i32, alpha: &mut i32,
     let mut min_eval = EvalMove::new(move_to_search, INIFINITY);
 
     for piece_move in board.get_all_moves() {
-      board.make_move(piece_move);
+      let mut itteration_board = board.clone();
+      itteration_board.make_move(piece_move);
 
-      let eval_move = minimax(board, piece_move, depth - 1, alpha, beta, true);
+      let eval_move = minimax(&mut itteration_board, piece_move, depth - 1, alpha, beta, true);
       if eval_move.eval < min_eval.eval {
         min_eval = EvalMove::new(piece_move, eval_move.eval);
       }
 
-      board.undo_move(piece_move);
+      // board.undo_move(piece_move);
       
       *beta = cmp::min(*beta, min_eval.eval);
       if *beta <= *alpha {
