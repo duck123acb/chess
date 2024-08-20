@@ -103,6 +103,9 @@ impl Move {
       promotion_piece: None
     }
   }
+  pub fn default() -> Self {
+    Move::new(0, 0, PieceType::WhiteKing, MoveFlags::new())
+  }
 }
 impl PartialEq for Move {
   fn eq(&self, other: &Self) -> bool {
@@ -871,102 +874,6 @@ impl Board {
         else if new_piece_bitboard & A8 != 0 {
           self.white_castling_flags.rook_queenside_moved = true;
         }
-      }
-    }
-
-    self.detect_check();
-    self.white_to_move = !self.white_to_move;
-    self.find_pinned_pieces();
-    self.get_opponents_attacks();
-    self.get_all_legal_moves();
-  }
-  pub fn undo_move(&mut self, move_to_undo: Move) {
-    self.castle_checks();
-    let new_piece_bitboard = 1 << move_to_undo.end_square;
-    let old_piece_bitboard = 1 << move_to_undo.start_square;
-
-    if move_to_undo.flags.is_promotion {
-      self.bitboards[move_to_undo.moved_piece_type as usize] |= old_piece_bitboard;
-      self.bitboards[move_to_undo.promotion_piece.unwrap() as usize] ^= new_piece_bitboard; 
-    }
-    else {
-      self.bitboards[move_to_undo.moved_piece_type as usize] ^= old_piece_bitboard | new_piece_bitboard;
-    }
-    
-    if let Some(piece_type) = move_to_undo.captured_piece_type {
-      self.bitboards[piece_type as usize] |= new_piece_bitboard;
-    }
-
-    // remove the passented piece
-    if move_to_undo.flags.can_be_en_passent {
-      if self.en_passent_square.unwrap() & new_piece_bitboard != 0 {
-        if self.white_to_move {
-          self.bitboards[PieceType::BlackPawn as usize] |= self.en_passent_square.unwrap() >> 8;
-        }
-        else {
-          self.bitboards[PieceType::WhitePawn as usize] |= self.en_passent_square.unwrap() << 8;
-        }
-      }
-    }
-
-    // castling
-    if let Some(castle_square) = move_to_undo.flags.kingside_castle_square {
-      if castle_square & new_piece_bitboard != 0 {
-        if self.white_to_move {
-          self.bitboards[PieceType::WhiteRook as usize] ^= 0x5;
-        }
-        else {
-          self.bitboards[PieceType::BlackRook as usize] ^= 0x500000000000000;
-        }
-      }
-    }
-    if let Some(castle_square) = move_to_undo.flags.queenside_castle_square {
-      if castle_square & new_piece_bitboard != 0 {
-        if self.white_to_move {
-          self.bitboards[PieceType::WhiteRook as usize] ^= 0x90;
-        }
-        else {
-          self.bitboards[PieceType::BlackRook as usize] ^= 0x9000000000000000;
-        }
-      }
-    }
-
-    if PieceType::WhiteKing == move_to_undo.moved_piece_type {
-      self.white_castling_flags.king_moved = false;
-    }
-    else if PieceType::WhiteRook == move_to_undo.moved_piece_type { // if the rook moves
-      if old_piece_bitboard & H1 != 0 {
-        self.white_castling_flags.rook_kingside_moved = false;
-      }
-      else if old_piece_bitboard & A1 != 0 {
-        self.white_castling_flags.rook_queenside_moved = false;
-      }
-    }
-    else if move_to_undo.captured_piece_type.is_some() && PieceType::WhiteRook == move_to_undo.captured_piece_type.unwrap() { // if the rook is captured
-      if new_piece_bitboard & H1 != 0 {
-        self.white_castling_flags.rook_kingside_moved = false;
-      }
-      else if new_piece_bitboard & A1 != 0 {
-        self.white_castling_flags.rook_queenside_moved = false;
-      }
-    }
-    if PieceType::BlackKing == move_to_undo.moved_piece_type {
-      self.black_castling_flags.king_moved = false;
-    }
-    else if PieceType::BlackRook == move_to_undo.moved_piece_type { // if the rook moves
-      if old_piece_bitboard & H1 != 0 {
-        self.white_castling_flags.rook_kingside_moved = false;
-      }
-      else if old_piece_bitboard & A1 != 0 {
-        self.white_castling_flags.rook_queenside_moved = false;
-      }
-    }
-    else if move_to_undo.captured_piece_type.is_some() && PieceType::BlackRook == move_to_undo.captured_piece_type.unwrap() { // if the rook is captured
-      if new_piece_bitboard & H8 != 0 {
-        self.white_castling_flags.rook_kingside_moved = false;
-      }
-      else if new_piece_bitboard & A8 != 0 {
-        self.white_castling_flags.rook_queenside_moved = false;
       }
     }
 

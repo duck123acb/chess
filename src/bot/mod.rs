@@ -1,76 +1,62 @@
-use std::cmp;
+mod evaluation;
 
+use std::cmp;
 use crate::board_representation::Board;
 use crate::board_representation::Move;
+use evaluation::*;
 
 // names are slightly misleading, but they might as well be as they are as high as high can be (for 32 bit integers)
 const INIFINITY: i32 = i32::MAX;
 const NEGATIVE_INIFINITY: i32 = i32::MIN;
 
-#[derive(Copy, Clone)]
-struct EvalMove {
-  pub board_move: Move,
-  pub eval: i32
-}
-impl EvalMove {
-  pub fn new(base_move: Move, value: i32) -> Self {
-    Self {
-      board_move: base_move,
-      eval: value
-    }
-  }
-}
-
-fn evaluate_position(board: &Board) -> i32 {
-  0 // lmaooooo best evaluation
-}
-
-fn minimax(board: &mut Board, move_to_search: Move, depth: i32, alpha: &mut i32, beta: &mut i32, maximizing_player: bool) -> EvalMove { 
+fn minimax(board: Board, depth: i32, mut alpha: i32, mut beta: i32, maximizing_player: bool) -> (i32, Option<Move>) { 
   if depth == 0 || board.is_checkmate() {
-    return EvalMove::new(move_to_search, evaluate_position(board));
+    return (evaluate_position(board), None);
   }
+
+  let mut best_move: Option<Move> = None;
 
   if maximizing_player {
-    let mut max_eval = EvalMove::new(move_to_search, NEGATIVE_INIFINITY);
+    let mut max_eval = NEGATIVE_INIFINITY;
 
     for piece_move in board.get_all_moves() {
-      board.make_move(piece_move);
+      let mut iteration_board = board.clone();
+      iteration_board.make_move(piece_move);
 
-      let eval_move = minimax(board, piece_move, depth - 1, alpha, beta, false);
-      if eval_move.eval > max_eval.eval {
-        max_eval = EvalMove::new(piece_move, eval_move.eval);
+      let (eval, _) = minimax(iteration_board, depth - 1, alpha, beta, false);
+      if eval > max_eval {
+        max_eval = eval;
+        best_move = Some(piece_move);
       }
 
-      board.undo_move(piece_move);
-
-      *alpha = cmp::max(*alpha, max_eval.eval);
-      if *beta <= *alpha {
+      alpha = cmp::max(alpha, eval);
+      if beta <= alpha {
         break;
       }
     }
 
-    return max_eval;
+    return (max_eval, best_move);
   }
   else {
-    let mut min_eval = EvalMove::new(move_to_search, INIFINITY);
+    let mut min_eval = INIFINITY;
 
     for piece_move in board.get_all_moves() {
-      board.make_move(piece_move);
+      let mut iteration_board = board.clone();
+      iteration_board.make_move(piece_move);
 
-      let eval_move = minimax(board, piece_move, depth - 1, alpha, beta, true);
-      if eval_move.eval < min_eval.eval {
-        min_eval = EvalMove::new(piece_move, eval_move.eval);
+      let (eval, _) = minimax(iteration_board, depth - 1, alpha, beta, true);
+      if eval < min_eval {
+        min_eval = eval;
+        best_move = Some(piece_move);
       }
 
-      board.undo_move(piece_move);
-      
-      *beta = cmp::min(*beta, min_eval.eval);
-      if *beta <= *alpha {
+      beta = cmp::min(beta, eval);
+      if beta <= alpha {
         break;
       }
     }
 
-    return min_eval;
+    return (min_eval, best_move);
   }
 }
 
@@ -85,12 +71,8 @@ impl Bot {
     }
   }
 
-  pub fn get_best_move(&self, board: &mut Board) -> Move {
-    let moves = board.get_all_moves();
-    let mut alpha = NEGATIVE_INIFINITY;
-    let mut beta = INIFINITY;
-    
-    let best_move = minimax(board, moves[0], 5, &mut alpha, &mut beta, self.is_white_player);
-    best_move.board_move
+  pub fn get_best_move(&mut self, board: Board) -> Move {
+    let (_score, best_move) = minimax(board, 3, NEGATIVE_INIFINITY, INIFINITY, self.is_white_player);
+    best_move.unwrap()
   }
 }

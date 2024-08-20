@@ -13,7 +13,7 @@ use utils::*;
 use macroquad::prelude::*;
 
 // const FEN: &str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-const FEN: &str = "8/8/8/3k4/8/8/8/RR2K3 w - - 0 1";
+const FEN: &str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
 
 fn window_conf() -> Conf {
@@ -29,7 +29,7 @@ fn window_conf() -> Conf {
 #[macroquad::main(window_conf)]
 async fn main() {
   let mut board = Board::new(FEN);
-  let bot = Bot::new(false);
+  let mut bot = Bot::new(false);
   let mut piece_moves: Vec<Move> = Vec::new();
 
   let texture_atlas = load_texture(TEXTURE_PATH).await.unwrap();
@@ -117,7 +117,7 @@ async fn main() {
             game_over = true;
             break;
           }
-          let bot_move = bot.get_best_move(&mut board);
+          let bot_move = bot.get_best_move(board.clone());
           board.make_move(bot_move);
           if board.is_checkmate() { // checkmate
             game_over = true;
