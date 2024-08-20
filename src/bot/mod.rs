@@ -29,7 +29,7 @@ fn minimax(board: Board, move_to_search: Move, depth: i32, alpha: &mut i32, beta
   }
 
   if maximizing_player {
-    let mut max_eval = EvalMove::new(move_to_search, NEGATIVE_INIFINITY);
+    let mut max_eval = EvalMove::new(move_to_search, *alpha);
 
     for piece_move in board.get_all_moves() {
       let mut itteration_board = board.clone();
@@ -49,7 +49,7 @@ fn minimax(board: Board, move_to_search: Move, depth: i32, alpha: &mut i32, beta
     return max_eval;
   }
   else {
-    let mut min_eval = EvalMove::new(move_to_search, INIFINITY);
+    let mut min_eval = EvalMove::new(move_to_search, *beta);
 
     for piece_move in board.get_all_moves() {
       let mut itteration_board = board.clone();
@@ -86,7 +86,7 @@ impl Bot {
     let mut alpha = NEGATIVE_INIFINITY;
     let mut beta = INIFINITY;
     
-    let best_move = minimax(board, moves[0], 3, &mut alpha, &mut beta, !self.is_white_player); // the initial move passed in here doesnt matter
+    let best_move = minimax(board, moves[0], 3, &mut alpha, &mut beta, self.is_white_player); // the initial move passed in here doesnt matter
     println!("{}, {}, {}", best_move.board_move.start_square, best_move.board_move.end_square, best_move.eval);
     best_move.board_move
   }
