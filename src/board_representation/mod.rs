@@ -103,6 +103,9 @@ impl Move {
       promotion_piece: None
     }
   }
+  pub fn default() -> Self {
+    Move::new(0, 0, PieceType::WhiteKing, MoveFlags::new())
+  }
 }
 impl PartialEq for Move {
   fn eq(&self, other: &Self) -> bool {

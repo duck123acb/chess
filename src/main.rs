@@ -29,7 +29,7 @@ fn window_conf() -> Conf {
 #[macroquad::main(window_conf)]
 async fn main() {
   let mut board = Board::new(FEN);
-  let bot = Bot::new(false);
+  let mut bot = Bot::new(false);
   let mut piece_moves: Vec<Move> = Vec::new();
 
   let texture_atlas = load_texture(TEXTURE_PATH).await.unwrap();

@@ -9,87 +9,72 @@ use evaluation::*;
 const INIFINITY: i32 = i32::MAX;
 const NEGATIVE_INIFINITY: i32 = i32::MIN;
 
-#[derive(Copy, Clone)]
-struct EvalMove {
-  pub board_move: Move,
-  pub eval: i32
-}
-impl EvalMove {
-  pub fn new(base_move: Move, value: i32) -> Self {
-    Self {
-      board_move: base_move,
-      eval: value
-    }
-  }
-}
-
-fn minimax(board: Board, move_to_search: Move, depth: i32, alpha: &mut i32, beta: &mut i32, maximizing_player: bool) -> EvalMove { 
-  if depth == 0 || board.is_checkmate() {
-    return EvalMove::new(move_to_search, evaluate_position(board));
-  }
-
-  if maximizing_player {
-    let mut max_eval = EvalMove::new(move_to_search, NEGATIVE_INIFINITY);
-
-    for piece_move in board.get_all_moves() {
-      let mut itteration_board = board.clone();
-      itteration_board.make_move(piece_move);
-
-      let eval_move = minimax(itteration_board, piece_move, depth - 1, alpha, beta, false);
-      if eval_move.eval > max_eval.eval {
-        max_eval = EvalMove::new(piece_move, eval_move.eval);
-      }
-
-      println!("{}", max_eval.eval);
-      *alpha = cmp::max(*alpha, max_eval.eval);
-      if *beta <= *alpha {
-        break;
-      }
-    }
-
-    return max_eval;
-  }
-  else {
-    let mut min_eval = EvalMove::new(move_to_search, INIFINITY);
-
-    for piece_move in board.get_all_moves() {
-      let mut itteration_board = board.clone();
-      itteration_board.make_move(piece_move);
-
-      let eval_move = minimax(itteration_board, piece_move, depth - 1, alpha, beta, true);
-      if eval_move.eval < min_eval.eval {
-        min_eval = EvalMove::new(piece_move, eval_move.eval);
-      }
-
-      println!("{}", min_eval.eval);
-      *beta = cmp::min(*beta, min_eval.eval);
-      if *beta <= *alpha {
-        break;
-      }
-    }
-
-    return min_eval;
-  }
-}
-
-
 pub struct Bot {
-  is_white_player: bool
+  is_white_player: bool,
+  best_move: Move
 }
 impl Bot {
   pub fn new(is_white: bool) -> Self {
     Self {
       is_white_player: is_white,
+      best_move: Move::default()
     }
   }
 
-  pub fn get_best_move(&self, board: Board) -> Move {
-    let moves = board.get_all_moves();
+  fn minimax(&mut self, board: Board, depth: i32, alpha: &mut i32, beta: &mut i32, maximizing_player: bool) -> i32 { 
+    if depth == 0 || board.is_checkmate() {
+      return evaluate_position(board);
+    }
+  
+    if maximizing_player {
+      let mut max_eval = NEGATIVE_INIFINITY;
+  
+      for piece_move in board.get_all_moves() {
+        let mut itteration_board = board.clone();
+        itteration_board.make_move(piece_move);
+  
+        let eval = self.minimax(itteration_board, depth - 1, alpha, beta, false);
+        if eval >= max_eval {
+          max_eval = eval;
+          self.best_move = piece_move;
+        }
+  
+        *alpha = cmp::max(*alpha, max_eval);
+        if *beta <= *alpha {
+          break;
+        }
+      }
+  
+      return max_eval;
+    }
+    else {
+      let mut min_eval = INIFINITY;
+  
+      for piece_move in board.get_all_moves() {
+        let mut itteration_board = board.clone();
+        itteration_board.make_move(piece_move);
+  
+        let eval = self.minimax(itteration_board, depth - 1, alpha, beta, true);
+        if eval <= min_eval {
+          min_eval = eval;
+          self.best_move = piece_move;
+        }
+  
+        *beta = cmp::min(*beta, min_eval);
+        if *beta <= *alpha {
+          break;
+        }
+      }
+  
+      return min_eval;
+    }
+  }
+
+  pub fn get_best_move(&mut self, board: Board) -> Move {
     let mut alpha = NEGATIVE_INIFINITY;
     let mut beta = INIFINITY;
     
-    let best_move = minimax(board, moves[0], 3, &mut alpha, &mut beta, self.is_white_player); // the initial move passed in here doesnt matter
-    println!("{}, {}, {}", best_move.board_move.start_square, best_move.board_move.end_square, best_move.eval);
-    best_move.board_move
+    self.minimax(board, 3, &mut alpha, &mut beta, self.is_white_player); // the initial move passed in here doesnt matter
+    self.best_move
   }
 }
