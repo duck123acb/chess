@@ -1,9 +1,9 @@
 
 # duck123acb Chess
 
-A work in progress chess engine with a GUI  
+A work in progress chess bot with a GUI  
 
-You can only play a game of chess by yourself currently  
+You can play a game as white against a bot as black, but the bot SUCKS at openings (and in general, all it knows how to do is count material)  
 If you want a different starting position, you have to change the `FEN` constant in the `main.rs` file
 
 ![image](https://github.com/user-attachments/assets/3f5d5d17-c98d-493b-a914-a757899dc7ae)
