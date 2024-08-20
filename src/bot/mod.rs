@@ -29,7 +29,7 @@ fn minimax(board: Board, move_to_search: Move, depth: i32, alpha: &mut i32, beta
   }
 
   if maximizing_player {
-    let mut max_eval = EvalMove::new(move_to_search, *alpha);
+    let mut max_eval = EvalMove::new(move_to_search, NEGATIVE_INIFINITY);
 
     for piece_move in board.get_all_moves() {
       let mut itteration_board = board.clone();
@@ -40,7 +40,7 @@ fn minimax(board: Board, move_to_search: Move, depth: i32, alpha: &mut i32, beta
         max_eval = EvalMove::new(piece_move, eval_move.eval);
       }
 
-      println!("{}", *alpha);
+      println!("{}", max_eval.eval);
       *alpha = cmp::max(*alpha, max_eval.eval);
       if *beta <= *alpha {
         break;
@@ -50,7 +50,7 @@ fn minimax(board: Board, move_to_search: Move, depth: i32, alpha: &mut i32, beta
     return max_eval;
   }
   else {
-    let mut min_eval = EvalMove::new(move_to_search, *beta);
+    let mut min_eval = EvalMove::new(move_to_search, INIFINITY);
 
     for piece_move in board.get_all_moves() {
       let mut itteration_board = board.clone();
@@ -61,7 +61,7 @@ fn minimax(board: Board, move_to_search: Move, depth: i32, alpha: &mut i32, beta
         min_eval = EvalMove::new(piece_move, eval_move.eval);
       }
 
-      println!("{}", *beta);
+      println!("{}", min_eval.eval);
       *beta = cmp::min(*beta, min_eval.eval);
       if *beta <= *alpha {
         break;
