@@ -2,8 +2,8 @@ use crate::board_representation::Board;
 use crate::utils::PieceType;
 
 // names are slightly misleading, but they might as well be as they are as high as high can be (for 32 bit integers)
-pub const INIFINITY: i32 = i32::MAX;
-pub const NEGATIVE_INIFINITY: i32 = i32::MIN;
+pub const INFINITY: i32 = i32::MAX;
+pub const NEGATIVE_INFINITY: i32 = i32::MIN;
 
 const PAWN_VALUE: i32 = 1;
 const KNIGHT_VALUE: i32 = 3;
@@ -62,12 +62,7 @@ things to add to evaluation:
 */
 pub fn evaluate_position(board: Board, is_mate:bool, is_white: bool) -> i32 {
   if is_mate {
-    if is_white { // white in mate
-      return NEGATIVE_INIFINITY;
-    }
-    else { // black in mate
-      return INIFINITY
-    }
+    return if is_white { NEGATIVE_INFINITY } else { INFINITY };
   }
 
   let mut eval = 0;

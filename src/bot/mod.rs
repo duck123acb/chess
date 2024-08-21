@@ -24,7 +24,7 @@ impl Bot {
     let mut best_move: Option<Move> = None;
   
     if maximizing_player {
-      let mut max_eval = NEGATIVE_INIFINITY;
+      let mut max_eval = NEGATIVE_INFINITY;
   
       for piece_move in board.get_all_moves() {
         let mut iteration_board = board.clone();
@@ -45,7 +45,7 @@ impl Bot {
       return (max_eval, best_move);
     }
     else {
-      let mut min_eval = INIFINITY;
+      let mut min_eval = INFINITY;
   
       for piece_move in board.get_all_moves() {
         let mut iteration_board = board.clone();
@@ -68,7 +68,7 @@ impl Bot {
   }
 
   pub fn get_best_move(&mut self, board: Board) -> Move {
-    let (_score, best_move) = self.minimax(board, 3, NEGATIVE_INIFINITY, INIFINITY, self.is_white_player);
+    let (_score, best_move) = self.minimax(board, 3, NEGATIVE_INFINITY, INFINITY, self.is_white_player);
     best_move.unwrap()
   }
 }

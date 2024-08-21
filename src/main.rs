@@ -12,7 +12,7 @@ use bot::Bot;
 use utils::*;
 use macroquad::prelude::*;
 
-const FEN: &str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+const FEN: &str = "4k2r/8/8/8/8/8/q7/4K3 w k - 0 1";
 
 fn window_conf() -> Conf {
   Conf {
@@ -115,12 +115,12 @@ async fn main() {
             game_over = true;
             break;
           }
-          let bot_move = bot.get_best_move(board.clone());
-          board.make_move(bot_move);
-          if board.is_checkmate() { // checkmate
-            game_over = true;
-            break;
-          }
+          // let bot_move = bot.get_best_move(board.clone());
+          // board.make_move(bot_move);
+          // if board.is_checkmate() { // checkmate
+          //   game_over = true;
+          //   break;
+          // }
         }
 
         piece_sprite.moved_piece = false;

@@ -675,7 +675,11 @@ impl Board {
         }
       },
       PieceType::BlackRook => {
-        moves = get_rook_moves(square_index, &occupancy);
+        moves = if !only_attacks {
+          get_rook_moves(square_index, &occupancy)
+        } else {
+          get_rook_moves(square_index, &0)
+        };
 
         if !only_attacks {
           moves ^= moves & self.all_black_pieces(); 
