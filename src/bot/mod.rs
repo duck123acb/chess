@@ -18,7 +18,7 @@ impl Bot {
   fn minimax(&self, board: Board, depth: i32, mut alpha: i32, mut beta: i32, maximizing_player: bool) -> (i32, Option<Move>) { 
     let is_mate = board.is_checkmate();
     if depth == 0 || is_mate {
-      return (evaluate_position(board, is_mate, self.is_white_player), None);
+      return (evaluate_position(board, is_mate, maximizing_player), None);
     }
   
     let mut best_move: Option<Move> = None;
@@ -49,14 +49,11 @@ impl Bot {
       let mut min_eval = INFINITY;
   
       for piece_move in board.get_all_moves() {
-        if piece_move.start_square == 56 && piece_move.end_square == 0 {
-          println!("hiu");
-        }
         let mut iteration_board = board.clone();
         iteration_board.make_move(piece_move);
   
         let (eval, _) = self.minimax(iteration_board, depth - 1, alpha, beta, true);
-        if eval == NEGATIVE_INFINITY {
+        if eval == NEGATIVE_INFINITY && !(piece_move.start_square == 56 && piece_move.end_square == 0) {
           println!("hi2341234");
         }
         if eval < min_eval {
