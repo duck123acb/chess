@@ -3,7 +3,6 @@ mod evaluation;
 use std::cmp;
 use crate::board_representation::Board;
 use crate::board_representation::Move;
-use crate::PieceType;
 use evaluation::*;
 
 pub struct Bot {
@@ -28,7 +27,6 @@ impl Bot {
       let mut max_eval = NEGATIVE_INFINITY;
   
       for piece_move in board.get_all_moves() {
-        // println!("{}, {}, {}", piece_move.start_square, piece_move.end_square, piece_move.moved_piece_type as usize);
         let mut iteration_board = board.clone();
         iteration_board.make_move(piece_move);
   
@@ -51,12 +49,16 @@ impl Bot {
       let mut min_eval = INFINITY;
   
       for piece_move in board.get_all_moves() {
-        // println!("{}, {}, {}", piece_move.start_square, piece_move.end_square, piece_move.moved_piece_type as usize);
-        // println!("{:b}", board.enemy_attacks);
+        if piece_move.start_square == 56 && piece_move.end_square == 0 {
+          println!("hiu");
+        }
         let mut iteration_board = board.clone();
         iteration_board.make_move(piece_move);
   
         let (eval, _) = self.minimax(iteration_board, depth - 1, alpha, beta, true);
+        if eval == NEGATIVE_INFINITY {
+          println!("hi2341234");
+        }
         if eval < min_eval {
           min_eval = eval;
           best_move = Some(piece_move);

@@ -12,7 +12,7 @@ use bot::Bot;
 use utils::*;
 use macroquad::prelude::*;
 
-const FEN: &str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+const FEN: &str = "4k2r/8/8/8/8/8/q7/4K3 w k - 0 1";
 
 fn window_conf() -> Conf {
   Conf {
@@ -63,7 +63,7 @@ async fn main() {
   }
 
   let mut game_over = false;
-  while !game_over {
+  loop {
     clear_background(GRAY);
 
     for square in &squares {
