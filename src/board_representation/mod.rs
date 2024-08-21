@@ -619,7 +619,11 @@ impl Board {
       },
       PieceType::WhiteQueen => {
         let diagonal_moves = get_bishop_moves(square_index, &occupancy);
-        let orthogonal_moves = get_rook_moves(square_index, &occupancy);
+        let orthogonal_moves = if !only_attacks {
+          get_rook_moves(square_index, &occupancy)
+        } else {
+          get_rook_moves(square_index, &0)
+        };
         moves = diagonal_moves | orthogonal_moves;
 
         if !only_attacks {
@@ -627,8 +631,16 @@ impl Board {
         }
       },
       PieceType::BlackQueen => {
-        let diagonal_moves = get_bishop_moves(square_index, &occupancy);
-        let orthogonal_moves = get_rook_moves(square_index, &occupancy);
+        let diagonal_moves = if !only_attacks {
+          get_bishop_moves(square_index, &occupancy)
+        } else {
+          get_bishop_moves(square_index, &0)
+        };
+        let orthogonal_moves = if !only_attacks {
+          get_rook_moves(square_index, &occupancy)
+        } else {
+          get_rook_moves(square_index, &0)
+        };
         moves = diagonal_moves | orthogonal_moves;
 
         if !only_attacks {
@@ -636,14 +648,22 @@ impl Board {
         }
       },
       PieceType::WhiteBishop => {
-        moves = get_bishop_moves(square_index, &occupancy);
+        moves = if !only_attacks {
+          get_bishop_moves(square_index, &occupancy)
+        } else {
+          get_bishop_moves(square_index, &0)
+        };
         
         if !only_attacks {
           moves ^= moves & self.all_white_pieces(); 
         }
       },
       PieceType::BlackBishop => {
-        moves = get_bishop_moves(square_index, &occupancy);
+        moves = if !only_attacks {
+          get_bishop_moves(square_index, &occupancy)
+        } else {
+          get_bishop_moves(square_index, &0)
+        };
 
         if !only_attacks {
           moves ^= moves & self.all_black_pieces(); 
@@ -889,7 +909,6 @@ impl Board {
   }
 
   pub fn is_checkmate(&self) -> bool {
-    println!("{}", self.get_all_moves().len());
     self.get_all_moves().len() == 0 && self.checks.len() != 0
   }
 }

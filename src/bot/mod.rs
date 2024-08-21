@@ -27,6 +27,7 @@ impl Bot {
       let mut max_eval = NEGATIVE_INFINITY;
   
       for piece_move in board.get_all_moves() {
+        println!("{}, {}", piece_move.start_square, piece_move.end_square);
         let mut iteration_board = board.clone();
         iteration_board.make_move(piece_move);
   
@@ -48,6 +49,7 @@ impl Bot {
       let mut min_eval = INFINITY;
   
       for piece_move in board.get_all_moves() {
+        println!("{}, {}", piece_move.start_square, piece_move.end_square);
         let mut iteration_board = board.clone();
         iteration_board.make_move(piece_move);
   
