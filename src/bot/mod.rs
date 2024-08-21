@@ -31,7 +31,7 @@ impl Bot {
         iteration_board.make_move(piece_move);
   
         let (eval, _) = self.minimax(iteration_board, depth - 1, alpha, beta, false);
-        if eval > max_eval {
+        if eval >= max_eval {
           max_eval = eval;
           best_move = Some(piece_move);
         }
@@ -53,10 +53,7 @@ impl Bot {
         iteration_board.make_move(piece_move);
   
         let (eval, _) = self.minimax(iteration_board, depth - 1, alpha, beta, true);
-        if eval == NEGATIVE_INFINITY && !(piece_move.start_square == 56 && piece_move.end_square == 0) {
-          println!("hi2341234");
-        }
-        if eval < min_eval {
+        if eval <= min_eval {
           min_eval = eval;
           best_move = Some(piece_move);
         }
