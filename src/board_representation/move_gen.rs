@@ -41,7 +41,7 @@ pub fn pawn_attacks(bitboard: &u64, is_white: bool, en_passent_square: Option<u6
   }
 
 
-  if let Some(square) = en_passent_square { // allows for the capture of en_passent
+  if let Some(square) = en_passent_square {
     let en_passent_attack = attacks & square;
     if en_passent_attack != 0 {
       attacks |= en_passent_attack;
@@ -179,7 +179,7 @@ pub fn get_bishop_moves(square_index: i32, population: &u64) -> u64 {
   
   moves
 }
-pub fn get_rook_moves(square_index: i32, population: &u64) -> u64 { // FIXME: for some reason the rook cant reach the edge of the board in some cases
+pub fn get_rook_moves(square_index: i32, population: &u64) -> u64 {
   let magic = &ROOK_MAGICS[square_index as usize];
   let mask = &ROOK_MASKS[square_index as usize];
   let relevant_bits = &ROOK_BITS[square_index as usize];

@@ -84,7 +84,7 @@ impl MoveFlags {
 pub struct Move {
   pub start_square: i32,
   pub end_square: i32,
-  moved_piece_type: PieceType,
+  pub moved_piece_type: PieceType,
 
   // flags
   captured_piece_type: Option<PieceType>,
@@ -125,7 +125,7 @@ pub struct Board {
   black_castling_flags: CastlingFlags,
 
   moves: [Vec<Move>; 64],
-  enemy_attacks: u64,
+  pub enemy_attacks: u64,
   checks: Vec<u64>,
   pinned_pieces: u64
 }
@@ -618,11 +618,15 @@ impl Board {
         }
       },
       PieceType::WhiteQueen => {
-        let diagonal_moves = get_bishop_moves(square_index, &occupancy);
+        let diagonal_moves = if !only_attacks {
+          get_bishop_moves(square_index, &occupancy)
+        } else {
+          get_bishop_moves(square_index, &(occupancy ^ self.bitboards[PieceType::BlackKing as usize]))
+        };
         let orthogonal_moves = if !only_attacks {
           get_rook_moves(square_index, &occupancy)
         } else {
-          get_rook_moves(square_index, &0)
+          get_rook_moves(square_index, &(occupancy ^ self.bitboards[PieceType::BlackKing as usize]))
         };
         moves = diagonal_moves | orthogonal_moves;
 
@@ -639,7 +643,7 @@ impl Board {
         let orthogonal_moves = if !only_attacks {
           get_rook_moves(square_index, &occupancy)
         } else {
-          get_rook_moves(square_index, &0)
+          get_rook_moves(square_index, &(occupancy ^ self.bitboards[PieceType::WhiteKing as usize]))
         };
         moves = diagonal_moves | orthogonal_moves;
 
@@ -651,7 +655,7 @@ impl Board {
         moves = if !only_attacks {
           get_bishop_moves(square_index, &occupancy)
         } else {
-          get_bishop_moves(square_index, &0)
+          get_bishop_moves(square_index, &(occupancy ^ self.bitboards[PieceType::BlackKing as usize]))
         };
         
         if !only_attacks {
@@ -662,7 +666,7 @@ impl Board {
         moves = if !only_attacks {
           get_bishop_moves(square_index, &occupancy)
         } else {
-          get_bishop_moves(square_index, &0)
+          get_bishop_moves(square_index, &(occupancy ^ self.bitboards[PieceType::WhiteKing as usize]))
         };
 
         if !only_attacks {
@@ -687,7 +691,7 @@ impl Board {
         moves = if !only_attacks {
           get_rook_moves(square_index, &occupancy)
         } else {
-          get_rook_moves(square_index, &0)
+          get_rook_moves(square_index, &(occupancy ^ self.bitboards[PieceType::BlackKing as usize]))
         };
 
         if !only_attacks {
@@ -698,7 +702,7 @@ impl Board {
         moves = if !only_attacks {
           get_rook_moves(square_index, &occupancy)
         } else {
-          get_rook_moves(square_index, &0)
+          get_rook_moves(square_index, &(occupancy ^ self.bitboards[PieceType::WhiteKing as usize]))
         };
 
         if !only_attacks {
@@ -806,6 +810,8 @@ impl Board {
     }
     
     if let Some(piece_type) = move_to_make.captured_piece_type {
+      if piece_type == PieceType::BlackKing || piece_type == PieceType::WhiteKing {
+      }
       self.bitboards[piece_type as usize] ^= new_piece_bitboard;
     }
 
@@ -903,6 +909,9 @@ impl Board {
 
     self.detect_check();
     self.white_to_move = !self.white_to_move;
+    if self.is_checkmate() {
+      return;
+    }
     self.find_pinned_pieces();
     self.get_opponents_attacks();
     self.get_all_legal_moves();
