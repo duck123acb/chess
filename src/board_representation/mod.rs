@@ -889,6 +889,7 @@ impl Board {
   }
 
   pub fn is_checkmate(&self) -> bool {
+    println!("{}", self.get_all_moves().len());
     self.get_all_moves().len() == 0 && self.checks.len() != 0
   }
 }
