@@ -18,7 +18,7 @@ impl Bot {
   fn minimax(&self, board: Board, depth: i32, mut alpha: i32, mut beta: i32, maximizing_player: bool) -> (i32, Option<Move>) { 
     let is_mate = board.is_checkmate();
     if depth == 0 || is_mate {
-      return (evaluate_position(board, is_mate, maximizing_player), None);
+      return (evaluate_position(board, is_mate, maximizing_player, depth), None);
     }
   
     let mut best_move: Option<Move> = None;
@@ -69,7 +69,7 @@ impl Bot {
   }
 
   pub fn get_best_move(&mut self, board: Board) -> Move {
-    let (_score, best_move) = self.minimax(board, 3, NEGATIVE_INFINITY, INFINITY, self.is_white_player);
+    let (_score, best_move) = self.minimax(board, STARTING_DEPTH, NEGATIVE_INFINITY, INFINITY, self.is_white_player);
     best_move.unwrap()
   }
 }
