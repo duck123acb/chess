@@ -6,19 +6,21 @@ use crate::board_representation::Move;
 use evaluation::*;
 
 pub struct Bot {
-  is_white_player: bool
+  is_white_player: bool,
+  best_move: Option<Move>
 }
 impl Bot {
   pub fn new(is_white: bool) -> Self {
     Self {
       is_white_player: is_white,
+      best_move: None
     }
   }
 
-  fn minimax(&self, board: Board, depth: i32, mut alpha: i32, mut beta: i32, maximizing_player: bool) -> (i32, Option<Move>) { 
+  fn minimax(&mut self, board: Board, depth: i32, mut alpha: i32, mut beta: i32, maximizing_player: bool) -> i32 { 
     let is_mate = board.is_checkmate();
     if depth == 0 || is_mate {
-      return (evaluate_position(board, is_mate, maximizing_player, depth), None);
+      return evaluate_position(board, is_mate, maximizing_player, depth);
     }
   
     let mut best_move: Option<Move> = None;
@@ -30,7 +32,7 @@ impl Bot {
         let mut iteration_board = board.clone();
         iteration_board.make_move(piece_move);
   
-        let (eval, _) = self.minimax(iteration_board, depth - 1, alpha, beta, false);
+        let eval = self.minimax(iteration_board, depth - 1, alpha, beta, false);
         if eval >= max_eval {
           max_eval = eval;
           best_move = Some(piece_move);
@@ -40,10 +42,7 @@ impl Bot {
         if beta <= alpha {
           break;
         }
-
       }
-
-      return (max_eval, best_move);
     }
     else {
       let mut min_eval = INFINITY;
@@ -52,7 +51,7 @@ impl Bot {
         let mut iteration_board = board.clone();
         iteration_board.make_move(piece_move);
   
-        let (eval, _) = self.minimax(iteration_board, depth - 1, alpha, beta, true);
+        let eval = self.minimax(iteration_board, depth - 1, alpha, beta, true);
         if eval <= min_eval {
           min_eval = eval;
           best_move = Some(piece_move);
@@ -63,13 +62,14 @@ impl Bot {
           break;
         }
       }
-
-      return (min_eval, best_move);
     }
+
+    self.best_move = best_move;
+    return 0;
   }
 
   pub fn get_best_move(&mut self, board: Board) -> Move {
-    let (_score, best_move) = self.minimax(board, STARTING_DEPTH, NEGATIVE_INFINITY, INFINITY, self.is_white_player);
-    best_move.unwrap()
+    self.minimax(board, STARTING_DEPTH, NEGATIVE_INFINITY, INFINITY, self.is_white_player);
+    self.best_move.unwrap()
   }
 }
