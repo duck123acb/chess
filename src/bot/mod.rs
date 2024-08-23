@@ -1,6 +1,5 @@
 mod evaluation;
 
-use std::cmp;
 use crate::board_representation::Board;
 use crate::board_representation::Move;
 use evaluation::*;
@@ -15,7 +14,7 @@ impl Bot {
     }
   }
 
-  fn minimax(&self, board: Board, depth: i32, mut alpha: i32, mut beta: i32, maximizing_player: bool) -> (i32, Option<Move>) { 
+  fn minimax(&self, board: Board, depth: i32, mut alpha: f32, mut beta: f32, maximizing_player: bool) -> (f32, Option<Move>) { 
     let is_mate = board.is_checkmate();
     if depth == 0 || is_mate {
       return (evaluate_position(board, is_mate, self.is_white_player, depth), None);
@@ -36,7 +35,7 @@ impl Bot {
           best_move = Some(piece_move);
         }
   
-        alpha = cmp::max(alpha, eval);
+        alpha = f32::max(alpha, eval);
         if beta <= alpha {
           break;
         }
@@ -57,7 +56,7 @@ impl Bot {
           best_move = Some(piece_move);
         }
   
-        beta = cmp::min(beta, eval);
+        beta = f32::min(beta, eval);
         if beta <= alpha {
           break;
         }
