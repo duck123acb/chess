@@ -53,18 +53,7 @@ fn minimax(board: Board, depth: i32, mut alpha: i32, mut beta: i32, maximizing_p
       }
     }
 
-    return (min_eval, best_move);
-  }
-}
-
-
-pub struct Bot {
-  is_white_player: bool
-}
-impl Bot {
-  pub fn new(is_white: bool) -> Self {
-    Self {
-      is_white_player: is_white,
+      return (min_eval, best_move);
     }
   }
 
