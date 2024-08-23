@@ -98,11 +98,11 @@ pub fn evaluate_position(board: Board, is_mate:bool, is_white: bool, depth: i32)
 
   for piece_type in PieceType::iter() {
     let bitboard = board.get_bitboards()[piece_type as usize];
-    for i in 0..64 {
-      if (1 << i) & bitboard == 0 {
+    for square_index in 0..64 {
+      if (1 << square_index) & bitboard == 0 {
         continue;
       }
-      eval += get_piece_value(piece_type, 1);
+      eval += get_piece_value(piece_type, square_index);
     }
   }
 
