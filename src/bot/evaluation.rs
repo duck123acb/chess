@@ -2,37 +2,37 @@ use crate::board_representation::Board;
 use crate::utils::PieceType;
 
 // names are slightly misleading, but they might as well be as they are as high as high can be (for 32 bit integers)
-pub const INFINITY: f32 = f32::MAX;
-pub const NEGATIVE_INFINITY: f32 = f32::MIN;
+pub const INFINITY: i32 = i32::MAX;
+pub const NEGATIVE_INFINITY: i32 = i32::MIN;
 
 pub const STARTING_DEPTH: i32 = 3;
 
-const WHITE_PAWN_PIECE_TABLE: [f32; 64] = [
-	0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-	1.0,    1.0,    1.0,    1.0,    1.0,    1.0,    1.0,    1.0,
-	1.0,    1.0,    1.0,    1.0,    1.0,    1.0,    1.0,    1.0,
-	1.0,    1.0,    1.0,    1.25,   1.25,   1.0,    1.0,    1.0,
-	1.0,    1.0,    1.25,   1.5,    1.5,    1.25,   1.0,    1.0,
-	1.5,    1.25,   1.0,    1.0,    1.0,    1.0,    1.25,   1.5,
-	1.5,    1.5,    1.5,    1.0,    1.0,    1.5,    1.5,    1.5,
-	0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+const WHITE_PAWN_PIECE_TABLE: [i32; 64] = [
+	00,    00,    00,    00,    00,    00,    00,    00,
+	10,    10,    10,    10,    10,    10,    10,    10,
+	10,    10,    10,    10,    10,    10,    10,    10,
+	10,    10,    10,    13,    13,    10,    10,    10,
+	10,    10,    13,    15,    15,    13,    10,    10,
+	15,    13,    10,    10,    10,    10,    13,    15,
+	15,    15,    15,    10,    10,    15,    15,    15,
+	00,    00,    00,    00,    00,    00,    00,    00,
 ];
-const BLACK_PAWN_PIECE_TABLE: [f32; 64] = [
-	0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-	1.5,    1.5,    1.5,    1.0,    1.0,    1.5,    1.5,    1.5,
-	1.5,    1.25,   1.0,    1.0,    1.0,    1.0,    1.25,   1.5,
-	1.0,    1.0,    1.25,   1.5,    1.5,    1.25,   1.0,    1.0,
-	1.0,    1.0,    1.0,    1.25,   1.25,   1.0,    1.0,    1.0,
-	1.0,    1.0,    1.0,    1.0,    1.0,    1.0,    1.0,    1.0,
-	1.0,    1.0,    1.0,    1.0,    1.0,    1.0,    1.0,    1.0,
-	0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+const BLACK_PAWN_PIECE_TABLE: [i32; 64] = [
+	00,    00,    00,    00,    00,    00,    00,    00,
+	15,    15,    15,    10,    10,    15,    15,    15,
+	15,    13,    10,    10,    10,    10,    13,    15,
+	10,    10,    13,    15,    15,    13,    10,    10,
+	10,    10,    10,    13,    13,    10,    10,    10,
+	10,    10,    10,    10,    10,    10,    10,    10,
+	10,    10,    10,    10,    10,    10,    10,    10,
+	00,    00,    00,    00,    00,    00,    00,    00,
 ];
 const KNIGHT_VALUE: i32 = 3;
 const BISHOP_VALUE: i32 = 3;
 const ROOK_VALUE: i32 = 5;
 const QUEEN_VALUE: i32 = 9;
 
-fn get_piece_value(piece_type: PieceType, square_index: usize) -> f32 {
+fn get_piece_value(piece_type: PieceType, square_index: usize) -> i32 {
   match piece_type {
     PieceType::WhiteQueen => {
       QUEEN_VALUE
@@ -81,15 +81,15 @@ things to add to evaluation:
 - penalty for split pawns
 - king safety
 */
-pub fn evaluate_position(board: Board, is_mate:bool, is_white: bool, depth: i32) -> f32 {
-  let mut eval = 0f32;
+pub fn evaluate_position(board: Board, is_mate:bool, is_white: bool, depth: i32) -> i32 {
+  let mut eval = 0;
   if is_mate {
-    eval = NEGATIVE_INFINITY as f32;
+    eval = NEGATIVE_INFINITY;
 
-    let increment = 5.0;
-    eval += increment * (STARTING_DEPTH - depth) as f32;
+    let increment = 5;
+    eval += increment * (STARTING_DEPTH - depth);
     if !is_white {
-      eval *= 1.0;
+      eval *= 1;
     }
 
     return eval;
