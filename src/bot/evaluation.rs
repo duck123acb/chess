@@ -27,36 +27,72 @@ const BLACK_PAWN_PIECE_TABLE: [i32; 64] = [
 	100,  100,  100,  100,  100,  100,  100,  100,
 	000,  000,  000,  000,  000,  000,  000,  000,
 ];
-const KNIGHT_VALUE: i32 = 3;
-const BISHOP_VALUE: i32 = 3;
-const ROOK_VALUE: i32 = 5;
-const QUEEN_VALUE: i32 = 9;
+const KNIGHT_PIECE_TABLE: [i32; 64] = [
+  225,  250,  250,  250,  250,  250,  250,  225,
+  250,  275,  275,  275,  275,  275,  275,  250,
+  250,  275,  300,  300,  300,  300,  275,  250,
+  250,  275,  300,  325,  325,  300,  275,  250,
+  250,  275,  300,  325,  325,  300,  275,  250,
+  250,  275,  300,  300,  300,  300,  275,  250,
+  250,  275,  275,  275,  275,  275,  275,  250,
+  225,  250,  250,  250,  250,  250,  250,  225,
+];
+const BISHOP_VALUE: [i32; 64] = [
+  000,  000,  000,  000,  000,  000,  000,  000,
+  000,  000,  000,  000,  000,  000,  000,  000,
+  000,  000,  000,  000,  000,  000,  000,  000,
+  000,  000,  000,  000,  000,  000,  000,  000,
+  000,  000,  000,  000,  000,  000,  000,  000,
+  000,  000,  000,  000,  000,  000,  000,  000,
+  000,  000,  000,  000,  000,  000,  000,  000,
+  000,  000,  000,  000,  000,  000,  000,  000,
+];
+const ROOK_VALUE: [i32; 64] = [
+  000,  000,  000,  000,  000,  000,  000,  000,
+  000,  000,  000,  000,  000,  000,  000,  000,
+  000,  000,  000,  000,  000,  000,  000,  000,
+  000,  000,  000,  000,  000,  000,  000,  000,
+  000,  000,  000,  000,  000,  000,  000,  000,
+  000,  000,  000,  000,  000,  000,  000,  000,
+  000,  000,  000,  000,  000,  000,  000,  000,
+  000,  000,  000,  000,  000,  000,  000,  000,
+];
+const QUEEN_VALUE: [i32; 64] = [
+  000,  000,  000,  000,  000,  000,  000,  000,
+  000,  000,  000,  000,  000,  000,  000,  000,
+  000,  000,  000,  000,  000,  000,  000,  000,
+  000,  000,  000,  000,  000,  000,  000,  000,
+  000,  000,  000,  000,  000,  000,  000,  000,
+  000,  000,  000,  000,  000,  000,  000,  000,
+  000,  000,  000,  000,  000,  000,  000,  000,
+  000,  000,  000,  000,  000,  000,  000,  000,
+];
 
 fn get_piece_value(piece_type: PieceType, square_index: usize) -> i32 {
   match piece_type {
     PieceType::WhiteQueen => {
-      QUEEN_VALUE
+      QUEEN_VALUE[square_index]
     },
     PieceType::BlackQueen => {
-      -QUEEN_VALUE
+      -QUEEN_VALUE[square_index]
     },
     PieceType::WhiteBishop => {
-      BISHOP_VALUE
+      BISHOP_VALUE[square_index]
     },
     PieceType::BlackBishop => {
-      -BISHOP_VALUE
+      -BISHOP_VALUE[square_index]
     },
     PieceType::WhiteKnight => {
-      KNIGHT_VALUE
+      KNIGHT_PIECE_TABLE[square_index]
     },
     PieceType::BlackKnight => {
-      -KNIGHT_VALUE
+      -KNIGHT_PIECE_TABLE[square_index]
     },
     PieceType::WhiteRook => {
-      ROOK_VALUE
+      ROOK_VALUE[square_index]
     },
     PieceType::BlackRook => {
-      -ROOK_VALUE
+      -ROOK_VALUE[square_index]
     },
     PieceType::WhitePawn=> {
       WHITE_PAWN_PIECE_TABLE[square_index]
