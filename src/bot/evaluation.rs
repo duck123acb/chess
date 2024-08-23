@@ -55,7 +55,7 @@ fn get_piece_value(piece_type: PieceType) -> i32 {
 I played this short game to come up with this list https://www.chess.com/analysis/game/live/118012214443?tab=analysis&move=57
 things to add to evaluation:
 - prevent checkmatre√
-- mate the opponent
+- mate the opponent√
 - added bonus for the bishop pair
 - passed pawn + protected passed pawn bonus
 - piece activity (like rooks on the 7th/2nd, octopus knights, sniper bishops)

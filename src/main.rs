@@ -14,7 +14,6 @@ use macroquad::prelude::*;
 
 const FEN: &str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
-
 fn window_conf() -> Conf {
   Conf {
     window_title: "chess".to_string(),
