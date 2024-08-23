@@ -12,7 +12,9 @@ use bot::Bot;
 use utils::*;
 use macroquad::prelude::*;
 
+// const FEN: &str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 const FEN: &str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+
 
 fn window_conf() -> Conf {
   Conf {
