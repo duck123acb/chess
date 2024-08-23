@@ -5,8 +5,6 @@ use crate::utils::PieceType;
 pub const INFINITY: i32 = i32::MAX;
 pub const NEGATIVE_INFINITY: i32 = i32::MIN;
 
-pub const STARTING_DEPTH: i32 = 3;
-
 const PAWN_VALUE: i32 = 1;
 const KNIGHT_VALUE: i32 = 3;
 const BISHOP_VALUE: i32 = 3;
@@ -62,20 +60,12 @@ things to add to evaluation:
 - penalty for split pawns
 - king safety
 */
-pub fn evaluate_position(board: Board, is_mate:bool, is_white: bool, depth: i32) -> i32 {
-  let mut eval = 0;
+pub fn evaluate_position(board: Board, is_mate:bool, is_white: bool) -> i32 {
   if is_mate {
-    eval = NEGATIVE_INFINITY;
-
-    let increment = 5 / STARTING_DEPTH;
-    eval += increment * (STARTING_DEPTH - depth);
-    if !is_white {
-      eval *= 1;
-    }
-
-    return eval;
+    return if is_white { NEGATIVE_INFINITY } else { INFINITY };
   }
 
+  let mut eval = 0;
 
   for piece_type in PieceType::iter() {
     let bitboard = board.get_bitboards()[piece_type as usize];
