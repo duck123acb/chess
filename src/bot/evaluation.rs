@@ -5,7 +5,7 @@ use crate::utils::PieceType;
 pub const INFINITY: i32 = i32::MAX;
 pub const NEGATIVE_INFINITY: i32 = i32::MIN;
 
-pub const STARTING_DEPTH: i32 = 3;
+pub const STARTING_DEPTH: i32 = 5;
 
 const WHITE_PAWN_PIECE_TABLE: [i32; 64] = [
 	000,  000,  000,  000,  000,  000,  000,  000,
@@ -37,50 +37,50 @@ const KNIGHT_PIECE_TABLE: [i32; 64] = [
   250,  275,  275,  275,  275,  275,  275,  250,
   225,  250,  250,  250,  250,  250,  250,  225,
 ];
-const BISHOP_VALUE: [i32; 64] = [
-  000,  000,  000,  000,  000,  000,  000,  000,
-  000,  000,  000,  000,  000,  000,  000,  000,
-  000,  000,  000,  000,  000,  000,  000,  000,
-  000,  000,  000,  000,  000,  000,  000,  000,
-  000,  000,  000,  000,  000,  000,  000,  000,
-  000,  000,  000,  000,  000,  000,  000,  000,
-  000,  000,  000,  000,  000,  000,  000,  000,
-  000,  000,  000,  000,  000,  000,  000,  000,
+const BISHOP_PIECE_TABLE: [i32; 64] = [
+  275,  275,  275,  275,  275,  275,  275,  275,
+  300,  350,  300,  325,  325,  300,  350,  300,
+  300,  300,  300,  300,  300,  300,  300,  300,
+  300,  325,  350,  300,  300,  350,  325,  300,
+  300,  300,  350,  300,  300,  350,  300,  300,
+  300,  300,  300,  300,  300,  300,  300,  300,
+  300,  300,  300,  325,  325,  300,  350,  300,
+  275,  275,  275,  275,  275,  275,  275,  275,
 ];
-const ROOK_VALUE: [i32; 64] = [
-  000,  000,  000,  000,  000,  000,  000,  000,
-  000,  000,  000,  000,  000,  000,  000,  000,
-  000,  000,  000,  000,  000,  000,  000,  000,
-  000,  000,  000,  000,  000,  000,  000,  000,
-  000,  000,  000,  000,  000,  000,  000,  000,
-  000,  000,  000,  000,  000,  000,  000,  000,
-  000,  000,  000,  000,  000,  000,  000,  000,
-  000,  000,  000,  000,  000,  000,  000,  000,
+const ROOK_PIECE_TABLE: [i32; 64] = [
+  475,  475,  500,  525,  525,  500,  475,  475,
+  400,  500,  500,  500,  500,  500,  500,  400,
+  400,  500,  500,  500,  500,  500,  500,  400,
+  400,  500,  500,  500,  500,  500,  500,  400,
+  400,  500,  500,  500,  500,  500,  500,  400,
+  400,  500,  500,  500,  500,  500,  500,  400,
+  400,  500,  500,  500,  500,  500,  500,  400,
+  475,  475,  500,  525,  525,  500,  475,  475,
 ];
-const QUEEN_VALUE: [i32; 64] = [
-  000,  000,  000,  000,  000,  000,  000,  000,
-  000,  000,  000,  000,  000,  000,  000,  000,
-  000,  000,  000,  000,  000,  000,  000,  000,
-  000,  000,  000,  000,  000,  000,  000,  000,
-  000,  000,  000,  000,  000,  000,  000,  000,
-  000,  000,  000,  000,  000,  000,  000,  000,
-  000,  000,  000,  000,  000,  000,  000,  000,
-  000,  000,  000,  000,  000,  000,  000,  000,
+const QUEEN_PIECE_TABLE: [i32; 64] = [
+  900,  900,  925,  950,  950,  925,  900,  900,
+  900,  900,  900,  900,  900,  900,  900,  900,
+  900,  900,  875,  875,  875,  875,  900,  900,
+  900,  900,  875,  800,  800,  875,  900,  900,
+  900,  900,  875,  800,  800,  875,  900,  900,
+  900,  900,  900,  900,  875,  875,  900,  900,
+  900,  900,  900,  900,  900,  900,  900,  900,
+  900,  900,  925,  950,  950,  925,  900,  900,
 ];
 
 fn get_piece_value(piece_type: PieceType, square_index: usize) -> i32 {
   match piece_type {
     PieceType::WhiteQueen => {
-      QUEEN_VALUE[square_index]
+      QUEEN_PIECE_TABLE[square_index]
     },
     PieceType::BlackQueen => {
-      -QUEEN_VALUE[square_index]
+      -QUEEN_PIECE_TABLE[square_index]
     },
     PieceType::WhiteBishop => {
-      BISHOP_VALUE[square_index]
+      BISHOP_PIECE_TABLE[square_index]
     },
     PieceType::BlackBishop => {
-      -BISHOP_VALUE[square_index]
+      -BISHOP_PIECE_TABLE[square_index]
     },
     PieceType::WhiteKnight => {
       KNIGHT_PIECE_TABLE[square_index]
@@ -89,10 +89,10 @@ fn get_piece_value(piece_type: PieceType, square_index: usize) -> i32 {
       -KNIGHT_PIECE_TABLE[square_index]
     },
     PieceType::WhiteRook => {
-      ROOK_VALUE[square_index]
+      ROOK_PIECE_TABLE[square_index]
     },
     PieceType::BlackRook => {
-      -ROOK_VALUE[square_index]
+      -ROOK_PIECE_TABLE[square_index]
     },
     PieceType::WhitePawn=> {
       WHITE_PAWN_PIECE_TABLE[square_index]
