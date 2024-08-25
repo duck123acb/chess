@@ -7,6 +7,8 @@ pub const NEGATIVE_INFINITY: i32 = i32::MIN;
 
 pub const STARTING_DEPTH: i32 = 5;
 
+const BISHOP_PAIR_VALUE: i32 = 50;
+
 const WHITE_PAWN_PIECE_TABLE: [i32; 64] = [
 	000,  000,  000,  000,  000,  000,  000,  000,
 	100,  100,  100,  100,  100,  100,  100,  100,
@@ -113,11 +115,12 @@ things to add to evaluation:
 - mate the opponent √
 - added bonus for the bishop pair
 - passed pawn + protected passed pawn bonus
-- piece activity (like rooks on the 7th/2nd, octopus knights, sniper bishops)
+- piece activity (like rooks on the 7th/2nd, octopus knights, sniper bishops)√
 - penalty for split pawns
 - king safety
 */
 pub fn evaluate_position(board: Board, is_mate:bool, is_white: bool, depth: i32) -> i32 {
+  let bitboards = board.get_bitboards();
   let mut eval = 0;
   if is_mate {
     eval = NEGATIVE_INFINITY;
@@ -131,9 +134,8 @@ pub fn evaluate_position(board: Board, is_mate:bool, is_white: bool, depth: i32)
     return eval;
   }
 
-
   for piece_type in PieceType::iter() {
-    let bitboard = board.get_bitboards()[piece_type as usize];
+    let bitboard = bitboards[piece_type as usize];
     for square_index in 0..64 {
       if (1 << square_index) & bitboard == 0 {
         continue;
@@ -141,6 +143,11 @@ pub fn evaluate_position(board: Board, is_mate:bool, is_white: bool, depth: i32)
       eval += get_piece_value(piece_type, square_index);
     }
   }
-
+  if bitboards[PieceType::WhiteBishop as usize].count_ones() >= 2 {
+    eval += BISHOP_PAIR_VALUE;
+  }
+  if bitboards[PieceType::BlackBishop as usize].count_ones() >= 2 {
+    eval -= BISHOP_PAIR_VALUE;
+  }
   eval
 }
