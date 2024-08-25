@@ -327,13 +327,16 @@ impl Board {
           },
           PieceType::WhiteQueen | PieceType::BlackQueen | PieceType::WhiteBishop | PieceType::BlackBishop | PieceType::WhiteRook | PieceType::BlackRook  => {
             let delta = i - enemy_king.trailing_zeros() as i32;
-            let direction = match delta {
+            let mut direction = match delta {
               d if d % 8 == 0 => 8, // vertical
               d if d % 7 == 0 => 7, // diagonal /
               d if d % 9 == 0 => 9, // diagonal \
               d if d.abs() < 8 => 1, // horizontal
               _ => 0,
             };
+            if delta > 0 {
+              direction *= -1;
+            }
             let mut ray = 0;
             let mut pos = i as i32;
             while pos >= 0 && pos < 64 {
@@ -615,11 +618,15 @@ impl Board {
         }
       },
       PieceType::WhiteQueen => {
-        let diagonal_moves = get_bishop_moves(square_index, &occupancy);
+        let diagonal_moves= if !only_attacks {
+          get_bishop_moves(square_index, &occupancy)
+        } else {
+          get_bishop_moves(square_index, &(occupancy ^ self.bitboards[PieceType::BlackKing as usize]))
+        };
         let orthogonal_moves = if !only_attacks {
           get_rook_moves(square_index, &occupancy)
         } else {
-          get_rook_moves(square_index, &0)
+          get_rook_moves(square_index, &(occupancy ^ self.bitboards[PieceType::BlackKing as usize]))
         };
         moves = diagonal_moves | orthogonal_moves;
 
@@ -631,12 +638,12 @@ impl Board {
         let diagonal_moves = if !only_attacks {
           get_bishop_moves(square_index, &occupancy)
         } else {
-          get_bishop_moves(square_index, &0)
+          get_bishop_moves(square_index, &(occupancy ^ self.bitboards[PieceType::WhiteKing as usize]))
         };
         let orthogonal_moves = if !only_attacks {
           get_rook_moves(square_index, &occupancy)
         } else {
-          get_rook_moves(square_index, &0)
+          get_rook_moves(square_index, &(occupancy ^ self.bitboards[PieceType::WhiteKing as usize]))
         };
         moves = diagonal_moves | orthogonal_moves;
 
@@ -648,7 +655,7 @@ impl Board {
         moves = if !only_attacks {
           get_bishop_moves(square_index, &occupancy)
         } else {
-          get_bishop_moves(square_index, &0)
+          get_bishop_moves(square_index, &(occupancy ^ self.bitboards[PieceType::BlackKing as usize]))
         };
         
         if !only_attacks {
@@ -659,7 +666,7 @@ impl Board {
         moves = if !only_attacks {
           get_bishop_moves(square_index, &occupancy)
         } else {
-          get_bishop_moves(square_index, &0)
+          get_bishop_moves(square_index, &(occupancy ^ self.bitboards[PieceType::WhiteKing as usize]))
         };
 
         if !only_attacks {
@@ -684,7 +691,7 @@ impl Board {
         moves = if !only_attacks {
           get_rook_moves(square_index, &occupancy)
         } else {
-          get_rook_moves(square_index, &0)
+          get_rook_moves(square_index, &(occupancy ^ self.bitboards[PieceType::BlackKing as usize]))
         };
 
         if !only_attacks {
@@ -695,7 +702,7 @@ impl Board {
         moves = if !only_attacks {
           get_rook_moves(square_index, &occupancy)
         } else {
-          get_rook_moves(square_index, &0)
+          get_rook_moves(square_index, &(occupancy ^ self.bitboards[PieceType::WhiteKing as usize]))
         };
 
         if !only_attacks {
