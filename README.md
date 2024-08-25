@@ -3,7 +3,7 @@
 
 A work in progress chess bot with a GUI  
 
-You can play a game as white against a bot as black, but the bot SUCKS at openings (and in general, all it knows how to do is count material)  
+You can play a game as white against a bot as black, but the bot SUCKS at openings (and in general, all it knows how to do is count material and play short checkmates)  
 If you want a different starting position, you have to change the `FEN` constant in the `main.rs` file
 
 ### WIP notes:
