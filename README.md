@@ -1,5 +1,5 @@
 
-# duck123acb Chess
+# duckfish
 
 A work in progress chess bot with a GUI  
 

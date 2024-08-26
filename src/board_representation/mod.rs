@@ -349,7 +349,6 @@ impl Board {
               pos += direction;
             }
             self.checks.push(ray | (1 << i));
-            println!("{:b}", ray | (1 << i));
           }
           _ => {
             // do nothin
