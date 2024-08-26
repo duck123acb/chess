@@ -32,6 +32,6 @@ Go to the project directory
 Install dependencies & Run
 
 ```bash
-  cargo run
+  cargo run --release
 ```
 
