@@ -124,7 +124,8 @@ pub struct Board {
   moves: [Vec<Move>; 64],
   enemy_attacks: u64,
   checks: Vec<u64>,
-  pinned_pieces: u64
+  pinned_pieces: u64,
+  pin_rays: [u64; 64],
 }
 impl Board {
   /* BOARD SETUP */
@@ -142,7 +143,8 @@ impl Board {
       moves: [EMPTY_VEC; 64],
       enemy_attacks: 0,
       checks: Vec::new(),
-      pinned_pieces: 0
+      pinned_pieces: 0,
+      pin_rays: [0; 64],
     };
     new_board.parse_fen(fen);
     new_board.detect_check();
@@ -347,6 +349,7 @@ impl Board {
               pos += direction;
             }
             self.checks.push(ray | (1 << i));
+            println!("{:b}", ray | (1 << i));
           }
           _ => {
             // do nothin
@@ -357,6 +360,7 @@ impl Board {
   }
   fn find_pinned_pieces(&mut self) {
     self.pinned_pieces = 0;
+    self.pin_rays = [0; 64];
 
     let king = if self.white_to_move { self.bitboards[PieceType::WhiteKing as usize] } else { self.bitboards[PieceType::BlackKing as usize] };
     let king_square = king.trailing_zeros() as i32;
@@ -539,14 +543,12 @@ impl Board {
         
         let friendly_occupation = if self.white_to_move { self.all_white_pieces() } else { self.all_black_pieces() };
         let friendly_blockers = friendly_occupation & ray;
-        if friendly_blockers == 0 {
-          continue;
-        }
-        if friendly_blockers.count_ones() > 1 {
+        if friendly_blockers.count_ones() != 1 {
           continue;
         }
 
         self.pinned_pieces |= friendly_blockers;
+        self.pin_rays[friendly_blockers.trailing_zeros() as usize] = ray | piece_bitboard;
       }
     }
   }
@@ -760,14 +762,14 @@ impl Board {
     for piece_type in PieceType::get_colour_types(self.white_to_move) {
       for i in 0..64 {
         let square_bitboard = 1 << i;
-        if square_bitboard & self.pinned_pieces != 0 {
-          continue;
-        }
 
         let bitboard = self.bitboards[piece_type as usize];
 
         if bitboard & square_bitboard != 0 {
-          let piece_moves = self.get_legal_moves(i, piece_type, false);
+          let mut piece_moves = self.get_legal_moves(i, piece_type, false);
+          if square_bitboard & self.pinned_pieces != 0 {
+            piece_moves.0 &= self.pin_rays[i as usize];
+          }
           all_pseudo_legal_moves[i as usize] = self.generate_moves_from_bitboard(i, piece_moves.0, piece_type, piece_moves.1);
         }
       }
