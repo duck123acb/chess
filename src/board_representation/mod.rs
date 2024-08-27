@@ -563,6 +563,9 @@ impl Board {
           new_move.captured_piece_type = Some(piece_type);
         }
       }
+      if new_move.captured_piece_type == Some(PieceType::WhiteKing) || new_move.captured_piece_type == Some(PieceType::BlackKing) {
+        continue;
+      } 
 
       if flags.is_promotion {
         if self.white_to_move {
@@ -801,7 +804,17 @@ impl Board {
     self.castle_checks();
     let new_piece_bitboard = 1 << move_to_make.end_square;
     let old_piece_bitboard = 1 << move_to_make.start_square;
-
+    
+    if let Some(piece_type) = move_to_make.captured_piece_type {
+      if piece_type == PieceType::BlackKing || piece_type == PieceType::WhiteKing {
+        for a in PieceType::iter() {
+          println!("{:b}", self.bitboards[a as usize]);
+        }
+        println!("{:b}, {}", new_piece_bitboard | old_piece_bitboard, move_to_make.moved_piece_type as usize);
+        println!("{}", self.white_to_move);
+      }
+      self.bitboards[piece_type as usize] ^= new_piece_bitboard;
+    }
     if move_to_make.flags.is_promotion {
       self.bitboards[move_to_make.moved_piece_type as usize] ^= old_piece_bitboard;
       self.bitboards[move_to_make.promotion_piece.unwrap() as usize] |= new_piece_bitboard; 
@@ -810,9 +823,6 @@ impl Board {
       self.bitboards[move_to_make.moved_piece_type as usize] ^= old_piece_bitboard | new_piece_bitboard;
     }
     
-    if let Some(piece_type) = move_to_make.captured_piece_type {
-      self.bitboards[piece_type as usize] ^= new_piece_bitboard;
-    }
 
     // remove the passented piece
     if move_to_make.flags.can_be_en_passent {
@@ -835,6 +845,9 @@ impl Board {
         else {
           Some(square << 8)
         };
+      }
+      else {
+        self.en_passent_square = None;
       }
     }
     else {
