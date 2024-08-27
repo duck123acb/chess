@@ -68,7 +68,7 @@ impl Bot {
   }
 
   pub fn get_best_move(&mut self, board: Board) -> Move {
-    let (_score, best_move) = self.minimax(board, 3, NEGATIVE_INFINITY, INFINITY, self.is_white_player);
+    let (_score, best_move) = self.minimax(board, 5, NEGATIVE_INFINITY, INFINITY, self.is_white_player);
     best_move.unwrap()
   }
 }

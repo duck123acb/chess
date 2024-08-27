@@ -811,6 +811,12 @@ impl Board {
     }
     
     if let Some(piece_type) = move_to_make.captured_piece_type {
+      if piece_type == PieceType::BlackKing || piece_type == PieceType::WhiteKing {
+        for a in PieceType::iter() {
+          println!("{:b}", self.bitboards[a as usize]);
+        }
+        println!("{:b}, {}", new_piece_bitboard | old_piece_bitboard, move_to_make.moved_piece_type as usize);
+      }
       self.bitboards[piece_type as usize] ^= new_piece_bitboard;
     }
 
@@ -819,6 +825,8 @@ impl Board {
       if self.en_passent_square.unwrap() & new_piece_bitboard != 0 {
         if self.white_to_move {
           self.bitboards[PieceType::BlackPawn as usize] ^= self.en_passent_square.unwrap() >> 8;
+        // println!("{:b}, {}", new_piece_bitboard | old_piece_bitboard, move_to_make.moved_piece_type as usize);
+        // println!("ha {:b}", self.en_passent_square.unwrap() >> 8);
         }
         else {
           self.bitboards[PieceType::WhitePawn as usize] ^= self.en_passent_square.unwrap() << 8;
@@ -828,6 +836,7 @@ impl Board {
     }
 
     if let Some(square) = move_to_make.flags.passented_square {
+      // println!("asdfasdfasdf {:b}", square );
       if new_piece_bitboard & square != 0 {
         self.en_passent_square = if move_to_make.moved_piece_type == PieceType::WhitePawn {
           Some(square >> 8)
@@ -835,6 +844,9 @@ impl Board {
         else {
           Some(square << 8)
         };
+      }
+      else {
+        self.en_passent_square = None;
       }
     }
     else {
