@@ -870,45 +870,25 @@ impl Board {
     }
 
     if !self.white_castling_flags.king_moved { // remove unneccecary checks
-      if PieceType::WhiteKing == move_to_make.moved_piece_type {
-        self.white_castling_flags.king_moved = true;
-      }
-      else if PieceType::WhiteRook == move_to_make.moved_piece_type { // if the rook moves
-        if old_piece_bitboard & H1 != 0 {
-          self.white_castling_flags.rook_kingside_moved = true;
-        }
-        else if old_piece_bitboard & A1 != 0 {
-          self.white_castling_flags.rook_queenside_moved = true;
-        }
+      self.white_castling_flags.king_moved = PieceType::WhiteKing == move_to_make.moved_piece_type;
+      if PieceType::WhiteRook == move_to_make.moved_piece_type { // if the rook moves
+        self.white_castling_flags.rook_kingside_moved = old_piece_bitboard & H1 != 0;
+        self.white_castling_flags.rook_queenside_moved = old_piece_bitboard & A1 != 0;
       }
       else if move_to_make.captured_piece_type.is_some() && PieceType::WhiteRook == move_to_make.captured_piece_type.unwrap() { // if the rook is captured
-        if new_piece_bitboard & H1 != 0 {
-          self.white_castling_flags.rook_kingside_moved = true;
-        }
-        else if new_piece_bitboard & A1 != 0 {
-          self.white_castling_flags.rook_queenside_moved = true;
-        }
+        self.white_castling_flags.rook_kingside_moved = new_piece_bitboard & H1 != 0;
+        self.white_castling_flags.rook_queenside_moved = new_piece_bitboard & A1 != 0;
       }
     }
     if !self.black_castling_flags.king_moved { // remove unneccecary checks
-      if PieceType::BlackKing == move_to_make.moved_piece_type {
-        self.black_castling_flags.king_moved = true;
-      }
-      else if PieceType::BlackRook == move_to_make.moved_piece_type { // if the rook moves
-        if old_piece_bitboard & H1 != 0 {
-          self.white_castling_flags.rook_kingside_moved = true;
-        }
-        else if old_piece_bitboard & A1 != 0 {
-          self.white_castling_flags.rook_queenside_moved = true;
-        }
+      self.black_castling_flags.king_moved = PieceType::BlackKing == move_to_make.moved_piece_type;
+      if PieceType::BlackRook == move_to_make.moved_piece_type { // if the rook moves
+        self.white_castling_flags.rook_kingside_moved = old_piece_bitboard & H8 != 0;
+        self.white_castling_flags.rook_queenside_moved = old_piece_bitboard & A8 != 0;
       }
       else if move_to_make.captured_piece_type.is_some() && PieceType::BlackRook == move_to_make.captured_piece_type.unwrap() { // if the rook is captured
-        if new_piece_bitboard & H8 != 0 {
-          self.white_castling_flags.rook_kingside_moved = true;
-        }
-        else if new_piece_bitboard & A8 != 0 {
-          self.white_castling_flags.rook_queenside_moved = true;
-        }
+        self.white_castling_flags.rook_kingside_moved = new_piece_bitboard & H8 != 0;
+        self.white_castling_flags.rook_queenside_moved = new_piece_bitboard & A8 != 0;
       }
     }
 

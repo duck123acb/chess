@@ -6,8 +6,8 @@ pub const BOTTOM_RANK: u64 = 0x00000000000000FF;
 pub const LEFT_FILE: u64 = 0x8080808080808080;
 pub const RIGHT_FILE: u64 = 0x0101010101010101;
 
-const RANK_SHIFT: i32 = 8; // value to shift if you want to move ranks
-const FILE_SHIFT: i32 = 1; // value to shift if you want to move files
+pub const RANK_SHIFT: i32 = 8; // value to shift if you want to move ranks
+pub const FILE_SHIFT: i32 = 1; // value to shift if you want to move files
 
 pub fn pawn_attacks(bitboard: &u64, is_white: bool, en_passent_square: Option<u64>) -> (u64, bool, bool) {
   let mut attacks: u64 = 0;
