@@ -6,8 +6,8 @@ pub const BOTTOM_RANK: u64 = 0x00000000000000FF;
 pub const LEFT_FILE: u64 = 0x8080808080808080;
 pub const RIGHT_FILE: u64 = 0x0101010101010101;
 
-const RANK_SHIFT: i32 = 8; // value to shift if you want to move ranks
-const FILE_SHIFT: i32 = 1; // value to shift if you want to move files
+pub const RANK_SHIFT: i32 = 8; // value to shift if you want to move ranks
+pub const FILE_SHIFT: i32 = 1; // value to shift if you want to move files
 
 pub fn pawn_attacks(bitboard: &u64, is_white: bool, en_passent_square: Option<u64>) -> (u64, bool, bool) {
   let mut attacks: u64 = 0;
@@ -179,7 +179,7 @@ pub fn get_bishop_moves(square_index: i32, population: &u64) -> u64 {
   
   moves
 }
-pub fn get_rook_moves(square_index: i32, population: &u64) -> u64 {
+pub fn get_rook_moves(square_index: i32, population: &u64) -> u64 { // FIXME: for some reason the rook cant reach the edge of the board in some cases
   let magic = &ROOK_MAGICS[square_index as usize];
   let mask = &ROOK_MASKS[square_index as usize];
   let relevant_bits = &ROOK_BITS[square_index as usize];

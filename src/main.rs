@@ -1,20 +1,33 @@
 /* MODULES */
 mod rendering;
 mod board_representation;
+mod bot;
 mod utils;
 
 /* IMPORTS */
 use rendering::piece_sprite::*;
 use rendering::square::*;
 use board_representation::*;
+use bot::Bot;
 use utils::*;
 use macroquad::prelude::*;
 
-const FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+const FEN: &str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+
+fn window_conf() -> Conf {
+  Conf {
+    window_title: "duckfish".to_string(),
+    window_width: 800,
+    window_height: 800,
+    window_resizable: false,
+    ..Default::default()
+  }
+}
 
 #[macroquad::main(window_conf)]
 async fn main() {
   let mut board = Board::new(FEN);
+  let mut bot = Bot::new(false);
   let mut piece_moves: Vec<Move> = Vec::new();
 
   let texture_atlas = load_texture(TEXTURE_PATH).await.unwrap();
@@ -96,8 +109,10 @@ async fn main() {
         }
 
         if let Some(matching_move) = piece_moves.iter().find(|m| **m == piece_move) { // finds move in the list of legal moves
-
           board.make_move(matching_move.clone());
+          
+          let bot_move = bot.get_best_move(board.clone());
+          board.make_move(bot_move);
         }
 
         piece_sprite.moved_piece = false;
